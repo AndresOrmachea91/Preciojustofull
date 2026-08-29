@@ -53,13 +53,50 @@ Hay una prueba que lo verifica automáticamente: `tests/test_arquitectura.py`.
 
 Documentación interactiva en http://localhost:8000/docs
 
+## Base de datos
+
+**PostgreSQL** es el motor. **Neon** (o Supabase) es solo quien lo aloja: no
+son alternativas entre sí.
+
+Hay dos adaptadores del mismo puerto y se elige con una variable de entorno:
+
+- sin `BASE_DATOS_URL` → repositorios en memoria, arranca sin instalar nada
+- con `BASE_DATOS_URL` → PostgreSQL
+
+Nada más cambia. Ni el dominio, ni los casos de uso, ni las rutas.
+
+    BASE_DATOS_URL=postgresql://usuario:clave@host/basededatos?sslmode=require
+
+El esquema se crea solo la primera vez que arranca. Se acepta la cadena tal
+como la entrega el proveedor, incluso con el prefijo `postgres://` que
+SQLAlchemy ya no admite: se traduce internamente.
+
 ## Pruebas
 
     pytest -v
 
-`tests/test_comparar_mercados.py` ejecuta un caso de uso completo **con
-repositorios en memoria, sin base de datos y sin red**. Eso es la demostración
-práctica de que el núcleo no depende de la infraestructura.
+Tres pruebas cuentan la arquitectura mejor que cualquier explicación:
+
+- `tests/test_contrato_repositorios.py` corre **el mismo conjunto de casos
+  contra los dos adaptadores** — el de memoria y el de SQLAlchemy sobre
+  SQLite. Si ambos pasan, son de verdad intercambiables. Agregar un tercer
+  adaptador es agregarlo a una lista, sin escribir una prueba más.
+- `tests/test_comparar_mercados.py` ejecuta un caso de uso completo sin base
+  de datos y sin red.
+- `tests/test_arquitectura.py` lee los archivos del dominio y falla si
+  alguien importa un framework.
+
+## El recolector
+
+    python -m src.adaptadores.entrada.cli.recolectar --fuente diario --productos 5,12,30
+    python -m src.adaptadores.entrada.cli.recolectar --disponibilidad
+
+Sin `BASE_DATOS_URL` avisa y termina con error en lugar de correr en vacío:
+es preferible fallar ruidosamente antes que perder días de serie en silencio.
+
+Guardar es **idempotente** —hay una restricción de unicidad por fuente,
+producto, mercado y fecha—, así que se puede correr tres veces al día sin
+duplicar nada.
 
 ## Postman
 
