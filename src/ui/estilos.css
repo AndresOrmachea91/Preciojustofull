@@ -1,0 +1,79 @@
+:root {
+  --tinta: #0e3b32;
+  --jade: #1c6b57;
+  --jade-claro: #dceae4;
+  --ambar: #b0560f;
+  --crema: #eef3f0;
+  --texto: #12211d;
+  --tenue: #55665f;
+  --borde: #cfd9d4;
+  --superficie: #ffffff;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--crema);
+  color: var(--texto);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.55;
+}
+
+.app { max-width: 720px; margin: 0 auto; padding: 24px 16px 64px; }
+
+.app__cabecera h1 { margin: 0; font-size: 1.9rem; color: var(--tinta); letter-spacing: -0.02em; }
+.app__cabecera p { margin: 4px 0 20px; color: var(--tenue); }
+
+.selector { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.selector__opcion {
+  padding: 8px 16px; border-radius: 999px; border: 1px solid var(--borde);
+  background: var(--superficie); color: var(--texto); font-size: 0.92rem;
+  cursor: pointer;
+}
+.selector__opcion--activa { background: var(--tinta); border-color: var(--tinta); color: #fff; }
+.selector__opcion:focus-visible { outline: 2px solid var(--jade); outline-offset: 2px; }
+
+.ahorro {
+  background: var(--jade-claro); border-radius: 10px;
+  padding: 12px 16px; margin: 0 0 16px; font-size: 0.95rem;
+}
+
+.lista { display: flex; flex-direction: column; gap: 12px; }
+
+.tarjeta {
+  background: var(--superficie); border: 1px solid var(--borde);
+  border-radius: 12px; padding: 16px 18px;
+}
+.tarjeta--destacada { border-color: var(--jade); }
+.tarjeta__cabecera { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.tarjeta__nombre { margin: 0; font-size: 1.05rem; }
+.tarjeta__zona { margin: 2px 0 0; color: var(--tenue); font-size: 0.85rem; }
+.tarjeta__precio { margin: 10px 0 8px; font-size: 1.5rem; font-weight: 600; color: var(--tinta); }
+.tarjeta__unidad { font-size: 0.85rem; font-weight: 400; color: var(--tenue); }
+.tarjeta__pie { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.tarjeta__nota { margin: 10px 0 0; font-size: 0.78rem; color: var(--tenue); }
+
+.insignia {
+  background: var(--jade); color: #fff; border-radius: 999px;
+  padding: 3px 10px; font-size: 0.72rem; white-space: nowrap;
+}
+
+.confianza { font-size: 0.78rem; padding: 3px 9px; border-radius: 999px; }
+.confianza--verificado { background: var(--jade-claro); color: var(--jade); }
+.confianza--alto { background: var(--jade-claro); color: var(--jade); }
+.confianza--medio { background: #f6efe2; color: var(--ambar); }
+.confianza--bajo { background: #f6e7e2; color: #93301d; }
+
+.tenue { color: var(--tenue); font-size: 0.82rem; }
+
+.estado { padding: 16px; color: var(--tenue); }
+.estado--error { background: #f6e0da; border-radius: 10px; color: #93301d; }
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --crema: #0c1512; --superficie: #14211d; --texto: #e4ede9;
+    --tenue: #93a49e; --borde: #2c3e38; --tinta: #4fc2a7; --jade-claro: #153029;
+  }
+}
+
