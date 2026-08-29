@@ -1,0 +1,93 @@
+{
+  "info": {
+    "name": "PrecioJusto Bolivia — API v1",
+    "description": "Colección de pruebas de la API. Ajustar la variable base_url segun el entorno.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000/api/v1" }
+  ],
+  "item": [
+    {
+      "name": "Salud",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{base_url}}/salud", "host": ["{{base_url}}"], "path": ["salud"] }
+      }
+    },
+    {
+      "name": "Listar productos",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{base_url}}/productos", "host": ["{{base_url}}"], "path": ["productos"] }
+      }
+    },
+    {
+      "name": "Listar mercados",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/mercados?zona=Centro",
+          "host": ["{{base_url}}"],
+          "path": ["mercados"],
+          "query": [{ "key": "zona", "value": "Centro" }]
+        }
+      }
+    },
+    {
+      "name": "Comparar precio entre mercados",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/precios/tomate/comparar",
+          "host": ["{{base_url}}"],
+          "path": ["precios", "tomate", "comparar"]
+        }
+      }
+    },
+    {
+      "name": "Precio en un mercado",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/precios/tomate/mercado/rodriguez",
+          "host": ["{{base_url}}"],
+          "path": ["precios", "tomate", "mercado", "rodriguez"]
+        }
+      }
+    },
+    {
+      "name": "Calcular canasta",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"items\": [\n    { \"codigo_producto\": \"tomate\", \"cantidad\": 2 },\n    { \"codigo_producto\": \"papa\", \"cantidad\": 1 },\n    { \"codigo_producto\": \"arroz\", \"cantidad\": 1 }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/canasta/calcular",
+          "host": ["{{base_url}}"],
+          "path": ["canasta", "calcular"]
+        }
+      }
+    },
+    {
+      "name": "Reportar precio",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"codigo_producto\": \"tomate\",\n  \"codigo_mercado\": \"lanza\",\n  \"monto\": 7.5,\n  \"unidad\": \"LIBRA\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/reportes",
+          "host": ["{{base_url}}"],
+          "path": ["reportes"]
+        }
+      }
+    }
+  ]
+}
+
