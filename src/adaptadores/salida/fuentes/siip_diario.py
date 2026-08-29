@@ -47,6 +47,7 @@ class FuenteSiipDiario:
 
     def __init__(self, cliente: ClienteResiliente | None = None, departamento: int = 2):
         self._cliente = cliente or ClienteResiliente()
+        self._cliente.nombre_fuente = self.nombre
         self._departamento = departamento   # 2 = La Paz
 
     @property

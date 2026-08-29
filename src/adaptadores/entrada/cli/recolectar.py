@@ -18,6 +18,7 @@ import sys
 import logging
 import argparse
 
+from src.adaptadores.salida.fuentes.cliente_resiliente import ClienteResiliente
 from src.adaptadores.salida.fuentes.siip_diario import FuenteSiipDiario
 from src.adaptadores.salida.fuentes.siip_ipc import FuenteSiipIpc
 from src.adaptadores.salida.persistencia.repositorios import ObservacionesPostgres
@@ -49,10 +50,11 @@ def _mostrar_disponibilidad(repositorio: ObservacionesPostgres) -> int:
     if not filas:
         print("Todavía no hay intentos registrados.")
         return 0
-    print(f"\n{'FUENTE':<20}{'INTENTOS':>10}{'ÉXITOS':>9}{'%':>8}{'MS':>9}")
-    print("-" * 56)
+    print("\nIntentos CRUDOS contra cada portal (incluye reintentos):")
+    print(f"\n{'FUENTE':<26}{'INTENTOS':>10}{'ÉXITOS':>9}{'%':>8}{'MS':>9}")
+    print("-" * 62)
     for f in filas:
-        print(f"{f['fuente']:<20}{f['intentos']:>10}{f['exitosos']:>9}"
+        print(f"{f['fuente']:<26}{f['intentos']:>10}{f['exitosos']:>9}"
               f"{f['porcentaje']:>7}%{f['ms_promedio']:>9}")
     return 0
 
@@ -81,7 +83,14 @@ def main() -> int:
         if args.productos else [args.producto]
     )
 
-    fuente = FUENTES[args.fuente]()
+    # El cliente registra CADA intento crudo contra el portal, incluidos los
+    # que fallan y se reintentan. Sobre esos intentos se mide la
+    # disponibilidad de la fuente original; sobre los productos resueltos,
+    # la disponibilidad efectiva del sistema. La diferencia es lo que aporta
+    # la arquitectura, y sin este registro sería invisible.
+    cliente = ClienteResiliente(registrar_intento=repositorio.registrar_intento)
+    fuente = FUENTES[args.fuente](cliente=cliente)
+
     if not fuente.esta_disponible():
         log.error("%s no está disponible (cortacircuito abierto)", fuente.nombre)
         return 2
@@ -92,20 +101,19 @@ def main() -> int:
             observaciones = fuente.recolectar(codigo)
         except Exception as ex:
             log.warning("Producto %s falló: %s", codigo, ex)
-            repositorio.registrar_intento(fuente.nombre, None, False, 0, str(ex)[:200])
             fallidos += 1
             continue
 
         nuevas = repositorio.guardar_varias(observaciones)
-        repositorio.registrar_intento(
-            fuente.nombre, None, True, 0, f"{len(observaciones)} observaciones"
-        )
         total_nuevas += nuevas
         log.info("Producto %s: %s observaciones, %s nuevas",
                  codigo, len(observaciones), nuevas)
 
-    log.info("Terminado. %s observaciones nuevas, %s productos fallidos.",
-             total_nuevas, fallidos)
+    resueltos = len(codigos) - fallidos
+    log.info("Terminado. %s observaciones nuevas, %s de %s productos resueltos.",
+             total_nuevas, resueltos, len(codigos))
+    log.info("Disponibilidad efectiva de esta corrida: %.1f%%",
+             100.0 * resueltos / len(codigos))
     # Que fallen algunos productos no debe marcar la corrida como rota:
     # la degradación parcial es un comportamiento esperado del sistema.
     return 1 if fallidos == len(codigos) else 0

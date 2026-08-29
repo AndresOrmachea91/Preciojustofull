@@ -27,6 +27,7 @@ class FuenteSiipIpc:
 
     def __init__(self, cliente: ClienteResiliente | None = None, version: str = "2018"):
         self._cliente = cliente or ClienteResiliente()
+        self._cliente.nombre_fuente = self.nombre
         self._version = version
 
     @property
