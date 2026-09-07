@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
-from src.adaptadores.entrada.api import esquemas as e
-from src.adaptadores.entrada.api.dependencias import caso_registrar_reporte
+from src.infraestructura.adaptadores.entrada.api import esquemas as e
+from src.infraestructura.adaptadores.entrada.api.dependencias import caso_registrar_reporte
 from src.dominio.excepciones import ErrorDominio
 
 router = APIRouter(prefix="/reportes", tags=["reportes"])

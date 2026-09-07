@@ -9,7 +9,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.adaptadores.entrada.api.rutas import canasta, catalogo, precios, reportes
+from src.infraestructura.adaptadores.entrada.api.rutas import canasta, catalogo, precios, reportes
 from src.configuracion import config
 
 logging.basicConfig(level=logging.INFO)

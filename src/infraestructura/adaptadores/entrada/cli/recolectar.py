@@ -5,9 +5,9 @@ Adaptador de entrada por línea de comandos: el recolector.
 Es otro adaptador sobre los mismos puertos que usa la API. Lo ejecuta
 GitHub Actions tres veces al día.
 
-    python -m src.adaptadores.entrada.cli.recolectar --fuente diario --producto 5
-    python -m src.adaptadores.entrada.cli.recolectar --fuente diario --productos 5,12,30
-    python -m src.adaptadores.entrada.cli.recolectar --disponibilidad
+    python -m src.infraestructura.adaptadores.entrada.cli.recolectar --fuente diario --producto 5
+    python -m src.infraestructura.adaptadores.entrada.cli.recolectar --fuente diario --productos 5,12,30
+    python -m src.infraestructura.adaptadores.entrada.cli.recolectar --disponibilidad
 
 Sin BASE_DATOS_URL configurada avisa y no guarda nada: es preferible
 fallar ruidosamente antes que perder días de serie en silencio.
@@ -18,11 +18,11 @@ import sys
 import logging
 import argparse
 
-from src.adaptadores.salida.fuentes.cliente_resiliente import ClienteResiliente
-from src.adaptadores.salida.fuentes.siip_diario import FuenteSiipDiario
-from src.adaptadores.salida.fuentes.siip_ipc import FuenteSiipIpc
-from src.adaptadores.salida.persistencia.repositorios import ObservacionesPostgres
-from src.adaptadores.salida.persistencia.sesion import (
+from src.infraestructura.adaptadores.salida.fuentes.cliente_resiliente import ClienteResiliente
+from src.infraestructura.adaptadores.salida.fuentes.siip_diario import FuenteSiipDiario
+from src.infraestructura.adaptadores.salida.fuentes.siip_ipc import FuenteSiipIpc
+from src.infraestructura.adaptadores.salida.persistencia.repositorios import ObservacionesPostgres
+from src.infraestructura.adaptadores.salida.persistencia.sesion import (
     crear_esquema, crear_motor, fabrica_sesiones,
 )
 from src.configuracion import config

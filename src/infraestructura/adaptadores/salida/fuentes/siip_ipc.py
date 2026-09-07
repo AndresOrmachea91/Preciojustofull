@@ -9,7 +9,7 @@ import re
 import logging
 from datetime import datetime, timezone
 
-from src.adaptadores.salida.fuentes.cliente_resiliente import ClienteResiliente
+from src.infraestructura.adaptadores.salida.fuentes.cliente_resiliente import ClienteResiliente
 from src.dominio.modelo import Fuente, NivelPrecio, Observacion
 from src.dominio.valor import Dinero, Periodo, Unidad
 

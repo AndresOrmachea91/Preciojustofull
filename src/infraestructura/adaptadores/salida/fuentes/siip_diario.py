@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 
 from bs4 import BeautifulSoup
 
-from src.adaptadores.salida.fuentes.cliente_resiliente import ClienteResiliente
+from src.infraestructura.adaptadores.salida.fuentes.cliente_resiliente import ClienteResiliente
 from src.dominio.modelo import Fuente, NivelPrecio, Observacion
 from src.dominio.valor import Dinero, Periodo, Unidad
 

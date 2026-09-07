@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, Query
 
-from src.adaptadores.entrada.api import esquemas as e
-from src.adaptadores.entrada.api.dependencias import obtener_mercados, obtener_productos
-from src.adaptadores.entrada.api.mapeo import mercado_a_salida, producto_a_salida
+from src.infraestructura.adaptadores.entrada.api import esquemas as e
+from src.infraestructura.adaptadores.entrada.api.dependencias import obtener_mercados, obtener_productos
+from src.infraestructura.adaptadores.entrada.api.mapeo import mercado_a_salida, producto_a_salida
 
 router = APIRouter(tags=["catalogo"])
 

@@ -14,11 +14,11 @@ una propiedad de la estructura.
 
 Las dependencias apuntan **siempre hacia adentro**:
 
-    adaptadores  ->  aplicacion  ->  dominio
+    infraestructura  ->  aplicacion  ->  dominio
 
 - `dominio/` no importa nada de fuera. Ni FastAPI, ni SQLAlchemy, ni requests.
 - `aplicacion/` importa solo `dominio` y sus propios puertos (interfaces).
-- `adaptadores/` importa lo que quiera: es el borde del sistema.
+- `infraestructura/` importa lo que quiera: es el borde del sistema.
 
 Si algún día `dominio/` necesita importar FastAPI, la arquitectura se rompió.
 Hay una prueba que lo verifica automáticamente: `tests/test_arquitectura.py`.
@@ -35,13 +35,15 @@ Hay una prueba que lo verifica automáticamente: `tests/test_arquitectura.py`.
           entrada.py    qué se le puede pedir al sistema (casos de uso)
           salida.py     qué necesita el sistema del mundo (repositorios, fuentes)
         casos_uso/      la implementación de los puertos de entrada
-      adaptadores/
-        entrada/
-          api/          FastAPI: rutas, esquemas, inyección de dependencias
-          cli/          el recolector como comando
-        salida/
-          memoria/      repositorios en memoria (para pruebas y para arrancar)
-          fuentes/      un adaptador por cada fuente de precios
+      infraestructura/
+        adaptadores/
+          entrada/
+            api/        FastAPI: rutas, esquemas, inyección de dependencias
+            cli/        el recolector como comando
+          salida/
+            memoria/    repositorios en memoria (para pruebas y para arrancar)
+            fuentes/    un adaptador por cada fuente de precios
+            persistencia/  SQLAlchemy sobre PostgreSQL
     tests/
 
 ## Cómo correrlo
@@ -49,7 +51,7 @@ Hay una prueba que lo verifica automáticamente: `tests/test_arquitectura.py`.
     python -m venv .venv && source .venv/bin/activate
     pip install -r requirements.txt
     cp .env.example .env
-    uvicorn src.adaptadores.entrada.api.main:app --reload
+    uvicorn src.infraestructura.adaptadores.entrada.api.main:app --reload
 
 Documentación interactiva en http://localhost:8000/docs
 
@@ -88,8 +90,8 @@ Tres pruebas cuentan la arquitectura mejor que cualquier explicación:
 
 ## El recolector
 
-    python -m src.adaptadores.entrada.cli.recolectar --fuente diario --productos 5,12,30
-    python -m src.adaptadores.entrada.cli.recolectar --disponibilidad
+    python -m src.infraestructura.adaptadores.entrada.cli.recolectar --fuente diario --productos 5,12,30
+    python -m src.infraestructura.adaptadores.entrada.cli.recolectar --disponibilidad
 
 Sin `BASE_DATOS_URL` avisa y termina con error en lugar de correr en vacío:
 es preferible fallar ruidosamente antes que perder días de serie en silencio.

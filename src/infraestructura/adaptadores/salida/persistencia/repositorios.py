@@ -21,8 +21,8 @@ from sqlalchemy.dialects.postgresql import insert as insert_pg
 from sqlalchemy.dialects.sqlite import insert as insert_sqlite
 from sqlalchemy.orm import Session, sessionmaker
 
-from src.adaptadores.salida.persistencia.sesion import sesion_de
-from src.adaptadores.salida.persistencia.tablas import (
+from src.infraestructura.adaptadores.salida.persistencia.sesion import sesion_de
+from src.infraestructura.adaptadores.salida.persistencia.tablas import (
     IntentoFuenteTabla, MercadoTabla, ObservacionTabla, ProductoTabla,
 )
 from src.dominio.modelo import (

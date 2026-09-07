@@ -10,11 +10,11 @@ from functools import lru_cache
 
 import logging
 
-from src.adaptadores.salida.memoria.repositorios import datos_de_ejemplo
-from src.adaptadores.salida.persistencia.repositorios import (
+from src.infraestructura.adaptadores.salida.memoria.repositorios import datos_de_ejemplo
+from src.infraestructura.adaptadores.salida.persistencia.repositorios import (
     MercadosPostgres, ObservacionesPostgres, ProductosPostgres,
 )
-from src.adaptadores.salida.persistencia.sesion import (
+from src.infraestructura.adaptadores.salida.persistencia.sesion import (
     crear_esquema, crear_motor, fabrica_sesiones,
 )
 from src.aplicacion.casos_uso.calcular_canasta import CalcularCanastaCasoUso

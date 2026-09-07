@@ -4,13 +4,13 @@
 
 Las dependencias apuntan **hacia adentro**. Nunca al revés.
 
-    adaptadores  ->  aplicacion  ->  dominio
+    infraestructura  ->  aplicacion  ->  dominio
 
 | Capa | Puede importar | Nunca importa |
 |---|---|---|
 | `dominio` | solo la biblioteca estándar | frameworks, base de datos, HTTP |
-| `aplicacion` | `dominio` y sus puertos | adaptadores, frameworks |
-| `adaptadores` | todo | — |
+| `aplicacion` | `dominio` y sus puertos | infraestructura, frameworks |
+| `infraestructura` | todo | — |
 
 `tests/test_arquitectura.py` verifica esto automáticamente en cada corrida.
 

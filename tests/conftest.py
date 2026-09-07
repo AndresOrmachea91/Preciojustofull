@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from src.adaptadores.salida.memoria.repositorios import datos_de_ejemplo
+from src.infraestructura.adaptadores.salida.memoria.repositorios import datos_de_ejemplo
 from src.dominio.modelo import Fuente, NivelPrecio, Observacion
 from src.dominio.valor import Dinero, Periodo, Unidad
 

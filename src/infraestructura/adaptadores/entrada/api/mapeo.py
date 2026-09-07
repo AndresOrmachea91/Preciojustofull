@@ -1,7 +1,7 @@
 """Traducción entre objetos del dominio y esquemas de la API."""
 from __future__ import annotations
 
-from src.adaptadores.entrada.api import esquemas as e
+from src.infraestructura.adaptadores.entrada.api import esquemas as e
 from src.aplicacion.puertos.entrada import CostoCanastaEnMercado, PrecioEnMercado
 from src.dominio.modelo import Mercado, PrecioConsolidado, Producto
 

@@ -37,9 +37,9 @@ jobs:
 
       - name: Recolectar precios mayoristas
         run: |
-          python -m src.adaptadores.entrada.cli.recolectar \
+          python -m src.infraestructura.adaptadores.entrada.cli.recolectar \
             --fuente diario --productos "5,12,30"
 
       - name: Resumen de disponibilidad
         if: always()
-        run: python -m src.adaptadores.entrada.cli.recolectar --disponibilidad
+        run: python -m src.infraestructura.adaptadores.entrada.cli.recolectar --disponibilidad

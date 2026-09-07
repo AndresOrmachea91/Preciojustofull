@@ -17,13 +17,13 @@ from datetime import datetime, timezone
 
 import pytest
 
-from src.adaptadores.salida.memoria.repositorios import (
+from src.infraestructura.adaptadores.salida.memoria.repositorios import (
     MercadosEnMemoria, ObservacionesEnMemoria, ProductosEnMemoria,
 )
-from src.adaptadores.salida.persistencia.repositorios import (
+from src.infraestructura.adaptadores.salida.persistencia.repositorios import (
     MercadosPostgres, ObservacionesPostgres, ProductosPostgres,
 )
-from src.adaptadores.salida.persistencia.sesion import (
+from src.infraestructura.adaptadores.salida.persistencia.sesion import (
     crear_esquema, crear_motor, fabrica_sesiones,
 )
 from src.dominio.modelo import (

@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from src.adaptadores.salida.persistencia.tablas import metadata
+from src.infraestructura.adaptadores.salida.persistencia.tablas import metadata
 
 log = logging.getLogger(__name__)
 

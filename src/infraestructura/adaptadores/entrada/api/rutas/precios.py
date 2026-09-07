@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from src.adaptadores.entrada.api import esquemas as e
-from src.adaptadores.entrada.api.dependencias import (
+from src.infraestructura.adaptadores.entrada.api import esquemas as e
+from src.infraestructura.adaptadores.entrada.api.dependencias import (
     caso_comparar_mercados, caso_consultar_precio,
 )
-from src.adaptadores.entrada.api.mapeo import precio_a_salida, precio_en_mercado_a_salida
+from src.infraestructura.adaptadores.entrada.api.mapeo import precio_a_salida, precio_en_mercado_a_salida
 from src.dominio.excepciones import ProductoNoEncontrado, SinObservaciones
 
 router = APIRouter(prefix="/precios", tags=["precios"])

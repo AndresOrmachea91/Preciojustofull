@@ -2,16 +2,17 @@
 Prueba que la arquitectura no se degrade con el tiempo.
 
 Es la regla que sostiene todo: las dependencias apuntan hacia adentro. El
-dominio no puede importar frameworks, y la aplicación no puede importar
-adaptadores. Si alguien lo rompe, esta prueba falla.
+dominio no puede importar frameworks ni capas externas, y la aplicación no
+puede importar infraestructura. Si alguien lo rompe, esta prueba falla.
 """
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parents[1] / "src"
 
-PROHIBIDO_EN_DOMINIO = ("fastapi", "sqlalchemy", "requests", "pydantic", "bs4")
+PROHIBIDO_EN_DOMINIO = ("fastapi", "sqlalchemy", "requests", "pydantic", "bs4",
+                        "src.infraestructura", "src.aplicacion")
 PROHIBIDO_EN_APLICACION = ("fastapi", "sqlalchemy", "requests", "bs4",
-                           "src.adaptadores")
+                           "src.infraestructura")
 
 
 def _archivos(subcarpeta: str):
