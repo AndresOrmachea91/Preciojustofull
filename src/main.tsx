@@ -1,12 +1,14 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
 
 import App from "@/ui/App";
 import "@/ui/estilos.css";
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-);
+const contenedor = document.getElementById("root");
+if (!contenedor) throw new Error("Falta el elemento #root en index.html");
 
+createRoot(contenedor).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);

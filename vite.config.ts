@@ -7,6 +7,11 @@ export default defineConfig({
   resolve: {
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
   },
-  test: { environment: "node", include: ["tests/**/*.test.ts"] },
+  test: {
+    // Las pruebas de dominio y aplicación no tocan el navegador y corren en
+    // node. Las de interfaz declaran jsdom con un docblock en su cabecera.
+    environment: "node",
+    include: ["tests/**/*.test.{ts,tsx}"],
+  },
 });
 
