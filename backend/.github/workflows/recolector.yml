@@ -1,0 +1,45 @@
+# Recolector diario sobre GitHub Actions: no hace falta servidor propio.
+# El historial de ejecuciones queda visible en GitHub y sirve como evidencia
+# para la métrica de disponibilidad efectiva del dato.
+name: Recolector diario
+
+on:
+  schedule:
+    # 07:00, 15:00 y 23:00 UTC = 03:00, 11:00 y 19:00 en Bolivia.
+    # Tres ventanas y no una sola: si el único intento falla, se pierde el
+    # día, y el bloque diario del SIIP es una ventana móvil que no se
+    # puede recuperar después.
+    - cron: "0 7,15,23 * * *"
+  workflow_dispatch:
+
+jobs:
+  recolectar:
+    runs-on: ubuntu-latest
+    env:
+      BASE_DATOS_URL: ${{ secrets.BASE_DATOS_URL }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Verificar que la base esté configurada
+        run: |
+          if [ -z "$BASE_DATOS_URL" ]; then
+            echo "::error::Falta el secreto BASE_DATOS_URL. Sin base, la corrida no guarda nada."
+            exit 1
+          fi
+
+      - name: Recolectar precios mayoristas
+        run: |
+          python -m src.infraestructura.adaptadores.entrada.cli.recolectar \
+            --fuente diario --productos "5,12,30"
+
+      - name: Resumen de disponibilidad
+        if: always()
+        run: python -m src.infraestructura.adaptadores.entrada.cli.recolectar --disponibilidad
