@@ -1,89 +1,89 @@
-codigo,nombre,tipo,macrodistrito,latitud,longitud,codigo_padre,osm_id,revision
-rodriguez,Mercado Rodríguez,mercado,Cotahuma,-16.500192,-68.138992,,w733480376,ok
-rodriguez_cubierto,Mercado Rodríguez - sector cubierto,tienda,Cotahuma,-16.500676,-68.139072,rodriguez,w733480381,confirmar_nombre
-lanza,Mercado Lanza,mercado,Centro,-16.494701,-68.137462,,w194362248,ok
-camacho,Mercado Camacho,mercado,Centro,-16.500624,-68.131153,,w187671475,ok
-yungas,Mercado Yungas,mercado,Centro,-16.497049,-68.129270,,w264710813,ok
-haiti,Mercado Haití,mercado,Centro,-16.490882,-68.122594,,w437094229,ok
-miraflores,Mercado Miraflores,mercado,Centro,-16.501255,-68.121763,,w366594547,ok
-la_bolita,Mercado La Bolita,mercado,Centro,-16.503306,-68.128234,,w539277526,ok
-garcilaso,Mercado Garcilaso de la Vega,mercado,Centro,-16.494231,-68.143206,,w739478591,ok
-belen,Mercado Belén,mercado,Cotahuma,-16.500781,-68.139492,,w444755647,ok
-uruguay,Mercado Uruguay,mercado,Max Paredes,-16.497319,-68.143753,,w178471709,ok
-frutas,Mercado de Frutas,mercado,Max Paredes,-16.498268,-68.141599,,w706477944,confirmar_si_es_parte_de_rodriguez
-el_tejar,Mercado El Tejar,mercado,Max Paredes,-16.495304,-68.152048,,w440996918,ok
-las_nieves,Mercado Las Nieves El Tejar,mercado,Max Paredes,-16.497113,-68.157397,,w655405977,ok
-calatayud,Mercado Calatayud,mercado,Max Paredes,-16.495357,-68.147632,,w441105317,ok
-pescado,Mercado de Pescado,mercado,Max Paredes,-16.494872,-68.153228,,w385784863,ok
-alto_mariscal,Mercado Alto Mariscal Santa Cruz,mercado,Max Paredes,-16.493025,-68.160383,,w441015612,ok
-bajo_mariscal,Mercado Bajo Mariscal Santa Cruz,mercado,Max Paredes,-16.492388,-68.158442,,n5063426607,ok
-san_jose,Mercado San José,mercado,Max Paredes,-16.489227,-68.158613,,w464989259,ok
-munaypata,Mercado Santiago de Munaypata,mercado,Max Paredes,-16.489954,-68.156268,,w653401253,ok
-pura_pura,Mercado Popular Pura Pura,mercado,Max Paredes,-16.487788,-68.150917,,n4614006192,ok
-sagrado_corazon,Mercado Sagrado Corazón de Jesús,mercado,Max Paredes,-16.500786,-68.153142,,w440055671,ok
-vicente_ochoa,Mercado Vicente Ochoa,mercado,Max Paredes,-16.498065,-68.144327,,n13855241830,ok
-hinojosa,Mercado Hinojosa,mercado,Cotahuma,-16.503377,-68.144499,,n1664233426,ok
-nueva_potosi,Mercado Villa Nueva Potosí,mercado,Cotahuma,-16.505414,-68.149391,,w767989086,ok
-sopocachi,Mercado Sopocachi,mercado,Cotahuma,-16.509482,-68.129690,,n3320737271,ok
-sanchez_lima,Mercado Sánchez Lima,mercado,Cotahuma,-16.507992,-68.136756,,w602863072,ok
-bolivar_cotahuma,Mercado Bolívar (Cotahuma),mercado,Cotahuma,-16.513918,-68.141159,,w441520041,homonimo_verificar
-strongest,Mercado Strongest,mercado,Cotahuma,-16.515814,-68.139969,,w467190245,ok
-cuatro_abril,Mercado 4 de Abril,mercado,Cotahuma,-16.522215,-68.145779,,w1298904246,ok
-raul_salmon,Mercado Raúl Salmón,mercado,Cotahuma,-16.528233,-68.123529,,w446398145,ok
-vergel_llojeta,Mercado Vergel Llojeta,mercado,Cotahuma,-16.534251,-68.140350,,w442132335,ok
-bolivar_periferica,Mercado Bolívar (Periférica),mercado,Periférica,-16.493630,-68.131845,,w756022056,homonimo_verificar
-killi_killi,Mercado Killi Killi,mercado,Periférica,-16.494515,-68.127408,,w493514594,ok
-calama,Mercado Calama,mercado,Periférica,-16.489733,-68.137226,,w525276109,ok
-antofagasta,Mercado Antofagasta,mercado,Periférica,-16.487688,-68.140624,,w564873423,ok
-maracana,Mercado Maracaná,mercado,Periférica,-16.485627,-68.137137,,w373425405,ok
-german_busch,Mercado Germán Busch,mercado,Periférica,-16.482154,-68.139880,,w130069966,corregido_osm_dice_German_Buch
-achachicala,Mercado de Achachicala,mercado,Periférica,-16.475438,-68.149449,,w514357970,ok
-villa_fatima,Mercado Villa Fátima,mercado,Periférica,-16.480468,-68.121167,,w329965254,ok
-quince_abril,Mercado 15 de Abril,mercado,Periférica,-16.476640,-68.118157,,w868950918,ok
-las_delicias,Mercado Las Delicias,mercado,Periférica,-16.476928,-68.123599,,w768333282,ok
-kollasuyo,Mercado Kollasuyo,mercado,San Antonio,-16.495126,-68.116615,,w253273638,ok
-teofilo_miranda,Mercado Teófilo Miranda,mercado,San Antonio,-16.497223,-68.116278,,n3416444808,ok
-modelo_nuestra_senora,Mercado Modelo Nuestra Señora de La Paz,mercado,San Antonio,-16.495539,-68.102878,,w334573996,ok
-san_juan,Mercado San Juan,mercado,San Antonio,-16.491097,-68.104007,,w457809755,ok
-pampahasi,Mercado Pampahasi 10 de Enero,mercado,San Antonio,-16.501579,-68.104440,,w162160265,ok
-alto_san_antonio,Mercado Alto San Antonio,mercado,San Antonio,-16.498080,-68.108423,,w1201741447,ok
-zenobio_lopez,Mercado Campesino Zenobio López,mercado,San Antonio,-16.506226,-68.115294,,w601079725,ok
-villa_armonia,Mercado Villa Armonía,mercado,San Antonio,-16.508713,-68.110556,,n3416921354,ok
-kupini,Mercado de Kupini,mercado,San Antonio,-16.508997,-68.099960,,w549419742,ok
-san_isidro,Mercado de San Isidro,mercado,San Antonio,-16.510938,-68.106124,,w549730654,ok
-ocho_septiembre,Mercado 8 de Septiembre,mercado,Sur,-16.516951,-68.113564,,w334539979,ok
-alto_obrajes,Mercado de Alto Obrajes,mercado,Sur,-16.523593,-68.104014,,w440072004,ok
-modelo_16_julio,Mercado Modelo 16 de Julio,mercado,Sur,-16.529880,-68.102474,,w439810941,ok
-catorce_septiembre,Mercado 14 de Septiembre,mercado,Sur,-16.528443,-68.099604,,n11050401683,ok
-alto_seguencoma,Mercado de Alto Seguencoma,mercado,Sur,-16.533939,-68.104161,,w514346651,ok
-virgen_nueves,Mercado Virgen de las Nueves,mercado,Sur,-16.516182,-68.084367,,w859447051,confirmar_Nieves_o_Nueves
-modelo_irpavi,Mercado Modelo de Irpavi,mercado,Sur,-16.524690,-68.087266,,w857004478,ok
-modelo_achumani,Mercado Modelo de Achumani,mercado,Sur,-16.530736,-68.073594,,w105591446,ok
-los_pinos,Mercado Los Pinos,mercado,Sur,-16.541163,-68.072524,,w845210606,ok
-la_merced,Mercado La Merced,mercado,Sur,-16.542087,-68.058045,,w454650840,ok
-veinticuatro_enero,Mercado 24 de Enero,mercado,Sur,-16.537104,-68.048408,,w296769155,ok
-ovejuyo,Mercado de Ovejuyo,mercado,Sur,-16.534222,-68.038116,,w430247409,ok
-las_cholas,Mercado Las Cholas,mercado,Sur,-16.544733,-68.092378,,w431568373,ok
-chicani,Mercado Soris Kora de Chicani,mercado,Sur,-16.500521,-68.082198,,n4379563532,macrodistrito_dudoso_probable_Hampaturi
-hipermaxi_sopocachi,Hipermaxi Sopocachi,supermercado,Cotahuma,-16.509439,-68.127925,,n767617231,ok
-hipermaxi_miraflores,Hipermaxi Miraflores,supermercado,Centro,-16.496182,-68.120448,,n2045415700,ok
-hipermaxi_arce,Hipermaxi Avenida Arce,supermercado,Centro,-16.508975,-68.122995,,n5760486839,ok
-hipermaxi_obrajes,Hipermaxi Obrajes,supermercado,Sur,-16.528313,-68.103342,,w372054111,ok
-hipermaxi_ballivian,Hipermaxi Calacoto Ballivián,supermercado,Sur,-16.538257,-68.080383,,w351547114,ok
-hipermaxi_achumani,Hipermaxi Achumani,supermercado,Sur,-16.518851,-68.062058,,w365104169,ok
-hipermaxi_costanera_sur,Hipermaxi Costanera (Achumani),supermercado,Sur,-16.545761,-68.070011,,w834091759,confirmar_barrio
-hipermaxi_costanera_obrajes,Hipermaxi Costanera (Obrajes),supermercado,Sur,-16.545346,-68.091130,,n10974264306,confirmar_barrio
-hipermaxi_chasquipampa,Hipermaxi Chasquipampa,supermercado,Sur,-16.540957,-68.057437,,n10927005512,duplicado_osm_fusionado_con_n11165113607
-ketal_plaza_espana,Ketal Express Plaza España,supermercado,Cotahuma,-16.514544,-68.129027,,n767618112,ok
-ketal_cotahuma,Ketal Sopocachi,supermercado,Cotahuma,-16.501668,-68.135871,,n5712450233,confirmar_barrio
-ketal_republica,Ketal Avenida República,supermercado,Max Paredes,-16.492262,-68.144836,,n5491718223,ok
-ketal_calacoto_15,Ketal Calacoto Calle 15,supermercado,Sur,-16.539314,-68.083925,,n1208365165,ok
-ketal_calacoto_21,Ketal Calacoto Calle 21,supermercado,Sur,-16.540441,-68.078032,,n1598894181,ok
-ketal_san_miguel,Ketal San Miguel,supermercado,Sur,-16.533800,-68.087053,,w439924320,duplicado_osm_fusionado_con_n4376024110
-ketal_obrajes,Ketal Obrajes,supermercado,Sur,-16.529130,-68.101787,,w439830838,ok
-ketal_achumani,Ketal Achumani,supermercado,Sur,-16.534672,-68.071902,,w846263517,ok
-fidalga_centro,Fidalga Centro,supermercado,Centro,-16.496699,-68.132526,,n4925402221,ok
-fidalga_sanchez_lima,Supermercado Fidalga Sánchez Lima,supermercado,Cotahuma,-16.510590,-68.127996,,w827221171,ok
-zumarket_german_busch,ZuMarket Germán Busch,supermercado,Centro,-16.502555,-68.121272,,w439091008,ok
-emapa_camacho,EMAPA Avenida Camacho,supermercado,Centro,-16.500028,-68.132075,,n5796476453,ok
-makro_centro,Makro,supermercado,Centro,-16.493233,-68.144270,,n11935477269,mayorista
+codigo,nombre,tipo,macrodistrito,latitud,longitud,codigo_padre,osm_id,revision,notas
+rodriguez,Mercado Rodríguez,mercado,Cotahuma,-16.500192,-68.138992,,w733480376,ok,
+rodriguez_cubierto,Mercado Rodríguez - sector cubierto,mercado,Cotahuma,-16.500676,-68.139072,rodriguez,w733480381,confirmar_en_campo,"polígono interior sin nombre en OSM; se asume sector cubierto del Mercado Rodríguez. Es mercado y no tienda porque un sector agrupa muchos puestos y debe publicar rango, no precio único"
+lanza,Mercado Lanza,mercado,Centro,-16.494701,-68.137462,,w194362248,ok,
+camacho,Mercado Camacho,mercado,Centro,-16.500624,-68.131153,,w187671475,ok,
+yungas,Mercado Yungas,mercado,Centro,-16.497049,-68.129270,,w264710813,ok,
+haiti,Mercado Haití,mercado,Centro,-16.490882,-68.122594,,w437094229,ok,
+miraflores,Mercado Miraflores,mercado,Centro,-16.501255,-68.121763,,w366594547,ok,
+la_bolita,Mercado La Bolita,mercado,Centro,-16.503306,-68.128234,,w539277526,ok,
+garcilaso,Mercado Garcilaso de la Vega,mercado,Centro,-16.494231,-68.143206,,w739478591,ok,
+belen,Mercado Belén,mercado,Cotahuma,-16.500781,-68.139492,,w444755647,ok,
+uruguay,Mercado Uruguay,mercado,Max Paredes,-16.497319,-68.143753,,w178471709,ok,
+frutas,Mercado de Frutas,mercado,Max Paredes,-16.498268,-68.141599,,w706477944,confirmar_en_campo,a 350 m del Mercado Rodríguez; falta confirmar en campo si es independiente o un sector. No se le pone codigo_padre sin verificar porque cambia cómo se agregan los precios
+el_tejar,Mercado El Tejar,mercado,Max Paredes,-16.495304,-68.152048,,w440996918,ok,
+las_nieves,Mercado Las Nieves El Tejar,mercado,Max Paredes,-16.497113,-68.157397,,w655405977,ok,
+calatayud,Mercado Calatayud,mercado,Max Paredes,-16.495357,-68.147632,,w441105317,ok,
+pescado,Mercado de Pescado,mercado,Max Paredes,-16.494872,-68.153228,,w385784863,ok,
+alto_mariscal,Mercado Alto Mariscal Santa Cruz,mercado,Max Paredes,-16.493025,-68.160383,,w441015612,ok,
+bajo_mariscal,Mercado Bajo Mariscal Santa Cruz,mercado,Max Paredes,-16.492388,-68.158442,,n5063426607,ok,
+san_jose,Mercado San José,mercado,Max Paredes,-16.489227,-68.158613,,w464989259,ok,
+munaypata,Mercado Santiago de Munaypata,mercado,Max Paredes,-16.489954,-68.156268,,w653401253,ok,
+pura_pura,Mercado Popular Pura Pura,mercado,Max Paredes,-16.487788,-68.150917,,n4614006192,ok,
+sagrado_corazon,Mercado Sagrado Corazón de Jesús,mercado,Max Paredes,-16.500786,-68.153142,,w440055671,ok,
+vicente_ochoa,Mercado Vicente Ochoa,mercado,Max Paredes,-16.498065,-68.144327,,n13855241830,ok,
+hinojosa,Mercado Hinojosa,mercado,Cotahuma,-16.503377,-68.144499,,n1664233426,ok,
+nueva_potosi,Mercado Villa Nueva Potosí,mercado,Cotahuma,-16.505414,-68.149391,,w767989086,ok,
+sopocachi,Mercado Sopocachi,mercado,Cotahuma,-16.509482,-68.129690,,n3320737271,ok,
+sanchez_lima,Mercado Sánchez Lima,mercado,Cotahuma,-16.507992,-68.136756,,w602863072,ok,
+bolivar_cotahuma,Mercado Bolívar (Cotahuma),mercado,Cotahuma,-16.513918,-68.141159,,w441520041,ok,homónimo legítimo de bolivar_periferica; este está en Tembladerani
+strongest,Mercado Strongest,mercado,Cotahuma,-16.515814,-68.139969,,w467190245,ok,
+cuatro_abril,Mercado 4 de Abril,mercado,Cotahuma,-16.522215,-68.145779,,w1298904246,ok,
+raul_salmon,Mercado Raúl Salmón,mercado,Cotahuma,-16.528233,-68.123529,,w446398145,ok,
+vergel_llojeta,Mercado Vergel Llojeta,mercado,Cotahuma,-16.534251,-68.140350,,w442132335,ok,
+bolivar_periferica,Mercado Bolívar (Periférica),mercado,Periférica,-16.493630,-68.131845,,w756022056,ok,"macrodistrito asignado por inclusión en el polígono oficial de nivel 9, no a mano. El punto está cerca del límite Centro/Periférica"
+killi_killi,Mercado Killi Killi,mercado,Periférica,-16.494515,-68.127408,,w493514594,ok,
+calama,Mercado Calama,mercado,Periférica,-16.489733,-68.137226,,w525276109,ok,
+antofagasta,Mercado Antofagasta,mercado,Periférica,-16.487688,-68.140624,,w564873423,ok,
+maracana,Mercado Maracaná,mercado,Periférica,-16.485627,-68.137137,,w373425405,ok,
+german_busch,Mercado Germán Busch,mercado,Periférica,-16.482154,-68.139880,,w130069966,ok,OSM escribe 'German Buch'; corregido a Germán Busch
+achachicala,Mercado de Achachicala,mercado,Periférica,-16.475438,-68.149449,,w514357970,ok,
+villa_fatima,Mercado Villa Fátima,mercado,Periférica,-16.480468,-68.121167,,w329965254,ok,
+quince_abril,Mercado 15 de Abril,mercado,Periférica,-16.476640,-68.118157,,w868950918,ok,
+las_delicias,Mercado Las Delicias,mercado,Periférica,-16.476928,-68.123599,,w768333282,ok,
+kollasuyo,Mercado Kollasuyo,mercado,San Antonio,-16.495126,-68.116615,,w253273638,ok,
+teofilo_miranda,Mercado Teófilo Miranda,mercado,San Antonio,-16.497223,-68.116278,,n3416444808,ok,
+modelo_nuestra_senora,Mercado Modelo Nuestra Señora de La Paz,mercado,San Antonio,-16.495539,-68.102878,,w334573996,ok,
+san_juan,Mercado San Juan,mercado,San Antonio,-16.491097,-68.104007,,w457809755,ok,
+pampahasi,Mercado Pampahasi 10 de Enero,mercado,San Antonio,-16.501579,-68.104440,,w162160265,ok,
+alto_san_antonio,Mercado Alto San Antonio,mercado,San Antonio,-16.498080,-68.108423,,w1201741447,ok,
+zenobio_lopez,Mercado Campesino Zenobio López,mercado,San Antonio,-16.506226,-68.115294,,w601079725,ok,
+villa_armonia,Mercado Villa Armonía,mercado,San Antonio,-16.508713,-68.110556,,n3416921354,ok,
+kupini,Mercado de Kupini,mercado,San Antonio,-16.508997,-68.099960,,w549419742,ok,
+san_isidro,Mercado de San Isidro,mercado,San Antonio,-16.510938,-68.106124,,w549730654,ok,
+ocho_septiembre,Mercado 8 de Septiembre,mercado,Sur,-16.516951,-68.113564,,w334539979,ok,
+alto_obrajes,Mercado de Alto Obrajes,mercado,Sur,-16.523593,-68.104014,,w440072004,ok,
+modelo_16_julio,Mercado Modelo 16 de Julio,mercado,Sur,-16.529880,-68.102474,,w439810941,ok,
+catorce_septiembre,Mercado 14 de Septiembre,mercado,Sur,-16.528443,-68.099604,,n11050401683,ok,
+alto_seguencoma,Mercado de Alto Seguencoma,mercado,Sur,-16.533939,-68.104161,,w514346651,ok,
+virgen_nieves,Mercado Virgen de las Nieves,mercado,Sur,-16.516182,-68.084367,,w859447051,ok,OSM escribe 'Virgen de las Nueves'; corregido a Nieves
+modelo_irpavi,Mercado Modelo de Irpavi,mercado,Sur,-16.524690,-68.087266,,w857004478,ok,
+modelo_achumani,Mercado Modelo de Achumani,mercado,Sur,-16.530736,-68.073594,,w105591446,ok,
+los_pinos,Mercado Los Pinos,mercado,Sur,-16.541163,-68.072524,,w845210606,ok,
+la_merced,Mercado La Merced,mercado,Sur,-16.542087,-68.058045,,w454650840,ok,
+veinticuatro_enero,Mercado 24 de Enero,mercado,Sur,-16.537104,-68.048408,,w296769155,ok,
+ovejuyo,Mercado de Ovejuyo,mercado,Sur,-16.534222,-68.038116,,w430247409,ok,
+las_cholas,Mercado Las Cholas,mercado,Sur,-16.544733,-68.092378,,w431568373,ok,
+chicani,Mercado Soris Kora de Chicani,mercado,Sur,-16.500521,-68.082198,,n4379563532,ok,"OSM nivel 9 solo define los 7 macrodistritos urbanos; Hampaturi y Zongo no existen como polígono, por eso el punto cae en Sur"
+hipermaxi_sopocachi,Hipermaxi Sopocachi,supermercado,Cotahuma,-16.509439,-68.127925,,n767617231,ok,
+hipermaxi_miraflores,Hipermaxi Miraflores,supermercado,Centro,-16.496182,-68.120448,,n2045415700,ok,
+hipermaxi_arce,Hipermaxi Avenida Arce,supermercado,Centro,-16.508975,-68.122995,,n5760486839,ok,
+hipermaxi_obrajes,Hipermaxi Obrajes,supermercado,Sur,-16.528313,-68.103342,,w372054111,ok,
+hipermaxi_ballivian,Hipermaxi Calacoto Ballivián,supermercado,Sur,-16.538257,-68.080383,,w351547114,ok,
+hipermaxi_achumani,Hipermaxi Achumani,supermercado,Sur,-16.518851,-68.062058,,w365104169,ok,
+hipermaxi_costanera_este,Hipermaxi Avenida Costanera (este),supermercado,Sur,-16.545761,-68.070011,,w834091759,confirmar_en_campo,no es Achumani; barrio sin confirmar. Está a 2 km de hipermaxi_costanera_oeste: verificar en el mapa si son dos sucursales o un duplicado de OSM
+hipermaxi_costanera_oeste,Hipermaxi Avenida Costanera (oeste),supermercado,Sur,-16.545346,-68.091130,,n10974264306,confirmar_en_campo,"no es Obrajes; barrio sin confirmar, por eso el nombre usa la avenida y no un barrio inventado"
+hipermaxi_chasquipampa,Hipermaxi Chasquipampa,supermercado,Sur,-16.540957,-68.057437,,n10927005512,ok,"fusionado con el duplicado OSM n11165113607, a 40 m"
+ketal_plaza_espana,Ketal Express Plaza España,supermercado,Cotahuma,-16.514544,-68.129027,,n767618112,ok,
+ketal_san_pedro,Ketal San Pedro,supermercado,Cotahuma,-16.501668,-68.135871,,n5712450233,ok,"el barrio es San Pedro, no Sopocachi; el macrodistrito Cotahuma viene del polígono oficial y no se toca"
+ketal_republica,Ketal Avenida República,supermercado,Max Paredes,-16.492262,-68.144836,,n5491718223,ok,
+ketal_calacoto_15,Ketal Calacoto Calle 15,supermercado,Sur,-16.539314,-68.083925,,n1208365165,ok,
+ketal_calacoto_21,Ketal Calacoto Calle 21,supermercado,Sur,-16.540441,-68.078032,,n1598894181,ok,
+ketal_san_miguel,Ketal San Miguel,supermercado,Sur,-16.533800,-68.087053,,w439924320,ok,"fusionado con el duplicado OSM n4376024110, mismo punto"
+ketal_obrajes,Ketal Obrajes,supermercado,Sur,-16.529130,-68.101787,,w439830838,ok,
+ketal_achumani,Ketal Achumani,supermercado,Sur,-16.534672,-68.071902,,w846263517,ok,
+fidalga_centro,Fidalga Centro,supermercado,Centro,-16.496699,-68.132526,,n4925402221,ok,
+fidalga_sanchez_lima,Supermercado Fidalga Sánchez Lima,supermercado,Cotahuma,-16.510590,-68.127996,,w827221171,ok,
+zumarket_german_busch,ZuMarket Germán Busch,supermercado,Centro,-16.502555,-68.121272,,w439091008,ok,
+emapa_camacho,EMAPA Avenida Camacho,supermercado,Centro,-16.500028,-68.132075,,n5796476453,ok,
+makro_centro,Makro,supermercado,Centro,-16.493233,-68.144270,,n11935477269,decidir_alcance,mayorista. Falta decidir si entra en la comparación de consumidor final; probablemente necesite un tipo propio `mayorista`

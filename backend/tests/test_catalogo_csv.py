@@ -16,7 +16,7 @@ PUNTOS_VENTA = CATALOGO / "puntos_venta.csv"
 
 COLUMNAS = [
     "codigo", "nombre", "tipo", "macrodistrito",
-    "latitud", "longitud", "codigo_padre", "osm_id", "revision",
+    "latitud", "longitud", "codigo_padre", "osm_id", "revision", "notas",
 ]
 TIPOS = {"mercado", "supermercado", "minimarket", "tienda"}
 MACRODISTRITOS = {
@@ -111,13 +111,15 @@ def test_la_jerarquia_no_tiene_ciclos(filas):
             actual = padre_de.get(actual, "")
 
 
-def test_un_local_hijo_no_puede_ser_un_mercado(filas):
-    """Un mercado contiene locales; un mercado no vive dentro de otro."""
-    infracciones = [
-        f["codigo"] for f in filas
-        if f["codigo_padre"] and f["tipo"] == "mercado"
+def test_la_jerarquia_no_pasa_de_dos_niveles(filas):
+    """Un local pertenece a un mercado. Un local dentro de un local dentro
+    de un mercado no es un modelo, es un error de carga."""
+    padre_de = {f["codigo"]: f["codigo_padre"] for f in filas}
+    nietos = [
+        c for c, p in padre_de.items()
+        if p and padre_de.get(p)
     ]
-    assert not infracciones, f"mercados con padre: {infracciones}"
+    assert not nietos, f"jerarquía de más de dos niveles: {nietos}"
 
 
 def test_solo_los_mercados_son_padres(filas):
