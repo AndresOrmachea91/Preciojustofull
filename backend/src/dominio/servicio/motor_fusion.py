@@ -12,7 +12,7 @@ from __future__ import annotations
 import statistics as est
 from datetime import datetime, timezone
 
-from src.dominio.excepciones import SinObservaciones
+from src.dominio.excepciones import NivelesNoComparables, SinObservaciones
 from src.dominio.modelo.observacion import Observacion
 from src.dominio.modelo.precio_consolidado import PrecioConsolidado, RangoPrecio
 from src.dominio.valor import NivelConfianza, UnidadCanonica
@@ -30,6 +30,12 @@ class MotorFusion:
     def consolidar(self, observaciones: list[Observacion]) -> PrecioConsolidado:
         if not observaciones:
             raise SinObservaciones("No hay observaciones para consolidar")
+
+        # Un precio mayorista y uno de consumidor final no miden lo mismo:
+        # promediarlos daría un número que no existe en ningún puesto.
+        niveles = {o.nivel.value for o in observaciones}
+        if len(niveles) > 1:
+            raise NivelesNoComparables(niveles)
 
         base = observaciones[0]
         validas = [o for o in observaciones if o.precio.unidad.es_conocida()]

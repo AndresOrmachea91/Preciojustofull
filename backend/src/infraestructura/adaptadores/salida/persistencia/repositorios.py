@@ -54,6 +54,8 @@ def _a_mercado(f: MercadoTabla) -> Mercado:
         latitud=f.latitud,
         longitud=f.longitud,
         factor_mercado=f.factor_mercado,
+        macrodistrito=f.macrodistrito or "",
+        codigo_padre=f.codigo_padre,
     )
 
 
@@ -147,6 +149,8 @@ class MercadosPostgres(_Base):
             fila.latitud = mercado.latitud
             fila.longitud = mercado.longitud
             fila.factor_mercado = mercado.factor_mercado
+            fila.macrodistrito = mercado.macrodistrito
+            fila.codigo_padre = mercado.codigo_padre
 
 
 class ObservacionesPostgres(_Base):

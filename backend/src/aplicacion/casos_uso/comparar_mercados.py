@@ -32,6 +32,10 @@ class CompararMercadosCasoUso:
         resultado: list[PrecioEnMercado] = []
         for mercado in self._mercados.listar(zona):
             obs = self._observaciones.buscar(codigo_producto, mercado.codigo)
+            # Un mayorista solo se describe con precios mayoristas y un
+            # puesto con precios de consumidor final: el tipo del punto de
+            # venta decide qué observaciones le pertenecen.
+            obs = [o for o in obs if o.nivel is mercado.nivel_precio]
             if not obs:
                 continue   # un mercado sin datos se omite, no se inventa
             try:

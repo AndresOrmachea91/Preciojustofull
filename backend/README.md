@@ -39,9 +39,10 @@ Hay una prueba que lo verifica automáticamente: `tests/test_arquitectura.py`.
         adaptadores/
           entrada/
             api/        FastAPI: rutas, esquemas, inyección de dependencias
-            cli/        el recolector como comando
+            cli/        el recolector y la siembra del catálogo como comandos
           salida/
             memoria/    repositorios en memoria (para pruebas y para arrancar)
+            catalogo/   lector del CSV de puntos de venta
             fuentes/    un adaptador por cada fuente de precios
             persistencia/  SQLAlchemy sobre PostgreSQL
     tests/
@@ -99,6 +100,18 @@ es preferible fallar ruidosamente antes que perder días de serie en silencio.
 Guardar es **idempotente** —hay una restricción de unicidad por fuente,
 producto, mercado y fecha—, así que se puede correr tres veces al día sin
 duplicar nada.
+
+## La siembra del catálogo
+
+    python -m src.infraestructura.adaptadores.entrada.cli.sembrar --dry-run
+    python -m src.infraestructura.adaptadores.entrada.cli.sembrar
+
+Lleva `datos/catalogo/puntos_venta.csv` a la tabla `mercado`, con la
+jerarquía (un sector apunta a su mercado por `codigo_padre`) y el
+macrodistrito. Es **idempotente**: inserta lo que falta y actualiza lo que
+cambió, por código. Nunca borra, porque las observaciones ya apuntan a esos
+códigos, y no pisa el `factor_mercado` aprendido en campo. `--dry-run`
+reporta cuántos insertaría, actualizaría y dejaría igual sin tocar nada.
 
 ## Postman
 

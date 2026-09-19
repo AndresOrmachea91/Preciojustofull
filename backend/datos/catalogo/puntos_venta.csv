@@ -86,4 +86,4 @@ fidalga_centro,Fidalga Centro,supermercado,Centro,-16.496699,-68.132526,,n492540
 fidalga_sanchez_lima,Supermercado Fidalga Sánchez Lima,supermercado,Cotahuma,-16.510590,-68.127996,,w827221171,ok,
 zumarket_german_busch,ZuMarket Germán Busch,supermercado,Centro,-16.502555,-68.121272,,w439091008,ok,
 emapa_camacho,EMAPA Avenida Camacho,supermercado,Centro,-16.500028,-68.132075,,n5796476453,ok,
-makro_centro,Makro,supermercado,Centro,-16.493233,-68.144270,,n11935477269,decidir_alcance,mayorista. Falta decidir si entra en la comparación de consumidor final; probablemente necesite un tipo propio `mayorista`
+makro_centro,Makro,mayorista,Centro,-16.493233,-68.144270,,n11935477269,decidir_alcance,tipo mayorista: el dominio no lo compara con precios de consumidor final. Falta decidir si se muestra en la comparación o solo alimenta la serie mayorista

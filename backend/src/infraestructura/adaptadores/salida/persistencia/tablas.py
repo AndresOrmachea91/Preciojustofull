@@ -12,7 +12,7 @@ en la integración continua, sin levantar un servidor.
 from __future__ import annotations
 
 from sqlalchemy import (
-    Column, DateTime, Float, Integer, String, UniqueConstraint, Index,
+    Column, DateTime, Float, ForeignKey, Integer, String, UniqueConstraint, Index,
     MetaData, Table,
 )
 from sqlalchemy.orm import declarative_base
@@ -38,11 +38,15 @@ class MercadoTabla(Base):
     nombre = Column(String(255), nullable=False)
     tipo = Column(String(32), nullable=False, default="mercado")
     zona = Column(String(128), nullable=False, default="")
+    macrodistrito = Column(String(64), nullable=False, default="")
     latitud = Column(Float, nullable=True)
     longitud = Column(Float, nullable=True)
     # Cuánto se aparta este punto de venta de la referencia de la ciudad.
     # Se aprende del levantamiento de campo.
     factor_mercado = Column(Float, nullable=False, default=1.0)
+    # Autorreferencia: el sector de un mercado apunta al mercado. Nullable
+    # porque la mayoría de los puntos de venta no tiene padre.
+    codigo_padre = Column(String(64), ForeignKey("mercado.codigo"), nullable=True)
 
 
 class ObservacionTabla(Base):

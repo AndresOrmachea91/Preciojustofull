@@ -18,7 +18,7 @@ COLUMNAS = [
     "codigo", "nombre", "tipo", "macrodistrito",
     "latitud", "longitud", "codigo_padre", "osm_id", "revision", "notas",
 ]
-TIPOS = {"mercado", "supermercado", "minimarket", "tienda"}
+TIPOS = {"mercado", "supermercado", "minimarket", "tienda", "mayorista"}
 MACRODISTRITOS = {
     "Centro", "Cotahuma", "Max Paredes", "Periférica",
     "San Antonio", "Sur", "Mallasa",

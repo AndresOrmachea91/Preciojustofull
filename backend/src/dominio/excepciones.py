@@ -26,3 +26,22 @@ class UnidadDesconocida(ErrorDominio):
 class SinObservaciones(ErrorDominio):
     """No hay ninguna observación para consolidar un precio."""
 
+
+
+class JerarquiaInvalida(ErrorDominio):
+    """La relación padre-hijo entre puntos de venta rompe una invariante."""
+
+    def __init__(self, infracciones: list[str]):
+        self.infracciones = list(infracciones)
+        super().__init__("Jerarquía inválida: " + "; ".join(self.infracciones))
+
+
+class NivelesNoComparables(ErrorDominio):
+    """Se intentó mezclar precios mayoristas con precios de consumidor final."""
+
+    def __init__(self, niveles: set[str]):
+        self.niveles = niveles
+        super().__init__(
+            "No se pueden consolidar observaciones de niveles distintos: "
+            + ", ".join(sorted(niveles))
+        )

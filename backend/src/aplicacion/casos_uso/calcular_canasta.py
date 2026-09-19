@@ -42,6 +42,7 @@ class CalcularCanastaCasoUso:
 
             for item in items:
                 obs = self._observaciones.buscar(item.codigo_producto, mercado.codigo)
+                obs = [o for o in obs if o.nivel is mercado.nivel_precio]
                 if not obs:
                     faltantes.append(item.codigo_producto)
                     continue

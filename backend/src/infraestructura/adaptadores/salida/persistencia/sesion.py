@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from contextlib import contextmanager
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -40,9 +40,28 @@ def crear_motor(url: str, eco: bool = False) -> Engine:
     return create_engine(url, **opciones)
 
 
+# Columnas agregadas después de que la base ya existía. create_all crea
+# tablas nuevas pero no toca las existentes, así que se completan a mano.
+# Es una migración mínima; si el esquema sigue creciendo, toca Alembic.
+_COLUMNAS_AGREGADAS = {
+    "mercado": {
+        "macrodistrito": "VARCHAR(64) NOT NULL DEFAULT ''",
+        "codigo_padre": "VARCHAR(64) NULL REFERENCES mercado(codigo)",
+    },
+}
+
+
 def crear_esquema(motor: Engine) -> None:
-    """Crea las tablas que falten. Es idempotente."""
+    """Crea las tablas y columnas que falten. Es idempotente."""
     metadata.create_all(motor)
+    inspector = inspect(motor)
+    with motor.begin() as conexion:
+        for tabla, columnas in _COLUMNAS_AGREGADAS.items():
+            existentes = {c["name"] for c in inspector.get_columns(tabla)}
+            for nombre, definicion in columnas.items():
+                if nombre not in existentes:
+                    conexion.execute(text(f"ALTER TABLE {tabla} ADD COLUMN {nombre} {definicion}"))
+                    log.info("Columna %s.%s agregada", tabla, nombre)
     log.info("Esquema verificado")
 
 
