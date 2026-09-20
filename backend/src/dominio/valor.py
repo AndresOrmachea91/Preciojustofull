@@ -34,6 +34,24 @@ class NivelPrecio(str, Enum):
     MINORISTA = "minorista"
 
 
+class TipoPrecio(str, Enum):
+    """
+    Qué clase de precio es el que se observó. Un cartel no es lo mismo que
+    lo que se pagó después de regatear.
+    """
+
+    ANUNCIADO = "anunciado"     # el cartel o la lista
+    COTIZADO = "cotizado"       # lo que dijeron al preguntar
+    PAGADO = "pagado"           # lo que efectivamente se pagó
+    DESCONOCIDO = "desconocido" # la fuente no lo dice; marcador explícito, no un valor plausible
+
+
+# Marcador explícito para "no se sabe qué variedad". No es None: una
+# observación sin variedad conocida sigue siendo una observación completa,
+# y el motor la trata como su propio grupo en vez de mezclarla con todas.
+VARIEDAD_DESCONOCIDA = "desconocida"
+
+
 class Ambito(str, Enum):
     """
     De qué lugar habla una observación.

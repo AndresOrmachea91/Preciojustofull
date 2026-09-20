@@ -28,7 +28,9 @@ from src.infraestructura.adaptadores.salida.persistencia.tablas import (
 from src.dominio.modelo import (
     Categoria, Fuente, Mercado, NivelPrecio, Observacion, Producto, TipoPuntoVenta,
 )
-from src.dominio.valor import Ambito, Dinero, Periodo, Unidad, UnidadCanonica
+from src.dominio.valor import (
+    VARIEDAD_DESCONOCIDA, Ambito, Dinero, Periodo, TipoPrecio, Unidad, UnidadCanonica,
+)
 
 log = logging.getLogger(__name__)
 
@@ -71,14 +73,19 @@ def _a_observacion(f: ObservacionTabla) -> Observacion:
         capturada_en=f.capturada_en,
         reputacion_informante=f.reputacion_informante,
         ambito=Ambito(f.ambito or "punto_venta"),
+        cantidad=f.cantidad if f.cantidad else 1.0,
+        variedad=f.variedad or VARIEDAD_DESCONOCIDA,
+        fecha_observacion=f.fecha_observacion,
+        tipo_precio=TipoPrecio(f.tipo_precio or "desconocido"),
+        evidencia=f.evidencia,
     )
 
 
 def _de_observacion(o: Observacion) -> dict:
     canonico, canonica = None, None
-    if o.precio.unidad.es_conocida():
-        canonico, unidad = o.precio.por_unidad_canonica()
-        canonica = unidad.value
+    if o.es_convertible:
+        canonico = o.precio_canonico()
+        canonica = o.unidad_canonica.value
     return {
         "fuente": o.fuente.value,
         "nivel": o.nivel.value,
@@ -89,8 +96,13 @@ def _de_observacion(o: Observacion) -> dict:
         "dia": o.periodo.dia,
         "precio_monto": o.precio.monto,
         "unidad_texto": o.precio.unidad.texto,
+        "cantidad": o.cantidad,
         "precio_canonico": canonico,
         "unidad_canonica": canonica,
+        "variedad": o.variedad,
+        "fecha_observacion": o.fecha_observacion,
+        "tipo_precio": o.tipo_precio.value,
+        "evidencia": o.evidencia,
         "reputacion_informante": o.reputacion_informante,
         "ambito": o.ambito.value,
         "capturada_en": o.capturada_en,

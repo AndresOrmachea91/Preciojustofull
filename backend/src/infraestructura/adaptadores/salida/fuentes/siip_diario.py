@@ -7,14 +7,13 @@ El núcleo no sabe nada de eso: recibe Observaciones y punto.
 from __future__ import annotations
 import re
 import logging
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from bs4 import BeautifulSoup
 
 from src.infraestructura.adaptadores.salida.fuentes.cliente_resiliente import ClienteResiliente
-from src.dominio.excepciones import UnidadDesconocida
 from src.dominio.modelo import Fuente, Observacion
-from src.dominio.valor import Dinero, Periodo, Unidad
+from src.dominio.valor import Dinero, Periodo, TipoPrecio, Unidad
 
 log = logging.getLogger(__name__)
 
@@ -50,9 +49,6 @@ class FuenteSiipDiario:
         self._cliente = cliente or ClienteResiliente()
         self._cliente.nombre_fuente = self.nombre
         self._departamento = departamento   # 2 = La Paz
-        # Filas que no se pudieron traducir, con su motivo. No se cuelan:
-        # un precio por "caja" sin peso conocido no es un precio por kilo.
-        self.rechazadas: list[tuple[str, str]] = []
 
     @property
     def nombre(self) -> str:
@@ -99,10 +95,9 @@ class FuenteSiipDiario:
             if not ciudad or ciudad.lower().startswith("promedio"):
                 continue   # el promedio se recalcula, no se importa
             if not Unidad(unidad).es_conocida():
-                motivo = str(UnidadDesconocida(unidad))
-                self.rechazadas.append((f"{codigo_producto}/{ciudad}", motivo))
-                log.warning("Fila rechazada (%s, %s): %s", codigo_producto, ciudad, motivo)
-                continue
+                # Se guarda igual, marcada como no convertible por la
+                # entidad: queda fuera de los cálculos por unidad canónica.
+                log.warning("Unidad no convertible en %s/%s: %r", codigo_producto, ciudad, unidad)
 
             for col, (anio, mes, dia) in periodos.items():
                 if col >= len(celdas) or anio is None:
@@ -125,6 +120,10 @@ class FuenteSiipDiario:
                         precio=precio,
                         capturada_en=ahora,
                         ambito=Fuente.SIIP_DIARIO.ambito,
+                        # La tabla tiene una columna por día: esa es la
+                        # fecha real. Las columnas mensuales no la tienen.
+                        fecha_observacion=date(anio, mes, dia) if (mes and dia) else None,
+                        tipo_precio=TipoPrecio.COTIZADO,
                     )
                 )
         return salida

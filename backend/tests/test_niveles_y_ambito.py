@@ -6,11 +6,11 @@ cotiza CONSUMIDOR FINAL (el mismo arroz por libra). Además las dos publican
 UN valor por ciudad, no por mercado. Estas pruebas verifican que el camino
 fuente -> observación -> motor respete las dos cosas.
 """
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 import pytest
 
-from src.dominio.excepciones import NivelesNoComparables, ReferenciaNoEsMedicion, UnidadDesconocida
+from src.dominio.excepciones import NivelesNoComparables, ReferenciaNoEsMedicion
 from src.dominio.modelo import Fuente, Mercado, NivelPrecio, Observacion, TipoPuntoVenta
 from src.dominio.servicio.motor_fusion import MotorFusion
 from src.dominio.valor import Ambito, Dinero, NivelConfianza, Periodo, Unidad, UnidadCanonica
@@ -73,18 +73,23 @@ HTML_DIARIO = """
 """
 
 
-def test_el_diario_produce_mayorista_de_ambito_ciudad_y_rechaza_lo_que_no_convierte():
+def test_el_diario_produce_mayorista_de_ambito_ciudad_y_marca_lo_que_no_convierte():
     fuente = FuenteSiipDiario(cliente=ClienteResiliente())
     obs = fuente._parsear(HTML_DIARIO, "5")
 
     assert obs and all(o.nivel is NivelPrecio.MAYORISTA for o in obs)
     assert all(o.ambito is Ambito.CIUDAD for o in obs)
-    assert {o.codigo_mercado for o in obs} == {"la_paz"}
-    assert all(o.precio.unidad.texto == "qq." for o in obs)
-    # "CAJA" sin peso no es un precio por kilo: se rechaza con motivo.
-    assert len(fuente.rechazadas) == 1
-    assert fuente.rechazadas[0][0] == "5/Cochabamba"
-    assert "CAJA" in fuente.rechazadas[0][1]
+    la_paz = [o for o in obs if o.codigo_mercado == "la_paz"]
+    cochabamba = [o for o in obs if o.codigo_mercado == "cochabamba"]
+    assert all(o.precio.unidad.texto == "qq." and o.es_convertible for o in la_paz)
+    # "CAJA" sin peso no es un precio por kilo: se CONSERVA tal cual, pero
+    # marcada como no convertible, fuera de todo cálculo por unidad canónica.
+    assert cochabamba and all(not o.es_convertible for o in cochabamba)
+    assert cochabamba[0].precio.unidad.texto == "CAJA"
+    assert cochabamba[0].unidad_canonica is None
+    # La fecha real sale de la columna del día; las columnas mensuales no la tienen.
+    assert {o.fecha_observacion for o in la_paz} == {None, date(2026, 7, 1), date(2026, 7, 2)}
+    assert all(o.fecha_observacion is not None for o in la_paz if o.periodo.es_diario)
 
 
 def test_el_ipc_produce_minorista_de_ambito_ciudad():
@@ -99,10 +104,12 @@ def test_el_ipc_produce_minorista_de_ambito_ciudad():
     fuente = FuenteSiipIpc(cliente=ClienteResiliente())
     obs = fuente._parsear(datos, "111030102")
 
-    assert len(obs) == 4
+    assert len(obs) == 6
     assert all(o.nivel is NivelPrecio.MINORISTA and o.ambito is Ambito.CIUDAD for o in obs)
-    assert {o.codigo_mercado for o in obs} == {"la_paz", "potosi"}
-    assert fuente.rechazadas == [("111030102/BENI", str(UnidadDesconocida("MANOJO")))]
+    assert {o.codigo_mercado for o in obs} == {"la_paz", "potosi", "beni"}
+    # "MANOJO" no convierte: se conserva marcada, sin fecha de día.
+    beni = [o for o in obs if o.codigo_mercado == "beni"]
+    assert beni and all(not o.es_convertible and o.fecha_observacion is None for o in beni)
 
 
 # --- el motor no mezcla niveles ni confunde referencia con medición ---------

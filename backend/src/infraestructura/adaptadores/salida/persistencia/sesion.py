@@ -53,7 +53,36 @@ _COLUMNAS_AGREGADAS = {
     },
     "observacion_precio": {
         "ambito": "VARCHAR(16) NOT NULL DEFAULT 'punto_venta'",
+        "cantidad": "FLOAT NOT NULL DEFAULT 1.0",
+        # Marcadores explícitos para lo histórico: no se sabe, y se dice.
+        "variedad": "VARCHAR(64) NOT NULL DEFAULT 'desconocida'",
+        "fecha_observacion": "DATE NULL",
+        "tipo_precio": "VARCHAR(16) NOT NULL DEFAULT 'desconocido'",
+        "evidencia": "VARCHAR(512) NULL",
     },
+}
+
+# Rellenos que se pueden hacer con honestidad sobre filas históricas. El
+# ámbito se deduce de la fuente (el SIIP siempre publica por ciudad). La
+# fecha de observación se recupera SOLO donde el propio dato la trae (el
+# periodo diario del SIIP tiene día); donde no, queda NULL. Nunca se
+# rellena con capturada_en.
+_AMBITO_POR_FUENTE = (
+    "UPDATE observacion_precio SET ambito = 'ciudad' "
+    "WHERE fuente IN ('siip_diario', 'siip_ipc') AND ambito <> 'ciudad'"
+)
+_RELLENOS_HISTORICOS = {
+    "sqlite": [
+        _AMBITO_POR_FUENTE,
+        "UPDATE observacion_precio SET fecha_observacion = "
+        "date(printf('%04d-%02d-%02d', anio, mes, dia)) "
+        "WHERE fecha_observacion IS NULL AND mes IS NOT NULL AND dia IS NOT NULL",
+    ],
+    "postgresql": [
+        _AMBITO_POR_FUENTE,
+        "UPDATE observacion_precio SET fecha_observacion = make_date(anio, mes, dia) "
+        "WHERE fecha_observacion IS NULL AND mes IS NOT NULL AND dia IS NOT NULL",
+    ],
 }
 
 
@@ -68,6 +97,10 @@ def crear_esquema(motor: Engine) -> None:
                 if nombre not in existentes:
                     conexion.execute(text(f"ALTER TABLE {tabla} ADD COLUMN {nombre} {definicion}"))
                     log.info("Columna %s.%s agregada", tabla, nombre)
+        for sentencia in _RELLENOS_HISTORICOS.get(motor.dialect.name, []):
+            rellenadas = conexion.execute(text(sentencia)).rowcount
+            if rellenadas:
+                log.info("Filas históricas completadas: %s", rellenadas)
     log.info("Esquema verificado")
 
 

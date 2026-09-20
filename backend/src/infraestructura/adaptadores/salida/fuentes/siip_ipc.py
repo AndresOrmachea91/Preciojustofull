@@ -10,9 +10,8 @@ import logging
 from datetime import datetime, timezone
 
 from src.infraestructura.adaptadores.salida.fuentes.cliente_resiliente import ClienteResiliente
-from src.dominio.excepciones import UnidadDesconocida
 from src.dominio.modelo import Fuente, Observacion
-from src.dominio.valor import Dinero, Periodo, Unidad
+from src.dominio.valor import Dinero, Periodo, TipoPrecio, Unidad
 
 log = logging.getLogger(__name__)
 
@@ -30,7 +29,6 @@ class FuenteSiipIpc:
         self._cliente = cliente or ClienteResiliente()
         self._cliente.nombre_fuente = self.nombre
         self._version = version
-        self.rechazadas: list[tuple[str, str]] = []
 
     @property
     def nombre(self) -> str:
@@ -71,12 +69,10 @@ class FuenteSiipIpc:
             ciudad = (fila.get("ciudad") or "").strip()
             unidad_texto = fila.get("unidad") or ""
             if not Unidad(unidad_texto).es_conocida():
-                motivo = str(UnidadDesconocida(unidad_texto))
-                self.rechazadas.append((f"{codigo_producto}/{ciudad}", motivo))
-                log.warning("Serie rechazada (%s, %s): %s", codigo_producto, ciudad, motivo)
-                continue
-            # El IPC cotiza una presentación concreta (por ejemplo 0,90 litros):
-            # primero hay que llevar el precio a una unidad comercial completa.
+                log.warning("Unidad no convertible en %s/%s: %r", codigo_producto, ciudad, unidad_texto)
+            # El IPC cotiza una presentación concreta ("Bs 75,87 por 760
+            # gramos"). Se conserva el par original con su cantidad; la
+            # entidad convierte.
             try:
                 cantidad = float(fila.get("cantidad") or 1) or 1.0
             except (TypeError, ValueError):
@@ -89,7 +85,7 @@ class FuenteSiipIpc:
                 if anio is None or not bruto:
                     continue
                 try:
-                    precio = Dinero(float(bruto) / cantidad, Unidad(unidad_texto))
+                    precio = Dinero(float(bruto), Unidad(unidad_texto))
                 except (TypeError, ValueError):
                     continue
                 salida.append(
@@ -103,6 +99,10 @@ class FuenteSiipIpc:
                         precio=precio,
                         capturada_en=ahora,
                         ambito=Fuente.SIIP_IPC.ambito,
+                        cantidad=cantidad,
+                        # Promedio mensual: el dato no trae un día.
+                        fecha_observacion=None,
+                        tipo_precio=TipoPrecio.COTIZADO,
                     )
                 )
         return salida

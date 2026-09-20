@@ -12,7 +12,7 @@ en la integración continua, sin levantar un servidor.
 from __future__ import annotations
 
 from sqlalchemy import (
-    Column, DateTime, Float, ForeignKey, Integer, String, UniqueConstraint, Index,
+    Column, Date, DateTime, Float, ForeignKey, Integer, String, UniqueConstraint, Index,
     MetaData, Table,
 )
 from sqlalchemy.orm import declarative_base
@@ -70,10 +70,20 @@ class ObservacionTabla(Base):
     mes = Column(Integer, nullable=True)
     dia = Column(Integer, nullable=True)
 
+    # El par original, siempre. precio_canonico es derivado y puede ser
+    # NULL: NULL significa "no convertible", no "no calculado".
     precio_monto = Column(Float, nullable=False)
     unidad_texto = Column(String(64), nullable=False)
+    cantidad = Column(Float, nullable=False, default=1.0)
     precio_canonico = Column(Float, nullable=True)
     unidad_canonica = Column(String(8), nullable=True)
+
+    variedad = Column(String(64), nullable=False, default="desconocida")
+    # Cuándo se observó según el DATO. NULL = no se sabe; nunca se rellena
+    # con capturada_en.
+    fecha_observacion = Column(Date, nullable=True)
+    tipo_precio = Column(String(16), nullable=False, default="desconocido")
+    evidencia = Column(String(512), nullable=True)
 
     reputacion_informante = Column(Float, nullable=False, default=1.0)
     # "punto_venta" si se midió en un local; "ciudad" si la fuente publica
