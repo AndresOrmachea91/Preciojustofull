@@ -156,7 +156,7 @@ class MotorFusion:
             fecha_observacion_mas_reciente=ciudad.fecha_observacion_mas_reciente,
             calculado_en=ciudad.calculado_en,
             conflictos=ciudad.conflictos + [
-                f"Estimado desde la referencia de ciudad {referencia[0].codigo_mercado} "
+                f"Estimado desde la referencia de ciudad {referencia[0].ciudad} "
                 f"con factor {f:.2f}; no es una medición en {mercado.codigo}"
             ],
         )
@@ -167,7 +167,7 @@ class MotorFusion:
     def _rechazar_referencias(observaciones: list[Observacion]) -> None:
         referencia = next((o for o in observaciones if o.es_referencia_de_ciudad), None)
         if referencia is not None:
-            raise ReferenciaNoEsMedicion(referencia.codigo_mercado)
+            raise ReferenciaNoEsMedicion(referencia.ciudad)
 
     def _consolidar_un_solo_grupo(self, observaciones: list[Observacion]) -> PrecioConsolidado:
         grupos = self.agrupar(observaciones)
@@ -209,7 +209,9 @@ class MotorFusion:
 
         return PrecioConsolidado(
             codigo_producto=base.codigo_producto,
-            codigo_mercado=base.codigo_mercado,
+            # Para una referencia de ciudad este consolidado es intermedio:
+            # estimar_desde_ciudad lo reemplaza por el código del local.
+            codigo_mercado=base.lugar,
             periodo=base.periodo,
             rango=RangoPrecio(
                 minimo=round(precio * (1 - dispersion), 2),

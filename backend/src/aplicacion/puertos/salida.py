@@ -37,6 +37,7 @@ class RepositorioObservaciones(Protocol):
         codigo_producto: str,
         codigo_mercado: str | None = None,
         periodo: Periodo | None = None,
+        ciudad: str | None = None,
     ) -> list[Observacion]: ...
     def guardar_varias(self, observaciones: list[Observacion]) -> int: ...
 

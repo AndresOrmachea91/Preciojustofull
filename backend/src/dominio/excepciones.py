@@ -42,10 +42,10 @@ class ReferenciaNoEsMedicion(ErrorDominio):
     publica por ciudad. Ese dato es referencia para estimar, no medición.
     """
 
-    def __init__(self, codigo_mercado: str):
-        self.codigo_mercado = codigo_mercado
+    def __init__(self, ciudad: str):
+        self.ciudad = ciudad
         super().__init__(
-            f"Las observaciones de ámbito ciudad ({codigo_mercado}) no son mediciones "
+            f"Las observaciones de ámbito ciudad ({ciudad}) no son mediciones "
             "de un local: úsese MotorFusion.estimar_desde_ciudad"
         )
 

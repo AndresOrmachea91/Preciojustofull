@@ -93,8 +93,9 @@ class FuenteSiipIpc:
                         fuente=Fuente.SIIP_IPC,
                         nivel=Fuente.SIIP_IPC.nivel_fijo,
                         codigo_producto=codigo_producto,
-                        # Una serie por ciudad, no por mercado: ámbito CIUDAD.
-                        codigo_mercado=ciudad.lower().replace(" ", "_"),
+                        # La ciudad va en su campo; no hay punto de venta.
+                        codigo_mercado=None,
+                        ciudad=ciudad.lower().replace(" ", "_"),
                         periodo=Periodo(anio, mes),
                         precio=precio,
                         capturada_en=ahora,

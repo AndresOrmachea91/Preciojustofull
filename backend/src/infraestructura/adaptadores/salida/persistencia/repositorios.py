@@ -63,16 +63,24 @@ def _a_mercado(f: MercadoTabla) -> Mercado:
 
 
 def _a_observacion(f: ObservacionTabla) -> Observacion:
+    ambito = Ambito(f.ambito or "punto_venta")
+    codigo_mercado, ciudad = f.codigo_mercado, f.ciudad
+    if ambito is Ambito.CIUDAD and ciudad is None and codigo_mercado is not None:
+        # Fila histórica todavía no reparada: la ciudad quedó en la columna
+        # del punto de venta. Se lee como lo que es; el script de reparación
+        # lo deja así en la base.
+        codigo_mercado, ciudad = None, codigo_mercado
     return Observacion(
         fuente=Fuente(f.fuente),
         nivel=NivelPrecio(f.nivel),
         codigo_producto=f.codigo_producto,
-        codigo_mercado=f.codigo_mercado,
+        codigo_mercado=codigo_mercado,
+        ciudad=ciudad,
         periodo=Periodo(f.anio, f.mes, f.dia),
         precio=Dinero(f.precio_monto, Unidad(f.unidad_texto)),
         capturada_en=f.capturada_en,
         reputacion_informante=f.reputacion_informante,
-        ambito=Ambito(f.ambito or "punto_venta"),
+        ambito=ambito,
         cantidad=f.cantidad if f.cantidad else 1.0,
         variedad=f.variedad or VARIEDAD_DESCONOCIDA,
         fecha_observacion=f.fecha_observacion,
@@ -91,6 +99,7 @@ def _de_observacion(o: Observacion) -> dict:
         "nivel": o.nivel.value,
         "codigo_producto": o.codigo_producto,
         "codigo_mercado": o.codigo_mercado,
+        "ciudad": o.ciudad,
         "anio": o.periodo.anio,
         "mes": o.periodo.mes,
         "dia": o.periodo.dia,
@@ -175,6 +184,7 @@ class ObservacionesPostgres(_Base):
         codigo_producto: str,
         codigo_mercado: str | None = None,
         periodo: Periodo | None = None,
+        ciudad: str | None = None,
     ) -> list[Observacion]:
         with sesion_de(self._fabrica) as s:
             consulta = select(ObservacionTabla).where(
@@ -182,6 +192,8 @@ class ObservacionesPostgres(_Base):
             )
             if codigo_mercado:
                 consulta = consulta.where(ObservacionTabla.codigo_mercado == codigo_mercado)
+            if ciudad:
+                consulta = consulta.where(ObservacionTabla.ciudad == ciudad)
             if periodo:
                 consulta = consulta.where(ObservacionTabla.anio == periodo.anio)
                 if periodo.mes is not None:
@@ -253,7 +265,7 @@ class ObservacionesPostgres(_Base):
         conocidas: dict[tuple, tuple[int, float]] = {}
         for f in filas:
             clave = (
-                f.fuente, f.nivel, f.codigo_producto, f.ambito, f.codigo_mercado,
+                f.fuente, f.nivel, f.codigo_producto, f.ambito, f.codigo_mercado, f.ciudad,
                 f.anio, f.mes, f.dia, f.unidad_texto, f.cantidad if f.cantidad else 1.0,
             )
             conocidas[clave] = (f.id, f.precio_monto)   # la última por id gana

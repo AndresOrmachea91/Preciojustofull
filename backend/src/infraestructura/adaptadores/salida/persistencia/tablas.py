@@ -63,7 +63,10 @@ class ObservacionTabla(Base):
     fuente = Column(String(32), nullable=False)
     nivel = Column(String(16), nullable=False)
     codigo_producto = Column(String(64), nullable=False)
-    codigo_mercado = Column(String(64), nullable=False)
+    # Uno de los dos: punto de venta (ámbito punto_venta) o ciudad (ámbito
+    # ciudad). La ciudad no es un mercado y no comparte columna.
+    codigo_mercado = Column(String(64), nullable=True)
+    ciudad = Column(String(64), nullable=True)
 
     anio = Column(Integer, nullable=False)
     mes = Column(Integer, nullable=True)
@@ -112,7 +115,7 @@ class ObservacionTabla(Base):
 # Observacion.clave_natural. El índice lleva además precio_monto: el mismo
 # hecho con otro valor es una revisión y tiene que poder convivir.
 CLAVE_NATURAL = (
-    "fuente", "nivel", "codigo_producto", "ambito", "codigo_mercado",
+    "fuente", "nivel", "codigo_producto", "ambito", "codigo_mercado", "ciudad",
     "anio", "mes", "dia", "unidad_texto", "cantidad",
 )
 NOMBRE_INDICE_CLAVE_NATURAL = "uq_hecho_observado"
@@ -122,7 +125,7 @@ NOMBRE_INDICE_CLAVE_NATURAL = "uq_hecho_observado"
 # primero hay que limpiar.
 INDICE_CLAVE_NATURAL = (
     f"CREATE UNIQUE INDEX IF NOT EXISTS {NOMBRE_INDICE_CLAVE_NATURAL} ON observacion_precio "
-    "(fuente, nivel, codigo_producto, ambito, codigo_mercado, "
+    "(fuente, nivel, codigo_producto, ambito, coalesce(codigo_mercado, ''), coalesce(ciudad, ''), "
     "anio, coalesce(mes, 0), coalesce(dia, 0), unidad_texto, cantidad, precio_monto)"
 )
 

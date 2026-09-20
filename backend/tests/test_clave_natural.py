@@ -21,9 +21,11 @@ T0 = datetime(2026, 9, 1, 8, 0, tzinfo=timezone.utc)
 
 def _obs(monto=6.82, unidad="LIBRA(s)", cantidad=1.0, capturada=T0, fuente=Fuente.SIIP_IPC,
          periodo=Periodo(2026, 8), producto="111030102", lugar="la_paz"):
+    es_ciudad = fuente.ambito.value == "ciudad"
     return Observacion(
         fuente=fuente, nivel=fuente.nivel_fijo or NivelPrecio.MINORISTA,
-        codigo_producto=producto, codigo_mercado=lugar, periodo=periodo,
+        codigo_producto=producto, codigo_mercado=None if es_ciudad else lugar,
+        ciudad=lugar if es_ciudad else None, periodo=periodo,
         precio=Dinero(monto, Unidad(unidad)), capturada_en=capturada, ambito=fuente.ambito,
         cantidad=cantidad,
     )
@@ -115,7 +117,7 @@ def test_el_indice_unico_rechaza_lo_que_el_upsert_no_vio():
     repo.guardar_varias([_obs()])
     with pytest.raises(IntegrityError), motor.begin() as c:
         c.execute(text(
-            "INSERT INTO observacion_precio (fuente, nivel, codigo_producto, codigo_mercado, anio, mes, dia, "
+            "INSERT INTO observacion_precio (fuente, nivel, codigo_producto, ciudad, anio, mes, dia, "
             "precio_monto, unidad_texto, cantidad, ambito, capturada_en) VALUES "
             "('siip_ipc','minorista','111030102','la_paz',2026,8,NULL,6.82,'LIBRA(s)',1.0,'ciudad','2026-09-02')"
         ))

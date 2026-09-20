@@ -55,10 +55,13 @@ class ObservacionesEnMemoria:
         codigo_producto: str,
         codigo_mercado: str | None = None,
         periodo: Periodo | None = None,
+        ciudad: str | None = None,
     ) -> list[Observacion]:
         salida = [o for o in self._datos if o.codigo_producto == codigo_producto]
         if codigo_mercado:
             salida = [o for o in salida if o.codigo_mercado == codigo_mercado]
+        if ciudad:
+            salida = [o for o in salida if o.ciudad == ciudad]
         if periodo:
             salida = [o for o in salida if o.periodo == periodo]
         return salida

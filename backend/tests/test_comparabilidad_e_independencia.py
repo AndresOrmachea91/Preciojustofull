@@ -23,9 +23,11 @@ AHORA = datetime.now(timezone.utc)
 
 def _obs(monto=10.0, unidad="KILO", fuente=Fuente.MEDIOS, periodo=Periodo(2026, 9, 15),
          variedad="desconocida", producto="papa", mercado="rodriguez", reputacion=1.0):
+    es_ciudad = fuente.ambito.value == "ciudad"
     return Observacion(
         fuente=fuente, nivel=fuente.nivel_fijo or NivelPrecio.MINORISTA,
-        codigo_producto=producto, codigo_mercado=mercado, periodo=periodo,
+        codigo_producto=producto, codigo_mercado=None if es_ciudad else mercado,
+        ciudad=mercado if es_ciudad else None, periodo=periodo,
         precio=Dinero(monto, Unidad(unidad)), capturada_en=AHORA, ambito=fuente.ambito,
         variedad=variedad, reputacion_informante=reputacion,
     )

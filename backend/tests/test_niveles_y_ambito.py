@@ -27,12 +27,15 @@ AHORA = datetime.now(timezone.utc)
 
 
 def _obs(fuente, nivel=None, ambito=None, monto=10.0, unidad="KILO", mercado="la_paz"):
+    ambito = ambito or fuente.ambito
+    # El lugar va en el campo que corresponde al ámbito: la ciudad no es un mercado.
+    lugar = {"ciudad": mercado} if ambito is Ambito.CIUDAD else {"codigo_mercado": mercado}
     return Observacion(
         fuente=fuente,
         nivel=nivel or fuente.nivel_fijo or NivelPrecio.MINORISTA,
-        codigo_producto="arroz", codigo_mercado=mercado,
+        codigo_producto="arroz",
         periodo=Periodo(2026, 7, 15), precio=Dinero(monto, Unidad(unidad)),
-        capturada_en=AHORA, ambito=ambito or fuente.ambito,
+        capturada_en=AHORA, ambito=ambito, **{"codigo_mercado": None, **lugar},
     )
 
 
@@ -59,6 +62,20 @@ def test_una_observacion_del_siip_no_puede_fingir_ser_medicion_local():
         _obs(Fuente.SIIP_IPC, ambito=Ambito.PUNTO_VENTA, mercado="rodriguez")
 
 
+def test_una_observacion_de_ciudad_no_lleva_punto_de_venta():
+    """'la_paz' no es un mercado: va en su campo, y el de punto de venta queda vacío."""
+    o = _obs(Fuente.SIIP_IPC)
+    assert o.ciudad == "la_paz" and o.codigo_mercado is None and o.lugar == "la_paz"
+    with pytest.raises(ValueError, match="no lleva punto de venta"):
+        Observacion(fuente=Fuente.SIIP_IPC, nivel=NivelPrecio.MINORISTA, codigo_producto="arroz",
+                    codigo_mercado="rodriguez", ciudad="la_paz", periodo=Periodo(2026, 7),
+                    precio=Dinero(1, Unidad("KILO")), capturada_en=AHORA, ambito=Ambito.CIUDAD)
+    with pytest.raises(ValueError, match="necesita la ciudad"):
+        Observacion(fuente=Fuente.SIIP_IPC, nivel=NivelPrecio.MINORISTA, codigo_producto="arroz",
+                    codigo_mercado=None, periodo=Periodo(2026, 7),
+                    precio=Dinero(1, Unidad("KILO")), capturada_en=AHORA, ambito=Ambito.CIUDAD)
+
+
 # --- los adaptadores producen lo que la fuente declara ----------------------
 
 HTML_DIARIO = """
@@ -79,8 +96,8 @@ def test_el_diario_produce_mayorista_de_ambito_ciudad_y_marca_lo_que_no_conviert
 
     assert obs and all(o.nivel is NivelPrecio.MAYORISTA for o in obs)
     assert all(o.ambito is Ambito.CIUDAD for o in obs)
-    la_paz = [o for o in obs if o.codigo_mercado == "la_paz"]
-    cochabamba = [o for o in obs if o.codigo_mercado == "cochabamba"]
+    la_paz = [o for o in obs if o.ciudad == "la_paz"]
+    cochabamba = [o for o in obs if o.ciudad == "cochabamba"]
     assert all(o.precio.unidad.texto == "qq." and o.es_convertible for o in la_paz)
     # "CAJA" sin peso no es un precio por kilo: se CONSERVA tal cual, pero
     # marcada como no convertible, fuera de todo cálculo por unidad canónica.
@@ -106,9 +123,9 @@ def test_el_ipc_produce_minorista_de_ambito_ciudad():
 
     assert len(obs) == 6
     assert all(o.nivel is NivelPrecio.MINORISTA and o.ambito is Ambito.CIUDAD for o in obs)
-    assert {o.codigo_mercado for o in obs} == {"la_paz", "potosi", "beni"}
+    assert {o.ciudad for o in obs} == {"la_paz", "potosi", "beni"}
     # "MANOJO" no convierte: se conserva marcada, sin fecha de día.
-    beni = [o for o in obs if o.codigo_mercado == "beni"]
+    beni = [o for o in obs if o.ciudad == "beni"]
     assert beni and all(not o.es_convertible and o.fecha_observacion is None for o in beni)
 
 
@@ -173,7 +190,7 @@ def observaciones(request):
 def test_el_ambito_ciudad_sobrevive_al_guardado(observaciones):
     observaciones.guardar_varias([_obs(Fuente.SIIP_IPC, unidad="LIBRA")])
 
-    (recuperada,) = observaciones.buscar("arroz", "la_paz")
+    (recuperada,) = observaciones.buscar("arroz", ciudad="la_paz")
 
     assert recuperada.ambito is Ambito.CIUDAD
     assert recuperada.nivel is NivelPrecio.MINORISTA

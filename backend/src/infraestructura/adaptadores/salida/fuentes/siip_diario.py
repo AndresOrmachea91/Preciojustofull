@@ -114,8 +114,9 @@ class FuenteSiipDiario:
                         fuente=Fuente.SIIP_DIARIO,
                         nivel=Fuente.SIIP_DIARIO.nivel_fijo,
                         codigo_producto=codigo_producto,
-                        # Es la ciudad, no un puesto: ámbito CIUDAD.
-                        codigo_mercado=ciudad.lower().replace(" ", "_"),
+                        # La ciudad va en su campo; no hay punto de venta.
+                        codigo_mercado=None,
+                        ciudad=ciudad.lower().replace(" ", "_"),
                         periodo=Periodo(anio, mes, dia),
                         precio=precio,
                         capturada_en=ahora,

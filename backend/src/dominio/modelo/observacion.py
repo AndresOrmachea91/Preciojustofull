@@ -114,7 +114,10 @@ class Observacion:
     fuente: Fuente
     nivel: NivelPrecio
     codigo_producto: str
-    codigo_mercado: str
+    # El LUGAR: un punto de venta del catálogo si el ámbito es PUNTO_VENTA;
+    # None si el ámbito es CIUDAD, porque entonces el lugar es `ciudad`.
+    # "La Paz" no es un mercado y no se inventa uno para taparlo.
+    codigo_mercado: str | None
     periodo: Periodo
     # El par ORIGINAL (monto, unidad) tal como lo dijo la fuente, más la
     # cantidad de esa unidad que cubre el monto: "Bs 75,87 por 760 gramos".
@@ -140,8 +143,21 @@ class Observacion:
     tipo_precio: TipoPrecio = TipoPrecio.DESCONOCIDO
     # Foto, URL del boletín, número de ticket. Opcional.
     evidencia: str | None = None
+    # Código de ciudad ("la_paz") cuando el ámbito es CIUDAD. Campo propio:
+    # no comparte columna con los puntos de venta.
+    ciudad: str | None = None
 
     def __post_init__(self):
+        if self.ambito is Ambito.CIUDAD:
+            if not self.ciudad:
+                raise ValueError("Una observación de ámbito ciudad necesita la ciudad")
+            if self.codigo_mercado is not None:
+                raise ValueError(
+                    f"Una observación de ámbito ciudad no lleva punto de venta ({self.codigo_mercado!r}): "
+                    "la ciudad no es un mercado"
+                )
+        elif not self.codigo_mercado:
+            raise ValueError("Una observación en un punto de venta necesita el código del punto de venta")
         if self.cantidad <= 0:
             raise ValueError("La cantidad debe ser mayor a cero")
         if not self.variedad or not self.variedad.strip():
@@ -164,6 +180,11 @@ class Observacion:
         return self.ambito is Ambito.CIUDAD
 
     @property
+    def lugar(self) -> str:
+        """El punto de venta o la ciudad, según el ámbito. Para mostrar, no para persistir."""
+        return self.codigo_mercado if self.codigo_mercado is not None else self.ciudad
+
+    @property
     def clave_natural(self) -> tuple:
         """
         Lo que identifica al HECHO observado, no a la captura. Dos capturas
@@ -173,7 +194,8 @@ class Observacion:
           misma cifra dicha por el IPC y por un diario que lo copia son
           dos afirmaciones (el motor luego las colapsa en un clan).
         producto + ámbito + lugar: de qué y de dónde. El lugar es un
-          punto de venta o una ciudad según el ámbito.
+          punto de venta o una ciudad según el ámbito; van como dos
+          campos porque son dos cosas.
         período observado (anio, mes, dia): cuándo, según el DATO. La fecha
           de captura queda fuera a propósito: es cuándo lo supimos, no
           cuándo pasó.
@@ -188,7 +210,7 @@ class Observacion:
         """
         return (
             self.fuente.value, self.nivel.value, self.codigo_producto,
-            self.ambito.value, self.codigo_mercado,
+            self.ambito.value, self.codigo_mercado, self.ciudad,
             self.periodo.anio, self.periodo.mes, self.periodo.dia,
             self.precio.unidad.texto, self.cantidad,
         )

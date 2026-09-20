@@ -63,7 +63,18 @@ _COLUMNAS_AGREGADAS = {
         "evidencia": "VARCHAR(512) NULL",
         "ultima_captura_en": "TIMESTAMP NULL",
         "revisa_a": "INTEGER NULL REFERENCES observacion_precio(id)",
+        "ciudad": "VARCHAR(64) NULL",
     },
+}
+
+# Cambios que SQLite no sabe hacer con ALTER (soltar un NOT NULL). En
+# SQLite las tablas nuevas ya nacen bien desde create_all; en PostgreSQL
+# hace falta decirlo. Se ejecuta antes de los rellenos.
+_AJUSTES_POR_DIALECTO = {
+    "postgresql": [
+        "ALTER TABLE observacion_precio ALTER COLUMN codigo_mercado DROP NOT NULL",
+        "ALTER TABLE observacion_precio DROP CONSTRAINT IF EXISTS uq_observacion_unica",
+    ],
 }
 
 # Rellenos que se pueden hacer con honestidad sobre filas históricas. El
@@ -101,6 +112,8 @@ def crear_esquema(motor: Engine) -> None:
                 if nombre not in existentes:
                     conexion.execute(text(f"ALTER TABLE {tabla} ADD COLUMN {nombre} {definicion}"))
                     log.info("Columna %s.%s agregada", tabla, nombre)
+        for sentencia in _AJUSTES_POR_DIALECTO.get(motor.dialect.name, []):
+            conexion.execute(text(sentencia))
         for sentencia in _RELLENOS_HISTORICOS.get(motor.dialect.name, []):
             rellenadas = conexion.execute(text(sentencia)).rowcount
             if rellenadas:
