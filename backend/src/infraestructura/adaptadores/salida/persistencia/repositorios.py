@@ -232,14 +232,15 @@ class ObservacionesPostgres(_Base):
                 if (clave, monto) in en_lote:
                     continue   # repetida dentro del mismo lote
                 en_lote.add((clave, monto))
-                previa = conocidas.get(clave)
-                if previa is not None and previa[1] == monto:
-                    vistas.append(previa[0])
+                previas = conocidas.get(clave)   # monto -> id, en orden de llegada
+                if previas is not None and monto in previas:
+                    vistas.append(previas[monto])
                     continue
                 fila = _de_observacion(o)
                 fila["capturada_en"] = o.capturada_en
                 fila["ultima_captura_en"] = o.capturada_en
-                fila["revisa_a"] = previa[0] if previa is not None else None
+                # Revisión de la fila más reciente conocida de ese hecho.
+                fila["revisa_a"] = list(previas.values())[-1] if previas else None
                 nuevas.append(fila)
             if nuevas:
                 s.execute(ObservacionTabla.__table__.insert(), nuevas)
@@ -252,8 +253,8 @@ class ObservacionesPostgres(_Base):
         return len(nuevas)
 
     @staticmethod
-    def _hechos_conocidos(s: Session, observaciones: list[Observacion]) -> dict[tuple, tuple[int, float]]:
-        """clave natural -> (id, monto) de la fila MÁS RECIENTE conocida de cada hecho."""
+    def _hechos_conocidos(s: Session, observaciones: list[Observacion]) -> dict[tuple, dict[float, int]]:
+        """clave natural -> {monto: id} de TODAS las filas conocidas de ese hecho (original y revisiones)."""
         productos = {o.codigo_producto for o in observaciones}
         fuentes = {o.fuente.value for o in observaciones}
         filas = s.execute(
@@ -262,13 +263,13 @@ class ObservacionesPostgres(_Base):
             .where(ObservacionTabla.fuente.in_(fuentes))
             .order_by(ObservacionTabla.id)
         ).scalars()
-        conocidas: dict[tuple, tuple[int, float]] = {}
+        conocidas: dict[tuple, dict[float, int]] = {}
         for f in filas:
             clave = (
                 f.fuente, f.nivel, f.codigo_producto, f.ambito, f.codigo_mercado, f.ciudad,
                 f.anio, f.mes, f.dia, f.unidad_texto, f.cantidad if f.cantidad else 1.0,
             )
-            conocidas[clave] = (f.id, f.precio_monto)   # la última por id gana
+            conocidas.setdefault(clave, {})[f.precio_monto] = f.id
         return conocidas
 
     def registrar_intento(

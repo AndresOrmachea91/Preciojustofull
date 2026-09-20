@@ -194,3 +194,42 @@ def test_el_ambito_ciudad_sobrevive_al_guardado(observaciones):
 
     assert recuperada.ambito is Ambito.CIUDAD
     assert recuperada.nivel is NivelPrecio.MINORISTA
+
+
+def test_el_adaptador_traduce_el_codigo_del_catalogo_al_de_la_fuente():
+    """La observación se guarda con el código del catálogo; el del SIIP es un detalle del adaptador."""
+    pedidos = []
+
+    class ClienteFalso(ClienteResiliente):
+        def pedir(self, url, metodo="GET", **kwargs):
+            pedidos.append(kwargs.get("params") or kwargs.get("data"))
+            class R:
+                text = HTML_DIARIO
+                def json(self): return {"eje_x": ["JUL-2026"], "data": [
+                    {"cantidad": "1.00", "unidad": "LIBRA(s)", "ciudad": "LA PAZ", "valor": [6.82]}]}
+            return R()
+
+    diario = FuenteSiipDiario(cliente=ClienteFalso(), mapeo={"arroz_primera": "5"}).recolectar("arroz_primera")
+    ipc = FuenteSiipIpc(cliente=ClienteFalso(), mapeo={"arroz_primera": "111030102"}).recolectar("arroz_primera")
+
+    assert pedidos[0]["producto"] == "5" and pedidos[1]["item"] == "111030102"
+    assert {o.codigo_producto for o in diario + ipc} == {"arroz_primera"}
+
+
+def test_el_diario_con_colspan_vacio_y_meses_de_menos_no_corre_las_columnas():
+    """
+    Tabla real del aceite (producto 3): el bloque diario viene con colspan=""
+    y 2025 tiene 5 columnas pero 4 etiquetas. Alineando por la derecha se
+    corrían los meses dos lugares y salían dos "octubre 2020" distintos.
+    """
+    html = """
+    <table><thead>
+    <tr><th rowspan=2>Ciudad</th><th rowspan=2>Unidad</th><th colspan="3">2024</th><th colspan="3">2025</th><th colspan="">2026-ABR</th></tr>
+    <tr><td>OCT</td><td>NOV</td><td>DIC</td><td>ENE</td><td>FEB</td></tr>
+    </thead>
+    <tr><td>La Paz</td><td>Lt.</td><td>1,00</td><td>2,00</td><td>3,00</td><td>4,00</td><td>5,00</td><td>6,00</td></tr>
+    </table>"""
+    obs = FuenteSiipDiario(cliente=ClienteResiliente())._parsear(html, "3")
+    periodos = sorted(((o.periodo.anio, o.periodo.mes, o.precio.monto) for o in obs), key=lambda t: t[2])
+    assert periodos == [(2024, 10, 1.0), (2024, 11, 2.0), (2024, 12, 3.0), (2025, 1, 4.0), (2025, 2, 5.0), (2025, None, 6.0)]
+    assert len({(o.periodo.anio, o.periodo.mes) for o in obs}) == len(obs)   # ningún período repetido

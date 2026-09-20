@@ -70,6 +70,26 @@ def filas_a_productos(filas: Iterable[dict], origen: str = "<memoria>") -> list[
     return [_a_producto(origen, n, fila) for n, fila in enumerate(filas, start=2)]
 
 
+COLUMNAS_FUENTE = ("siip_diario", "siip_ipc")
+
+
+def leer_mapeo_fuentes(ruta: Path | str) -> dict[str, dict[str, str]]:
+    """
+    Por fuente, qué código usa esa fuente para cada producto del catálogo:
+    {"siip_diario": {"arroz_primera": "5", ...}, "siip_ipc": {...}}.
+    Solo entran los productos que tienen código en esa fuente.
+    """
+    ruta = Path(ruta)
+    mapeo: dict[str, dict[str, str]] = {col: {} for col in COLUMNAS_FUENTE}
+    with ruta.open(encoding="utf-8", newline="") as archivo:
+        for n, fila in enumerate(csv.DictReader(archivo), start=2):
+            for col in COLUMNAS_FUENTE:
+                codigo_fuente = (fila.get(col) or "").strip()
+                if codigo_fuente:
+                    mapeo[col][fila["codigo"].strip()] = codigo_fuente
+    return mapeo
+
+
 def _a_producto(ruta, numero: int, fila: dict) -> Producto:
     for col in COLUMNAS_PRODUCTO:
         if not (fila.get(col) or "").strip():

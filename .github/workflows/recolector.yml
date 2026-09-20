@@ -40,10 +40,14 @@ jobs:
             exit 1
           fi
 
-      - name: Recolectar precios mayoristas
-        run: |
-          python -m src.infraestructura.adaptadores.entrada.cli.recolectar \
-            --fuente diario --productos "5,12,30"
+      # Todo el catálogo de productos, las dos fuentes (mayorista y consumidor
+      # final). Sale con 3 si los portales respondieron pero no trajeron NI UN
+      # hecho nuevo: eso pinta la corrida en rojo a propósito. Veintidós días
+      # de "éxitos" sin un dato nuevo pasaron desapercibidos porque solo se
+      # miraba el HTTP.
+      - name: Recolectar las dos fuentes sobre todo el catálogo
+        timeout-minutes: 30
+        run: python -m src.infraestructura.adaptadores.entrada.cli.recolectar
 
       - name: Resumen de disponibilidad
         if: always()

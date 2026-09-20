@@ -15,6 +15,8 @@ Orden, y no otro:
   1. Sembrar el catálogo (puntos de venta y productos).
   2. La ciudad a su campo: las filas del SIIP pasan a ámbito ciudad, con
      ciudad = lo que estaba en codigo_mercado y codigo_mercado = NULL.
+     Y el producto pasa del código del SIIP ("5") al del catálogo
+     ("arroz_primera"), que es con el que el recolector guarda desde ahora.
   3. Reprocesar el parseo con el parser actual: unidad canónica, precio
      canónico, tipo de precio, fecha de observación. precio_monto y
      unidad_texto no se tocan: son el dato original.
@@ -43,7 +45,9 @@ from src.dominio.valor import TipoPrecio, Unidad
 from src.infraestructura.adaptadores.entrada.cli.sembrar import (
     CATALOGO_POR_DEFECTO, PRODUCTOS_POR_DEFECTO,
 )
-from src.infraestructura.adaptadores.salida.catalogo.lector_csv import leer_productos, leer_puntos_venta
+from src.infraestructura.adaptadores.salida.catalogo.lector_csv import (
+    leer_mapeo_fuentes, leer_productos, leer_puntos_venta,
+)
 from src.infraestructura.adaptadores.salida.persistencia.repositorios import (
     MercadosPostgres, ObservacionesPostgres, ProductosPostgres,
 )
@@ -89,6 +93,31 @@ def ciudad_a_su_campo(c: Connection, simular: bool) -> int:
             [{"id": f.id, "ciudad": f.ciudad or f.codigo_mercado} for f in filas],
         )
     return len(filas)
+
+
+def producto_al_codigo_del_catalogo(c: Connection, simular: bool) -> dict:
+    """'5' es el código del SIIP; el producto es 'arroz_primera'. Lo que no está en el catálogo se reporta y se deja."""
+    mapeos = leer_mapeo_fuentes(PRODUCTOS_POR_DEFECTO)
+    inverso = {fuente: {v: k for k, v in m.items()} for fuente, m in mapeos.items()}
+    filas = c.execute(text(
+        "SELECT DISTINCT fuente, codigo_producto FROM observacion_precio"
+    )).all()
+    cambios, sin_mapeo = [], []
+    for f in filas:
+        catalogo = inverso.get(f.fuente, {}).get(f.codigo_producto)
+        if catalogo is None:
+            if f.codigo_producto not in mapeos.get(f.fuente, {}):
+                sin_mapeo.append((f.fuente, f.codigo_producto))
+            continue
+        cambios.append({"fuente": f.fuente, "viejo": f.codigo_producto, "nuevo": catalogo})
+    if not simular and cambios:
+        c.execute(text(
+            "UPDATE observacion_precio SET codigo_producto = :nuevo "
+            "WHERE fuente = :fuente AND codigo_producto = :viejo"
+        ), cambios)
+    for fuente, codigo in sin_mapeo:
+        log.warning("%s/%s no está en el catálogo de productos: se deja como está", fuente, codigo)
+    return {"remapeados": [(x["viejo"], x["nuevo"]) for x in cambios], "sin_mapeo": sin_mapeo}
 
 
 def reprocesar_parseo(c: Connection, simular: bool) -> dict:
@@ -202,6 +231,8 @@ def reparar(motor: Engine, simular: bool) -> dict:
     with motor.begin() as c:
         informe["2_ciudad"] = ciudad_a_su_campo(c, simular)
         log.info("2. Filas del SIIP con la ciudad en su campo: %s", informe["2_ciudad"])
+        informe["2b_producto"] = producto_al_codigo_del_catalogo(c, simular)
+        log.info("2b. Producto al código del catálogo: %s", informe["2b_producto"])
         informe["3_parseo"] = reprocesar_parseo(c, simular)
         log.info("3. Parseo: %s", informe["3_parseo"])
         informe["4_dedup"] = deduplicar(c, simular)

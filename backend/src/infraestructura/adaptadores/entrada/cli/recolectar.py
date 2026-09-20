@@ -5,9 +5,14 @@ Adaptador de entrada por línea de comandos: el recolector.
 Es otro adaptador sobre los mismos puertos que usa la API. Lo ejecuta
 GitHub Actions tres veces al día.
 
-    python -m src.infraestructura.adaptadores.entrada.cli.recolectar --fuente diario --producto 5
-    python -m src.infraestructura.adaptadores.entrada.cli.recolectar --fuente diario --productos 5,12,30
+    python -m src.infraestructura.adaptadores.entrada.cli.recolectar                 # todo el catálogo, las dos fuentes
+    python -m src.infraestructura.adaptadores.entrada.cli.recolectar --fuente diario
+    python -m src.infraestructura.adaptadores.entrada.cli.recolectar --productos arroz_primera,papa_holandesa
     python -m src.infraestructura.adaptadores.entrada.cli.recolectar --disponibilidad
+
+Los productos salen de datos/catalogo/productos.csv, que dice qué código
+usa cada fuente para cada uno. Las observaciones se guardan con el código
+del catálogo.
 
 Sin BASE_DATOS_URL configurada avisa y no guarda nada: es preferible
 fallar ruidosamente antes que perder días de serie en silencio.
@@ -26,7 +31,10 @@ from __future__ import annotations
 import sys
 import logging
 import argparse
+from pathlib import Path
 
+from src.infraestructura.adaptadores.entrada.cli.sembrar import PRODUCTOS_POR_DEFECTO
+from src.infraestructura.adaptadores.salida.catalogo.lector_csv import leer_mapeo_fuentes
 from src.infraestructura.adaptadores.salida.fuentes.cliente_resiliente import ClienteResiliente
 from src.infraestructura.adaptadores.salida.fuentes.siip_diario import FuenteSiipDiario
 from src.infraestructura.adaptadores.salida.fuentes.siip_ipc import FuenteSiipIpc
@@ -39,7 +47,8 @@ from src.configuracion import config
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("recolector")
 
-FUENTES = {"diario": FuenteSiipDiario, "ipc": FuenteSiipIpc}
+# nombre en la línea de comandos -> (adaptador, columna del catálogo)
+FUENTES = {"diario": (FuenteSiipDiario, "siip_diario"), "ipc": (FuenteSiipIpc, "siip_ipc")}
 
 
 def _abrir_repositorio() -> ObservacionesPostgres | None:
@@ -82,41 +91,20 @@ def _mostrar_disponibilidad(repositorio: ObservacionesPostgres) -> int:
     return 0
 
 
-def main() -> int:
-    p = argparse.ArgumentParser(description="Recolector de fuentes de precios")
-    p.add_argument("--fuente", choices=list(FUENTES))
-    p.add_argument("--producto", help="Un código de producto")
-    p.add_argument("--productos", help="Varios códigos separados por coma")
-    p.add_argument("--disponibilidad", action="store_true",
-                   help="Muestra el resumen de disponibilidad por fuente")
-    args = p.parse_args()
-
-    repositorio = _abrir_repositorio()
-    if repositorio is None:
-        return 2
-
-    if args.disponibilidad:
-        return _mostrar_disponibilidad(repositorio)
-
-    if not args.fuente or not (args.producto or args.productos):
-        p.error("hacen falta --fuente y --producto (o --productos)")
-
-    codigos = (
-        [c.strip() for c in args.productos.split(",") if c.strip()]
-        if args.productos else [args.producto]
-    )
-
+def _recolectar_fuente(repositorio, nombre_fuente: str, mapeo: dict[str, str], codigos: list[str]) -> tuple[int, int, int]:
+    """Corre una fuente sobre sus productos. Devuelve (hechos nuevos, resueltos, fallidos)."""
+    adaptador, _ = FUENTES[nombre_fuente]
     # El cliente registra CADA intento crudo contra el portal, incluidos los
     # que fallan y se reintentan. Sobre esos intentos se mide la
     # disponibilidad de la fuente original; sobre los productos resueltos,
     # la disponibilidad efectiva del sistema. La diferencia es lo que aporta
     # la arquitectura, y sin este registro sería invisible.
     cliente = ClienteResiliente(registrar_intento=repositorio.registrar_intento)
-    fuente = FUENTES[args.fuente](cliente=cliente)
+    fuente = adaptador(cliente=cliente, mapeo=mapeo)
 
     if not fuente.esta_disponible():
         log.error("%s no está disponible (cortacircuito abierto)", fuente.nombre)
-        return 2
+        return 0, 0, len(codigos)
 
     total_nuevas = fallidos = 0
     for codigo in codigos:
@@ -133,20 +121,65 @@ def main() -> int:
         nuevas = repositorio.guardar_varias(observaciones)
         repositorio.registrar_corrida(fuente.nombre, codigo, len(observaciones), nuevas)
         total_nuevas += nuevas
-        log.info("Producto %s: %s hechos vistos, %s nuevos",
-                 codigo, len(observaciones), nuevas)
+        log.info("[%s] %s (%s): %s hechos vistos, %s nuevos",
+                 nombre_fuente, codigo, mapeo.get(codigo, codigo), len(observaciones), nuevas)
 
     resueltos = len(codigos) - fallidos
+    log.info("[%s] %s hechos nuevos, %s de %s productos resueltos (%.1f%%).",
+             nombre_fuente, total_nuevas, resueltos, len(codigos),
+             100.0 * resueltos / len(codigos) if codigos else 0.0)
+    return total_nuevas, resueltos, fallidos
+
+
+def main() -> int:
+    p = argparse.ArgumentParser(description="Recolector de fuentes de precios")
+    p.add_argument("--fuente", choices=list(FUENTES), help="Una sola fuente; por defecto las dos")
+    p.add_argument("--productos", help="Códigos del CATÁLOGO separados por coma; por defecto todo el catálogo")
+    p.add_argument("--catalogo", type=Path, default=PRODUCTOS_POR_DEFECTO,
+                   help=f"CSV de productos (por defecto {PRODUCTOS_POR_DEFECTO})")
+    p.add_argument("--disponibilidad", action="store_true",
+                   help="Muestra el resumen de disponibilidad por fuente")
+    args = p.parse_args()
+
+    repositorio = _abrir_repositorio()
+    if repositorio is None:
+        return 2
+
+    if args.disponibilidad:
+        return _mostrar_disponibilidad(repositorio)
+
+    mapeos = leer_mapeo_fuentes(args.catalogo)
+    pedidos = [c.strip() for c in args.productos.split(",") if c.strip()] if args.productos else None
+    fuentes = [args.fuente] if args.fuente else list(FUENTES)
+
+    total_nuevas = total_resueltos = total_fallidos = total_pedidos = 0
+    for nombre in fuentes:
+        _, columna = FUENTES[nombre]
+        mapeo = mapeos[columna]
+        codigos = [c for c in (pedidos or mapeo) if c in mapeo]
+        if pedidos:
+            for c in pedidos:
+                if c not in mapeo:
+                    log.warning("[%s] %s no tiene código en esta fuente; se omite", nombre, c)
+        if not codigos:
+            log.warning("[%s] ningún producto que recolectar", nombre)
+            continue
+        nuevas, resueltos, fallidos = _recolectar_fuente(repositorio, nombre, mapeo, codigos)
+        total_nuevas += nuevas
+        total_resueltos += resueltos
+        total_fallidos += fallidos
+        total_pedidos += len(codigos)
+
+    if not total_pedidos:
+        p.error("no hay productos que recolectar")
     log.info("Terminado. %s hechos nuevos, %s de %s productos resueltos.",
-             total_nuevas, resueltos, len(codigos))
-    log.info("Disponibilidad de la fuente en esta corrida: %.1f%%",
-             100.0 * resueltos / len(codigos))
+             total_nuevas, total_resueltos, total_pedidos)
     # Que fallen algunos productos no debe marcar la corrida como rota:
     # la degradación parcial es un comportamiento esperado del sistema.
-    if fallidos == len(codigos):
+    if total_fallidos == total_pedidos:
         return 1
     if total_nuevas == 0:
-        log.warning("La fuente respondió pero NO trajo ningún hecho nuevo: el dato no avanzó.")
+        log.warning("Las fuentes respondieron pero NO trajeron ningún hecho nuevo: el dato no avanzó.")
         return 3
     return 0
 

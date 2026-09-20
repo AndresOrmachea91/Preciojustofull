@@ -25,10 +25,17 @@ MESES = {
 class FuenteSiipIpc:
     """Adaptador del puerto FuentePrecios."""
 
-    def __init__(self, cliente: ClienteResiliente | None = None, version: str = "2018"):
+    def __init__(
+        self,
+        cliente: ClienteResiliente | None = None,
+        version: str = "2018",
+        mapeo: dict[str, str] | None = None,
+    ):
         self._cliente = cliente or ClienteResiliente()
         self._cliente.nombre_fuente = self.nombre
         self._version = version
+        # Código del catálogo -> código del IPC (ver FuenteSiipDiario).
+        self._mapeo = mapeo or {}
 
     @property
     def nombre(self) -> str:
@@ -47,7 +54,8 @@ class FuenteSiipIpc:
     def recolectar(self, codigo_producto: str) -> list[Observacion]:
         r = self._cliente.pedir(
             URL, metodo="POST",
-            data={"flag": "itemAniosMes", "version": self._version, "item": codigo_producto},
+            data={"flag": "itemAniosMes", "version": self._version,
+                  "item": self._mapeo.get(codigo_producto, codigo_producto)},
         )
         return self._parsear(r.json(), codigo_producto)
 

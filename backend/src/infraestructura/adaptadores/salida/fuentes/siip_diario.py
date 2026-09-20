@@ -45,10 +45,20 @@ def numero_boliviano(texto: str) -> float | None:
 class FuenteSiipDiario:
     """Adaptador del puerto FuentePrecios."""
 
-    def __init__(self, cliente: ClienteResiliente | None = None, departamento: int = 2):
+    def __init__(
+        self,
+        cliente: ClienteResiliente | None = None,
+        departamento: int = 2,
+        mapeo: dict[str, str] | None = None,
+    ):
         self._cliente = cliente or ClienteResiliente()
         self._cliente.nombre_fuente = self.nombre
         self._departamento = departamento   # 2 = La Paz
+        # Código del catálogo -> código del SIIP. Las observaciones se
+        # guardan con el código del catálogo; el de la fuente es un detalle
+        # de este adaptador. Sin mapeo, se asume que el código ya es el de
+        # la fuente (uso manual, pruebas).
+        self._mapeo = mapeo or {}
 
     @property
     def nombre(self) -> str:
@@ -60,7 +70,7 @@ class FuenteSiipDiario:
     def recolectar(self, codigo_producto: str) -> list[Observacion]:
         params = {
             "DatosGen": 1,
-            "producto": codigo_producto,
+            "producto": self._mapeo.get(codigo_producto, codigo_producto),
             f"d{self._departamento}": self._departamento,
         }
         respuesta = self._cliente.pedir(URL, params=params)
@@ -80,8 +90,15 @@ class FuenteSiipDiario:
         if not encabezados:
             return []
 
+        # Las filas de encabezado se alinean por la IZQUIERDA: la segunda
+        # fila empieza después de las celdas con rowspan de la primera
+        # (Ciudad, Unidad). Alinear por la derecha corría los meses cuando
+        # el SIIP manda colspan="" o menos etiquetas que columnas, y eso
+        # producía dos "octubre" con valores distintos para el mismo hecho.
+        fijas = self._celdas_con_rowspan(filas[0])
+        encabezados = [encabezados[0]] + [[""] * fijas + e for e in encabezados[1:]]
         ancho = max(len(e) for e in encabezados)
-        encabezados = [[""] * (ancho - len(e)) + e for e in encabezados]
+        encabezados = [e + [""] * (ancho - len(e)) for e in encabezados]
         periodos = self._mapear_periodos(encabezados, ancho)
 
         ahora = datetime.now(timezone.utc)
@@ -141,6 +158,16 @@ class FuenteSiipDiario:
         return encabezados, inicio
 
     @staticmethod
+    def _celdas_con_rowspan(fila) -> int:
+        total = 0
+        for c in fila.find_all(["th", "td"]):
+            try:
+                total += 1 if int(c.get("rowspan", 1)) > 1 else 0
+            except (TypeError, ValueError):
+                pass
+        return total
+
+    @staticmethod
     def _expandir(fila):
         salida = []
         for c in fila.find_all(["th", "td"]):
@@ -195,6 +222,8 @@ class FuenteSiipDiario:
                 mes = mes or mes_actual
 
             if anio or mes or dia:
-                periodos[col] = (anio or anio_actual, mes or mes_actual, dia)
+                # Sin etiqueta de mes la columna es del año, no del mes
+                # anterior: heredar el mes inventaría un período.
+                periodos[col] = (anio or anio_actual, mes, dia)
         return periodos
 

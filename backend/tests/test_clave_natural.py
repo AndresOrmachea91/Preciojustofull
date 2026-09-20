@@ -121,3 +121,16 @@ def test_el_indice_unico_rechaza_lo_que_el_upsert_no_vio():
             "precio_monto, unidad_texto, cantidad, ambito, capturada_en) VALUES "
             "('siip_ipc','minorista','111030102','la_paz',2026,8,NULL,6.82,'LIBRA(s)',1.0,'ciudad','2026-09-02')"
         ))
+
+
+def test_una_revision_ya_conocida_no_se_vuelve_a_insertar():
+    """
+    Un hecho con dos valores conocidos (original y revisión): volver a ver
+    CUALQUIERA de los dos es "visto", no una tercera fila. Antes solo se
+    comparaba con el último y la segunda pasada chocaba contra el índice.
+    """
+    motor, repo = _sqlalchemy()
+    repo.guardar_varias([_obs(monto=9.91), _obs(monto=10.5, capturada=T0 + timedelta(days=1))])
+    assert repo.guardar_varias([_obs(monto=9.91), _obs(monto=10.5)]) == 0
+    with motor.connect() as c:
+        assert c.execute(text("SELECT count(*) FROM observacion_precio")).scalar() == 2

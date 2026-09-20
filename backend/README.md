@@ -91,15 +91,40 @@ Tres pruebas cuentan la arquitectura mejor que cualquier explicación:
 
 ## El recolector
 
-    python -m src.infraestructura.adaptadores.entrada.cli.recolectar --fuente diario --productos 5,12,30
+    python -m src.infraestructura.adaptadores.entrada.cli.recolectar                 # todo el catálogo, las dos fuentes
+    python -m src.infraestructura.adaptadores.entrada.cli.recolectar --fuente ipc --productos arroz_primera,papa_holandesa
     python -m src.infraestructura.adaptadores.entrada.cli.recolectar --disponibilidad
+
+Los productos salen de `datos/catalogo/productos.csv`, que dice qué código
+usa cada fuente (`siip_diario`, `siip_ipc`) para cada uno. Las
+observaciones se guardan con el código del catálogo (`arroz_primera`),
+nunca con el de la fuente.
 
 Sin `BASE_DATOS_URL` avisa y termina con error en lugar de correr en vacío:
 es preferible fallar ruidosamente antes que perder días de serie en silencio.
 
-Guardar es **idempotente** —hay una restricción de unicidad por fuente,
-producto, mercado y fecha—, así que se puede correr tres veces al día sin
-duplicar nada.
+Guardar es **idempotente**: cada observación se identifica por la clave
+natural del hecho (fuente, nivel, producto, ámbito, lugar, período
+observado, unidad y cantidad) y volver a verla no la duplica, solo anota
+`ultima_captura_en`. Si la fuente publica otro valor para el mismo hecho,
+se guarda como revisión (`revisa_a`) sin pisar la anterior.
+
+El resumen de disponibilidad tiene dos partes: si el portal **responde**
+(intentos HTTP) y si el dato **avanza** (corridas con al menos un hecho
+nuevo). Una corrida que ve hechos ya conocidos y ninguno nuevo sale con
+código 3 y cuenta como fallida: el servidor respondió, pero la serie no
+se movió.
+
+## Reparar los datos existentes
+
+    python -m src.infraestructura.adaptadores.entrada.cli.reparar_datos            # simulación
+    python -m src.infraestructura.adaptadores.entrada.cli.reparar_datos --aplicar
+
+Una sola vez, idempotente. Siembra el catálogo, pone la ciudad en su campo
+y el producto con el código del catálogo, reprocesa el parseo con el
+parser actual, deduplica por clave natural conservando la primera captura
+(y se detiene sin borrar nada si un hecho tiene más de un valor) y crea el
+índice único. Correrlo primero en simulación es obligatorio.
 
 ## La siembra del catálogo
 

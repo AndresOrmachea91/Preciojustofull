@@ -96,7 +96,7 @@ def test_la_reparacion_deja_un_hecho_por_fila_con_la_primera_captura():
         harina = c.execute(text(
             "SELECT unidad_canonica, precio_canonico, unidad_texto, precio_monto, ciudad, codigo_mercado, "
             "capturada_en, ultima_captura_en, tipo_precio, fecha_observacion "
-            "FROM observacion_precio WHERE codigo_producto = '12' AND dia IS NULL"
+            "FROM observacion_precio WHERE codigo_producto = 'harina_blanca' AND dia IS NULL"
         )).one()
     assert (harina.unidad_canonica, harina.precio_canonico) == ("kg", pytest.approx(335.0 / 46))
     assert (harina.unidad_texto, harina.precio_monto) == ("46 Kg.", 335.0)     # el original no se toca
@@ -106,7 +106,9 @@ def test_la_reparacion_deja_un_hecho_por_fila_con_la_primera_captura():
     assert harina.tipo_precio == TipoPrecio.COTIZADO.value and harina.fecha_observacion is None
 
     repo = ObservacionesPostgres(fabrica_sesiones(motor))
-    (diaria,) = [o for o in repo.buscar("5", ciudad="la_paz") if o.periodo.dia == 2]
+    (diaria,) = [o for o in repo.buscar("arroz_primera", ciudad="la_paz") if o.periodo.dia == 2]
+    assert informe["2b_producto"]["remapeados"] == [("5", "arroz_primera"), ("12", "harina_blanca"), ("30", "pacu")]
+    assert informe["2b_producto"]["sin_mapeo"] == []
     assert diaria.ambito is Ambito.CIUDAD and diaria.fecha_observacion.isoformat() == "2026-07-02"
 
 
@@ -133,5 +135,5 @@ def test_despues_de_reparar_el_indice_rechaza_duplicados():
         c.execute(text(
             "INSERT INTO observacion_precio (fuente, nivel, codigo_producto, ciudad, anio, mes, dia, precio_monto, "
             "unidad_texto, cantidad, ambito, capturada_en) VALUES "
-            "('siip_diario','mayorista','30',  'la_paz', 2026, 6, NULL, 39.5, 'Kg.', 1.0, 'ciudad', '2026-09-20')"
+            "('siip_diario','mayorista','pacu', 'la_paz', 2026, 6, NULL, 39.5, 'Kg.', 1.0, 'ciudad', '2026-09-20')"
         ))

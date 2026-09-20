@@ -108,3 +108,14 @@ def test_el_catalogo_real_de_productos_se_lee_entero():
     assert por_codigo["trucha"].categoria is Categoria.PESCADO
     assert por_codigo["leche_polvo"].categoria is Categoria.LACTEO
     assert por_codigo["arroz_primera"].es_perecedero is False
+
+
+def test_el_mapeo_a_las_fuentes_sale_del_catalogo():
+    from src.infraestructura.adaptadores.salida.catalogo.lector_csv import leer_mapeo_fuentes
+
+    mapeo = leer_mapeo_fuentes(PRODUCTOS_REAL)
+
+    assert mapeo["siip_diario"]["arroz_primera"] == "5"
+    assert mapeo["siip_ipc"]["arroz_primera"] == "111030102"
+    assert "banana" not in mapeo["siip_ipc"] and mapeo["siip_diario"]["banana"] == "60"
+    assert len(mapeo["siip_diario"]) == 45 and len(mapeo["siip_ipc"]) == 41
