@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from enum import Enum
 
+from src.dominio.excepciones import DerivacionCiclica
 from src.dominio.valor import (
     VARIEDAD_DESCONOCIDA, Ambito, Dinero, NivelConfianza, NivelPrecio, Periodo,
     TipoPrecio, UnidadCanonica,
@@ -14,7 +15,8 @@ __all__ = ["Fuente", "NivelPrecio", "Observacion"]
 class Fuente(str, Enum):
     SIIP_DIARIO = "siip_diario"       # mayorista, por ciudad, automático
     SIIP_IPC = "siip_ipc"             # consumidor final, por ciudad, automático
-    MEDIOS = "medios"                 # reportes audiovisuales
+    PRENSA = "prensa"                 # diarios que reproducen el boletín del SIIP
+    MEDIOS = "medios"                 # reportes audiovisuales propios
     CIUDADANO = "ciudadano"           # reporte desde el celular
     CAMPO = "campo"                   # levantamiento verificado
 
@@ -24,9 +26,48 @@ class Fuente(str, Enum):
             Fuente.CAMPO: NivelConfianza.VERIFICADO,
             Fuente.SIIP_DIARIO: NivelConfianza.ALTO,
             Fuente.SIIP_IPC: NivelConfianza.ALTO,
+            Fuente.PRENSA: NivelConfianza.MEDIO,
             Fuente.MEDIOS: NivelConfianza.MEDIO,
             Fuente.CIUDADANO: NivelConfianza.BAJO,
         }[self]
+
+    @property
+    def deriva_de(self) -> "Fuente | None":
+        """
+        De qué otra fuente copia esta. Un diario que reproduce el boletín
+        del SIIP no es una segunda evidencia del mismo precio: es la misma
+        evidencia dos veces. El motor lo usa para no inflar la confianza.
+        """
+        return _DERIVA_DE.get(self)
+
+    @property
+    def es_voz_unica(self) -> bool:
+        """
+        Una fuente de voz única publica UN dato y quien la copia repite ese
+        dato: sus observaciones forman un clan. Un reporte ciudadano, una
+        visita de campo o una nota de un medio propio son voces distintas
+        cada vez: no son copias de nadie, y cada una es evidencia propia.
+        """
+        return self.raiz in (Fuente.SIIP_DIARIO, Fuente.SIIP_IPC)
+
+    @property
+    def raiz(self) -> "Fuente":
+        """La fuente original al final de la cadena de derivación. Identifica el clan."""
+        actual = self
+        while actual.deriva_de is not None:
+            actual = actual.deriva_de
+        return actual
+
+    @classmethod
+    def validar_derivaciones(cls) -> None:
+        """Falla fuerte si la relación deriva_de tiene un ciclo."""
+        for inicio in cls:
+            camino, actual = [inicio], _DERIVA_DE.get(inicio)
+            while actual is not None:
+                if actual in camino:
+                    raise DerivacionCiclica([f.value for f in camino + [actual]])
+                camino.append(actual)
+                actual = _DERIVA_DE.get(actual)
 
     @property
     def nivel_fijo(self) -> NivelPrecio | None:
@@ -34,8 +75,11 @@ class Fuente(str, Enum):
         El nivel que la fuente cotiza SIEMPRE. El SIIP diario es el precio
         mayorista (arroz por quintal, carne en gancho); el IPC es lo que
         paga el consumidor. Una fuente de campo no tiene nivel fijo: mide
-        donde está parada, sea un puesto o un mayorista.
+        donde está parada, sea un puesto o un mayorista. Una fuente
+        derivada hereda el nivel de la que copia.
         """
+        if self.deriva_de is not None:
+            return self.deriva_de.nivel_fijo
         return {
             Fuente.SIIP_DIARIO: NivelPrecio.MAYORISTA,
             Fuente.SIIP_IPC: NivelPrecio.MINORISTA,
@@ -43,10 +87,17 @@ class Fuente(str, Enum):
 
     @property
     def ambito(self) -> Ambito:
-        """Las dos fuentes del SIIP publican un valor por ciudad, no por puesto."""
-        if self in (Fuente.SIIP_DIARIO, Fuente.SIIP_IPC):
+        """Las dos fuentes del SIIP publican un valor por ciudad, no por puesto; quien las copia también."""
+        if self.raiz in (Fuente.SIIP_DIARIO, Fuente.SIIP_IPC):
             return Ambito.CIUDAD
         return Ambito.PUNTO_VENTA
+
+
+# Quién copia a quién. Declarado acá, en una sola tabla, para que no haya
+# que leer cinco adaptadores para saberlo. Sin ciclos: se valida.
+_DERIVA_DE: dict[Fuente, Fuente] = {
+    Fuente.PRENSA: Fuente.SIIP_DIARIO,
+}
 
 
 @dataclass(frozen=True, slots=True)

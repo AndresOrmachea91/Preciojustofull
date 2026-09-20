@@ -39,7 +39,7 @@ class CompararMercadosCasoUso:
             if not obs:
                 continue   # un mercado sin datos se omite, no se inventa
             try:
-                consolidado = self._motor.consolidar(obs)
+                consolidado = self._motor.consolidar_grupos(obs)[0]   # el grupo más reciente
             except SinObservaciones:
                 continue
             resultado.append(

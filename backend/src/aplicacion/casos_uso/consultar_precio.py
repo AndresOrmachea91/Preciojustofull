@@ -27,5 +27,8 @@ class ConsultarPrecioProducto:
         if self._productos.obtener(codigo_producto) is None:
             raise ProductoNoEncontrado(codigo_producto)
         obs = self._observaciones.buscar(codigo_producto, codigo_mercado)
-        return self._motor.consolidar(obs)
+        # Grupos distintos (otra variedad, otro mes) no se fusionan: se
+        # publica el más reciente. Decidir si "reciente" alcanza es otra
+        # historia, todavía no escrita.
+        return self._motor.consolidar_grupos(obs)[0]
 

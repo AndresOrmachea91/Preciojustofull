@@ -50,6 +50,26 @@ class ReferenciaNoEsMedicion(ErrorDominio):
         )
 
 
+class GruposNoComparables(ErrorDominio):
+    """
+    Se pidió UN precio para observaciones que no son comparables entre sí
+    (variedad, unidad o período distintos). No es conflicto: son grupos
+    separados, y se publican por separado.
+    """
+
+    def __init__(self, claves: list[str]):
+        self.claves = list(claves)
+        super().__init__("Las observaciones forman grupos no comparables: " + "; ".join(self.claves))
+
+
+class DerivacionCiclica(ErrorDominio):
+    """La relación deriva_de entre fuentes tiene un ciclo: un clan se contendría a sí mismo."""
+
+    def __init__(self, ciclo: list[str]):
+        self.ciclo = list(ciclo)
+        super().__init__("Ciclo en la derivación de fuentes: " + " -> ".join(self.ciclo))
+
+
 class NivelesNoComparables(ErrorDominio):
     """Se intentó mezclar precios mayoristas con precios de consumidor final."""
 

@@ -47,7 +47,7 @@ class CalcularCanastaCasoUso:
                     faltantes.append(item.codigo_producto)
                     continue
                 try:
-                    consolidado = self._motor.consolidar(obs)
+                    consolidado = self._motor.consolidar_grupos(obs)[0]   # el grupo más reciente
                 except SinObservaciones:
                     faltantes.append(item.codigo_producto)
                     continue
