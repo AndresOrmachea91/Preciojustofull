@@ -75,6 +75,9 @@ class ObservacionTabla(Base):
     unidad_canonica = Column(String(8), nullable=True)
 
     reputacion_informante = Column(Float, nullable=False, default=1.0)
+    # "punto_venta" si se midió en un local; "ciudad" si la fuente publica
+    # un valor para toda la ciudad (SIIP). Lo segundo estima, no mide.
+    ambito = Column(String(16), nullable=False, default="punto_venta")
     capturada_en = Column(DateTime(timezone=True), nullable=False)
 
     __table_args__ = (

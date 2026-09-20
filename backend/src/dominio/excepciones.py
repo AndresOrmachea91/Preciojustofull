@@ -36,6 +36,20 @@ class JerarquiaInvalida(ErrorDominio):
         super().__init__("Jerarquía inválida: " + "; ".join(self.infracciones))
 
 
+class ReferenciaNoEsMedicion(ErrorDominio):
+    """
+    Se intentó consolidar como precio de un local un dato que la fuente
+    publica por ciudad. Ese dato es referencia para estimar, no medición.
+    """
+
+    def __init__(self, codigo_mercado: str):
+        self.codigo_mercado = codigo_mercado
+        super().__init__(
+            f"Las observaciones de ámbito ciudad ({codigo_mercado}) no son mediciones "
+            "de un local: úsese MotorFusion.estimar_desde_ciudad"
+        )
+
+
 class NivelesNoComparables(ErrorDominio):
     """Se intentó mezclar precios mayoristas con precios de consumidor final."""
 

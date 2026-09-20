@@ -10,7 +10,8 @@ import logging
 from datetime import datetime, timezone
 
 from src.infraestructura.adaptadores.salida.fuentes.cliente_resiliente import ClienteResiliente
-from src.dominio.modelo import Fuente, NivelPrecio, Observacion
+from src.dominio.excepciones import UnidadDesconocida
+from src.dominio.modelo import Fuente, Observacion
 from src.dominio.valor import Dinero, Periodo, Unidad
 
 log = logging.getLogger(__name__)
@@ -29,6 +30,7 @@ class FuenteSiipIpc:
         self._cliente = cliente or ClienteResiliente()
         self._cliente.nombre_fuente = self.nombre
         self._version = version
+        self.rechazadas: list[tuple[str, str]] = []
 
     @property
     def nombre(self) -> str:
@@ -68,6 +70,11 @@ class FuenteSiipIpc:
         for fila in datos.get("data") or []:
             ciudad = (fila.get("ciudad") or "").strip()
             unidad_texto = fila.get("unidad") or ""
+            if not Unidad(unidad_texto).es_conocida():
+                motivo = str(UnidadDesconocida(unidad_texto))
+                self.rechazadas.append((f"{codigo_producto}/{ciudad}", motivo))
+                log.warning("Serie rechazada (%s, %s): %s", codigo_producto, ciudad, motivo)
+                continue
             # El IPC cotiza una presentación concreta (por ejemplo 0,90 litros):
             # primero hay que llevar el precio a una unidad comercial completa.
             try:
@@ -88,12 +95,14 @@ class FuenteSiipIpc:
                 salida.append(
                     Observacion(
                         fuente=Fuente.SIIP_IPC,
-                        nivel=NivelPrecio.MINORISTA,
+                        nivel=Fuente.SIIP_IPC.nivel_fijo,
                         codigo_producto=codigo_producto,
+                        # Una serie por ciudad, no por mercado: ámbito CIUDAD.
                         codigo_mercado=ciudad.lower().replace(" ", "_"),
                         periodo=Periodo(anio, mes),
                         precio=precio,
                         capturada_en=ahora,
+                        ambito=Fuente.SIIP_IPC.ambito,
                     )
                 )
         return salida

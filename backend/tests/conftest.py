@@ -14,7 +14,7 @@ def repositorios():
 
 @pytest.fixture
 def hacer_observacion():
-    def _hacer(monto, unidad="KILO", fuente=Fuente.SIIP_IPC, reputacion=1.0,
+    def _hacer(monto, unidad="KILO", fuente=Fuente.MEDIOS, reputacion=1.0,
                producto="tomate", mercado="rodriguez"):
         return Observacion(
             fuente=fuente,

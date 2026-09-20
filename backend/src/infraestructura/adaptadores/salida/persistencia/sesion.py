@@ -48,6 +48,9 @@ _COLUMNAS_AGREGADAS = {
         "macrodistrito": "VARCHAR(64) NOT NULL DEFAULT ''",
         "codigo_padre": "VARCHAR(64) NULL REFERENCES mercado(codigo)",
     },
+    "observacion_precio": {
+        "ambito": "VARCHAR(16) NOT NULL DEFAULT 'punto_venta'",
+    },
 }
 
 

@@ -3,12 +3,14 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 
-from src.dominio.valor import Dinero, Periodo, NivelConfianza
+from src.dominio.valor import Ambito, Dinero, NivelConfianza, NivelPrecio, Periodo
+
+__all__ = ["Fuente", "NivelPrecio", "Observacion"]
 
 
 class Fuente(str, Enum):
-    SIIP_DIARIO = "siip_diario"       # mayorista, automático
-    SIIP_IPC = "siip_ipc"             # minorista de referencia, automático
+    SIIP_DIARIO = "siip_diario"       # mayorista, por ciudad, automático
+    SIIP_IPC = "siip_ipc"             # consumidor final, por ciudad, automático
     MEDIOS = "medios"                 # reportes audiovisuales
     CIUDADANO = "ciudadano"           # reporte desde el celular
     CAMPO = "campo"                   # levantamiento verificado
@@ -23,10 +25,25 @@ class Fuente(str, Enum):
             Fuente.CIUDADANO: NivelConfianza.BAJO,
         }[self]
 
+    @property
+    def nivel_fijo(self) -> NivelPrecio | None:
+        """
+        El nivel que la fuente cotiza SIEMPRE. El SIIP diario es el precio
+        mayorista (arroz por quintal, carne en gancho); el IPC es lo que
+        paga el consumidor. Una fuente de campo no tiene nivel fijo: mide
+        donde está parada, sea un puesto o un mayorista.
+        """
+        return {
+            Fuente.SIIP_DIARIO: NivelPrecio.MAYORISTA,
+            Fuente.SIIP_IPC: NivelPrecio.MINORISTA,
+        }.get(self)
 
-class NivelPrecio(str, Enum):
-    MAYORISTA = "mayorista"
-    MINORISTA = "minorista"
+    @property
+    def ambito(self) -> Ambito:
+        """Las dos fuentes del SIIP publican un valor por ciudad, no por puesto."""
+        if self in (Fuente.SIIP_DIARIO, Fuente.SIIP_IPC):
+            return Ambito.CIUDAD
+        return Ambito.PUNTO_VENTA
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,6 +66,25 @@ class Observacion:
     capturada_en: datetime
     # Para reportes ciudadanos: cuánto vale la palabra de quien reportó.
     reputacion_informante: float = 1.0
+    # Si es CIUDAD, codigo_mercado es el código de la ciudad ("la_paz") y
+    # el dato es referencia para estimar, no medición de un local.
+    ambito: Ambito = Ambito.PUNTO_VENTA
+
+    def __post_init__(self):
+        fijo = self.fuente.nivel_fijo
+        if fijo is not None and self.nivel is not fijo:
+            raise ValueError(
+                f"La fuente {self.fuente.value} solo cotiza {fijo.value}, no {self.nivel.value}"
+            )
+        if self.ambito is not self.fuente.ambito:
+            raise ValueError(
+                f"La fuente {self.fuente.value} publica por {self.fuente.ambito.value}, "
+                f"no por {self.ambito.value}"
+            )
+
+    @property
+    def es_referencia_de_ciudad(self) -> bool:
+        return self.ambito is Ambito.CIUDAD
 
     @property
     def confianza(self) -> NivelConfianza:

@@ -100,11 +100,11 @@ def datos_de_ejemplo():
         obs("tomate", "lanza", 7.50, "LIBRA", Fuente.CIUDADANO, 0.8),
         obs("tomate", "villafatima", 6.00, "LIBRA", Fuente.MEDIOS),
         obs("tomate", "minimarket_sopocachi", 9.00, "LIBRA", Fuente.CAMPO),
-        obs("papa", "rodriguez", 80.0, "ARROBA", Fuente.SIIP_DIARIO),
+        obs("papa", "rodriguez", 80.0, "ARROBA", Fuente.MEDIOS),
         obs("papa", "lanza", 85.0, "ARROBA", Fuente.CIUDADANO, 0.6),
         obs("papa", "villafatima", 78.0, "ARROBA", Fuente.CAMPO),
-        obs("arroz", "rodriguez", 8.20, "KILO", Fuente.SIIP_IPC),
-        obs("arroz", "lanza", 8.60, "KILO", Fuente.SIIP_IPC),
+        obs("arroz", "rodriguez", 8.20, "KILO", Fuente.MEDIOS),
+        obs("arroz", "lanza", 8.60, "KILO", Fuente.CAMPO),
         obs("arroz", "minimarket_sopocachi", 10.50, "KILO", Fuente.CAMPO),
     ]
     return (

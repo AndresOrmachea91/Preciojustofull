@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 
-from src.dominio.modelo.observacion import NivelPrecio
+from src.dominio.valor import NivelPrecio
 
 
 class TipoPuntoVenta(str, Enum):

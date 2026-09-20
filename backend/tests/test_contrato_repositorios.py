@@ -49,7 +49,7 @@ def repos(request):
     return _memoria() if request.param == "memoria" else _sqlalchemy()
 
 
-def _observacion(monto=10.0, unidad="KILO", fuente=Fuente.SIIP_IPC,
+def _observacion(monto=10.0, unidad="KILO", fuente=Fuente.MEDIOS,
                  producto="tomate", mercado="rodriguez", dia=15, reputacion=1.0):
     return Observacion(
         fuente=fuente,

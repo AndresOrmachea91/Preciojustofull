@@ -12,7 +12,8 @@ from datetime import datetime, timezone
 from bs4 import BeautifulSoup
 
 from src.infraestructura.adaptadores.salida.fuentes.cliente_resiliente import ClienteResiliente
-from src.dominio.modelo import Fuente, NivelPrecio, Observacion
+from src.dominio.excepciones import UnidadDesconocida
+from src.dominio.modelo import Fuente, Observacion
 from src.dominio.valor import Dinero, Periodo, Unidad
 
 log = logging.getLogger(__name__)
@@ -49,6 +50,9 @@ class FuenteSiipDiario:
         self._cliente = cliente or ClienteResiliente()
         self._cliente.nombre_fuente = self.nombre
         self._departamento = departamento   # 2 = La Paz
+        # Filas que no se pudieron traducir, con su motivo. No se cuelan:
+        # un precio por "caja" sin peso conocido no es un precio por kilo.
+        self.rechazadas: list[tuple[str, str]] = []
 
     @property
     def nombre(self) -> str:
@@ -94,6 +98,11 @@ class FuenteSiipDiario:
             unidad = celdas[1].strip()
             if not ciudad or ciudad.lower().startswith("promedio"):
                 continue   # el promedio se recalcula, no se importa
+            if not Unidad(unidad).es_conocida():
+                motivo = str(UnidadDesconocida(unidad))
+                self.rechazadas.append((f"{codigo_producto}/{ciudad}", motivo))
+                log.warning("Fila rechazada (%s, %s): %s", codigo_producto, ciudad, motivo)
+                continue
 
             for col, (anio, mes, dia) in periodos.items():
                 if col >= len(celdas) or anio is None:
@@ -108,12 +117,14 @@ class FuenteSiipDiario:
                 salida.append(
                     Observacion(
                         fuente=Fuente.SIIP_DIARIO,
-                        nivel=NivelPrecio.MAYORISTA,
+                        nivel=Fuente.SIIP_DIARIO.nivel_fijo,
                         codigo_producto=codigo_producto,
+                        # Es la ciudad, no un puesto: ámbito CIUDAD.
                         codigo_mercado=ciudad.lower().replace(" ", "_"),
                         periodo=Periodo(anio, mes, dia),
                         precio=precio,
                         capturada_en=ahora,
+                        ambito=Fuente.SIIP_DIARIO.ambito,
                     )
                 )
         return salida

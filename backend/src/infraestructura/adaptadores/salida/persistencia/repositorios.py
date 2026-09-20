@@ -28,7 +28,7 @@ from src.infraestructura.adaptadores.salida.persistencia.tablas import (
 from src.dominio.modelo import (
     Categoria, Fuente, Mercado, NivelPrecio, Observacion, Producto, TipoPuntoVenta,
 )
-from src.dominio.valor import Dinero, Periodo, Unidad
+from src.dominio.valor import Ambito, Dinero, Periodo, Unidad
 
 log = logging.getLogger(__name__)
 
@@ -69,6 +69,7 @@ def _a_observacion(f: ObservacionTabla) -> Observacion:
         precio=Dinero(f.precio_monto, Unidad(f.unidad_texto)),
         capturada_en=f.capturada_en,
         reputacion_informante=f.reputacion_informante,
+        ambito=Ambito(f.ambito or "punto_venta"),
     )
 
 
@@ -90,6 +91,7 @@ def _de_observacion(o: Observacion) -> dict:
         "precio_canonico": canonico,
         "unidad_canonica": canonica,
         "reputacion_informante": o.reputacion_informante,
+        "ambito": o.ambito.value,
         "capturada_en": o.capturada_en,
     }
 
