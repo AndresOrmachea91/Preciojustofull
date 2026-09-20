@@ -28,7 +28,7 @@ from src.infraestructura.adaptadores.salida.persistencia.tablas import (
 from src.dominio.modelo import (
     Categoria, Fuente, Mercado, NivelPrecio, Observacion, Producto, TipoPuntoVenta,
 )
-from src.dominio.valor import Ambito, Dinero, Periodo, Unidad
+from src.dominio.valor import Ambito, Dinero, Periodo, Unidad, UnidadCanonica
 
 log = logging.getLogger(__name__)
 
@@ -42,6 +42,7 @@ def _a_producto(f: ProductoTabla) -> Producto:
         categoria=Categoria(f.categoria),
         dias_conservacion=f.dias_conservacion,
         zona_origen=f.zona_origen,
+        unidad_base=UnidadCanonica(f.unidad_base or "kg"),
     )
 
 
@@ -124,6 +125,7 @@ class ProductosPostgres(_Base):
             fila.categoria = producto.categoria.value
             fila.dias_conservacion = producto.dias_conservacion
             fila.zona_origen = producto.zona_origen
+            fila.unidad_base = producto.unidad_base.value
 
 
 class MercadosPostgres(_Base):

@@ -3,12 +3,15 @@ from pathlib import Path
 
 import pytest
 
-from src.dominio.modelo import TipoPuntoVenta
+from src.dominio.modelo import Categoria, TipoPuntoVenta
+from src.dominio.valor import UnidadCanonica
 from src.infraestructura.adaptadores.salida.catalogo.lector_csv import (
-    CatalogoCorrupto, filas_a_puntos_venta, leer_puntos_venta,
+    CatalogoCorrupto, filas_a_productos, filas_a_puntos_venta, leer_productos, leer_puntos_venta,
 )
 
-CATALOGO_REAL = Path(__file__).resolve().parents[1] / "datos" / "catalogo" / "puntos_venta.csv"
+CATALOGO = Path(__file__).resolve().parents[1] / "datos" / "catalogo"
+CATALOGO_REAL = CATALOGO / "puntos_venta.csv"
+PRODUCTOS_REAL = CATALOGO / "productos.csv"
 
 FILA_BUENA = {
     "codigo": "rodriguez", "nombre": "Mercado Rodríguez", "tipo": "mercado",
@@ -62,3 +65,46 @@ def test_el_catalogo_real_se_lee_entero():
     por_codigo = {p.codigo: p for p in puntos}
     assert por_codigo["rodriguez_cubierto"].codigo_padre == "rodriguez"
     assert por_codigo["makro_centro"].tipo is TipoPuntoVenta.MAYORISTA
+
+
+# --- productos ------------------------------------------------------------
+
+PRODUCTO_BUENO = {
+    "codigo": "huevo", "nombre": "Huevo grande", "categoria": "carne", "unidad_base": "unidad",
+    "es_perecedero": "si", "siip_diario": "29", "siip_ipc": "114040101",
+    "revision": "verificar_unidad", "notas": "",
+}
+
+
+def test_traduce_un_producto_completo():
+    (p,) = filas_a_productos([PRODUCTO_BUENO])
+
+    assert p.codigo == "huevo"
+    assert p.categoria is Categoria.CARNE
+    assert p.unidad_base is UnidadCanonica.UNIDAD
+    assert p.es_perecedero is True
+    assert filas_a_productos([{**PRODUCTO_BUENO, "es_perecedero": "no"}])[0].es_perecedero is False
+
+
+@pytest.mark.parametrize("fila, motivo", [
+    ({**PRODUCTO_BUENO, "categoria": "bebida"}, "categoría desconocida 'bebida'"),
+    ({**PRODUCTO_BUENO, "unidad_base": "caja"}, "unidad_base desconocida 'caja'"),
+    ({**PRODUCTO_BUENO, "es_perecedero": "quizás"}, "es_perecedero debe ser si o no"),
+    ({**PRODUCTO_BUENO, "nombre": ""}, "la columna 'nombre' está vacía"),
+])
+def test_un_producto_corrupto_falla_con_fila_y_motivo(fila, motivo):
+    with pytest.raises(CatalogoCorrupto) as e:
+        filas_a_productos([PRODUCTO_BUENO, fila])
+    assert e.value.numero_fila == 3
+    assert motivo in str(e.value)
+
+
+def test_el_catalogo_real_de_productos_se_lee_entero():
+    productos = leer_productos(PRODUCTOS_REAL)
+
+    assert len(productos) == 45
+    por_codigo = {p.codigo: p for p in productos}
+    assert por_codigo["cebolla_verde"].unidad_base is UnidadCanonica.ATADO
+    assert por_codigo["trucha"].categoria is Categoria.PESCADO
+    assert por_codigo["leche_polvo"].categoria is Categoria.LACTEO
+    assert por_codigo["arroz_primera"].es_perecedero is False

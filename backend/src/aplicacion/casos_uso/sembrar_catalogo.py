@@ -8,8 +8,8 @@ trabajo del adaptador.
 from __future__ import annotations
 from dataclasses import dataclass, field, replace
 
-from src.aplicacion.puertos.salida import RepositorioMercados
-from src.dominio.modelo import Mercado
+from src.aplicacion.puertos.salida import RepositorioMercados, RepositorioProductos
+from src.dominio.modelo import Mercado, Producto
 from src.dominio.servicio.jerarquia import ordenar_padres_primero, validar_jerarquia
 
 
@@ -33,10 +33,39 @@ class SembrarCatalogo:
     actualiza lo que cambió, comparando entidad contra entidad.
     """
 
-    def __init__(self, mercados: RepositorioMercados):
+    def __init__(
+        self, mercados: RepositorioMercados, productos: RepositorioProductos | None = None
+    ):
         self._mercados = mercados
+        self._productos = productos
+
+    def sembrar_productos(self, productos: list[Producto], simular: bool = False) -> ResumenSiembra:
+        """
+        Los productos no dependen de nada: se siembran en cualquier orden
+        y no hay nada aprendido que conservar, así que la comparación es
+        entidad contra entidad, sin más.
+        """
+        if self._productos is None:
+            raise ValueError("SembrarCatalogo no recibió un repositorio de productos")
+        resumen = ResumenSiembra(simulado=simular)
+        for producto in productos:
+            existente = self._productos.obtener(producto.codigo)
+            if existente is None:
+                resumen.insertados.append(producto.codigo)
+            elif existente == producto:
+                resumen.sin_cambios.append(producto.codigo)
+                continue
+            else:
+                resumen.actualizados.append(producto.codigo)
+            if not simular:
+                self._productos.guardar(producto)
+        return resumen
 
     def ejecutar(self, puntos: list[Mercado], simular: bool = False) -> ResumenSiembra:
+        """Siembra los puntos de venta. Alias histórico de sembrar_puntos_venta."""
+        return self.sembrar_puntos_venta(puntos, simular)
+
+    def sembrar_puntos_venta(self, puntos: list[Mercado], simular: bool = False) -> ResumenSiembra:
         validar_jerarquia(puntos)
         resumen = ResumenSiembra(simulado=simular)
 

@@ -29,6 +29,7 @@ class ProductoTabla(Base):
     categoria = Column(String(32), nullable=False, default="otro")
     dias_conservacion = Column(Integer, nullable=False, default=30)
     zona_origen = Column(String(128), nullable=True)
+    unidad_base = Column(String(8), nullable=False, default="kg")
 
 
 class MercadoTabla(Base):

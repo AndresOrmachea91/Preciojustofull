@@ -108,10 +108,11 @@ duplicar nada.
 
 Lleva `datos/catalogo/puntos_venta.csv` a la tabla `mercado`, con la
 jerarquía (un sector apunta a su mercado por `codigo_padre`) y el
-macrodistrito. Es **idempotente**: inserta lo que falta y actualiza lo que
-cambió, por código. Nunca borra, porque las observaciones ya apuntan a esos
-códigos, y no pisa el `factor_mercado` aprendido en campo. `--dry-run`
-reporta cuántos insertaría, actualizaría y dejaría igual sin tocar nada.
+macrodistrito, y `datos/catalogo/productos.csv` a la tabla `producto`. Es
+**idempotente**: inserta lo que falta y actualiza lo que cambió, por
+código. Nunca borra, porque las observaciones ya apuntan a esos códigos, y
+no pisa el `factor_mercado` aprendido en campo. `--dry-run` reporta cuántos
+insertaría, actualizaría y dejaría igual sin tocar nada.
 
 ## Postman
 

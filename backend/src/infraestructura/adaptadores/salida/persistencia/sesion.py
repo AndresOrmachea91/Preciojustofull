@@ -44,6 +44,9 @@ def crear_motor(url: str, eco: bool = False) -> Engine:
 # tablas nuevas pero no toca las existentes, así que se completan a mano.
 # Es una migración mínima; si el esquema sigue creciendo, toca Alembic.
 _COLUMNAS_AGREGADAS = {
+    "producto": {
+        "unidad_base": "VARCHAR(8) NOT NULL DEFAULT 'kg'",
+    },
     "mercado": {
         "macrodistrito": "VARCHAR(64) NOT NULL DEFAULT ''",
         "codigo_padre": "VARCHAR(64) NULL REFERENCES mercado(codigo)",

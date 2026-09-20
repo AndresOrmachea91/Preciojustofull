@@ -1,0 +1,46 @@
+codigo,nombre,categoria,unidad_base,es_perecedero,siip_diario,siip_ipc,revision,notas
+arroz_primera,Arroz de primera,abarrote,kg,no,5,111030102,ok,confirmado en mapeo_productos
+arroz_segunda,Arroz de segunda,abarrote,kg,no,7,111030103,ok,confirmado en mapeo_productos
+azucar,Azúcar blanco nacional,abarrote,kg,no,9,118010101,ok,confirmado en mapeo_productos
+harina_blanca,Harina blanca nacional,abarrote,kg,no,12,111040101,ok,confirmado en mapeo_productos
+fideo,Fideo nacional,abarrote,kg,no,10,111060101,confirmar_ipc,el IPC separa fideo corto (111060101) y pasta larga (111060103); el diario no distingue
+aceite_soya,Aceite vegetal envasado nacional,abarrote,litro,no,3,115010103,confirmar_ipc,el diario no dice de qué aceite es; el IPC separa girasol (115010102) y soya
+manteca_vegetal,Manteca vegetal nacional,abarrote,kg,no,18,,ok,sin equivalente en el IPC división 1
+leche_polvo,Leche en polvo,lacteo,kg,no,13,114010304,ok,confirmado en mapeo_productos
+leche_fluida,Leche fluida,lacteo,litro,si,14,114010202,confirmar_ipc,el IPC separa natural (114010101) y pasteurizada
+quinua,Quinua,abarrote,kg,no,19,111030602,confirmar_ipc,el IPC dice quinua real; el diario solo quinua
+mani,Maní,abarrote,kg,no,16,117050201,confirmar_ipc,el IPC especifica crudo
+pollo_entero,Pollo entero eviscerado,carne,kg,si,23,112060101,ok,
+carne_res,Carne de res,carne,kg,si,27,112010107,revisar_corte,el diario cotiza en gancho (mayorista) y el IPC pulpa con hueso (minorista); no son el mismo corte
+carne_cerdo,Carne de cerdo,carne,kg,si,72,112020101,revisar_corte,mismo problema de corte que la res
+huevo,Huevo grande,carne,unidad,si,29,114040101,verificar_unidad,confirmar si el diario cotiza por unidad o por ciento
+pacu,Pacú,pescado,kg,si,30,113010112,ok,confirmado en mapeo_productos
+pejerrey,Pejerrey,pescado,kg,si,31,113010103,ok,confirmado en mapeo_productos
+surubi,Surubí,pescado,kg,si,32,113010108,ok,confirmado en mapeo_productos
+trucha,Trucha,pescado,kg,si,33,113010101,ok,confirmado en mapeo_productos
+papa_holandesa,Papa holandesa,tuberculo,kg,no,44,117020104,ok,confirmado en mapeo_productos
+papa_desiree,Papa Desiree,tuberculo,kg,no,43,,ok,sin equivalente en el IPC
+papa_huaycha,Papa Huaycha,tuberculo,kg,no,46,,ok,el IPC solo tiene imilla; huaycha no es imilla
+yuca,Yuca,tuberculo,kg,si,47,117020801,ok,
+tomate,Tomate Rio Fuego,hortaliza,kg,si,56,117012902,confirmar_ipc,el IPC separa redondo (117012902) y perita (117012901)
+cebolla,Cebolla cabeza,hortaliza,kg,si,50,117011202,ok,
+cebolla_verde,Cebolla verde,hortaliza,atado,si,51,117011201,verificar_unidad,el atado no convierte a kg
+zanahoria,Zanahoria Chantenay,hortaliza,kg,si,58,117013201,ok,confirmado en mapeo_productos
+haba_verde,Haba verde,hortaliza,kg,si,52,117013501,ok,
+arveja,Arveja blanca,hortaliza,kg,si,49,117013401,confirmar_ipc,el diario dice blanca y el IPC verde
+choclo,Maíz choclo,hortaliza,unidad,si,54,117011301,verificar_unidad,se vende por unidad y por docena
+locoto,Locoto,hortaliza,kg,si,53,117012101,ok,confirmado en mapeo_productos
+aji_vaina,Ají en vaina,hortaliza,kg,no,48,117010302,ok,confirmado en mapeo_productos
+ajo,Ajo,hortaliza,kg,no,77,117010401,ok,confirmado en mapeo_productos
+pimenton,Pimentón californiano,hortaliza,kg,si,55,117012501,ok,
+vainita,Vainita blanca,hortaliza,kg,si,57,117013601,ok,
+zapallo,Zapallo,hortaliza,kg,no,59,117013301,ok,
+platano,Plátano,fruta,kg,si,69,116016901,colision_ipc,el IPC agrupa plátano/guineo/banano en un solo item; banana usa el mismo código
+banana,Banana Cavendish,fruta,kg,si,60,,colision_ipc,el IPC no separa banana de plátano; se deja sin mapeo para no duplicar la serie
+limon,Limón sutil,fruta,kg,si,61,116014101,confirmar_ipc,el IPC dice criollo y el diario sutil
+mandarina,Mandarina criolla,fruta,kg,si,62,116014501,ok,confirmado en mapeo_productos
+manzana,Manzana Red Delicious,fruta,kg,si,64,116014702,verificar_unidad,el diario cotiza por caja de 21 kg
+naranja,Naranja criolla,fruta,kg,si,65,116015502,ok,confirmado en mapeo_productos
+papaya,Papaya Salvietti,fruta,kg,si,67,116016301,ok,confirmado en mapeo_productos
+pina,Piña Pucallpa,fruta,unidad,si,68,116016601,verificar_unidad,se vende por unidad
+sandia,Sandía Crimson Sweet,fruta,unidad,si,70,116017001,verificar_unidad,se vende por unidad y por peso

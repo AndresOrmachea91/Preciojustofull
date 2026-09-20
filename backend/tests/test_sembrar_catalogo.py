@@ -10,15 +10,17 @@ from sqlalchemy import event
 
 from src.aplicacion.casos_uso.sembrar_catalogo import SembrarCatalogo
 from src.dominio.excepciones import JerarquiaInvalida
-from src.dominio.modelo import Mercado, TipoPuntoVenta
-from src.infraestructura.adaptadores.salida.catalogo.lector_csv import leer_puntos_venta
-from src.infraestructura.adaptadores.salida.memoria.repositorios import MercadosEnMemoria
-from src.infraestructura.adaptadores.salida.persistencia.repositorios import MercadosPostgres
+from src.dominio.modelo import Categoria, Mercado, Producto, TipoPuntoVenta
+from src.dominio.valor import UnidadCanonica
+from src.infraestructura.adaptadores.salida.catalogo.lector_csv import leer_productos, leer_puntos_venta
+from src.infraestructura.adaptadores.salida.memoria.repositorios import MercadosEnMemoria, ProductosEnMemoria
+from src.infraestructura.adaptadores.salida.persistencia.repositorios import MercadosPostgres, ProductosPostgres
 from src.infraestructura.adaptadores.salida.persistencia.sesion import (
     crear_esquema, crear_motor, fabrica_sesiones,
 )
 
 CATALOGO_REAL = Path(__file__).resolve().parents[1] / "datos" / "catalogo" / "puntos_venta.csv"
+PRODUCTOS_REAL = Path(__file__).resolve().parents[1] / "datos" / "catalogo" / "productos.csv"
 
 
 def _punto(codigo, nombre=None, tipo=TipoPuntoVenta.MERCADO, padre=None, macro="Centro"):
@@ -121,3 +123,64 @@ def test_el_catalogo_real_se_siembra_en_sqlalchemy_con_clave_foranea():
     hijo = repo.obtener("rodriguez_cubierto")
     assert hijo.codigo_padre == "rodriguez"
     assert hijo.macrodistrito == "Cotahuma"
+
+
+# --- productos ------------------------------------------------------------
+
+PRODUCTOS = [
+    Producto("arroz_primera", "Arroz de primera", Categoria.ABARROTE, 30),
+    Producto("huevo", "Huevo grande", Categoria.CARNE, 5, unidad_base=UnidadCanonica.UNIDAD),
+]
+
+
+def test_sembrar_productos_dos_veces_deja_el_mismo_estado():
+    repo = ProductosEnMemoria()
+    caso = SembrarCatalogo(MercadosEnMemoria(), repo)
+
+    primera = caso.sembrar_productos(PRODUCTOS)
+    segunda = caso.sembrar_productos(PRODUCTOS)
+
+    assert len(primera.insertados) == 2
+    assert segunda.insertados == segunda.actualizados == []
+    assert len(segunda.sin_cambios) == 2
+    assert len(repo.listar()) == 2
+
+
+def test_sembrar_productos_sobre_existentes_actualiza_sin_duplicar():
+    repo = ProductosEnMemoria([Producto("huevo", "Huevo", Categoria.OTRO)])
+
+    resumen = SembrarCatalogo(MercadosEnMemoria(), repo).sembrar_productos(PRODUCTOS)
+
+    assert resumen.actualizados == ["huevo"]
+    assert resumen.insertados == ["arroz_primera"]
+    assert len(repo.listar()) == 2
+    assert repo.obtener("huevo").unidad_base is UnidadCanonica.UNIDAD
+
+
+def test_dry_run_de_productos_no_escribe():
+    repo = ProductosEnMemoria()
+
+    resumen = SembrarCatalogo(MercadosEnMemoria(), repo).sembrar_productos(PRODUCTOS, simular=True)
+
+    assert len(resumen.insertados) == 2
+    assert repo.listar() == []
+
+
+def test_sin_repositorio_de_productos_no_se_puede_sembrar_productos():
+    with pytest.raises(ValueError, match="repositorio de productos"):
+        SembrarCatalogo(MercadosEnMemoria()).sembrar_productos(PRODUCTOS)
+
+
+def test_el_catalogo_real_de_productos_se_siembra_en_sqlalchemy():
+    motor = crear_motor("sqlite://")
+    crear_esquema(motor)
+    fabrica = fabrica_sesiones(motor)
+    caso = SembrarCatalogo(MercadosPostgres(fabrica), ProductosPostgres(fabrica))
+    productos = leer_productos(PRODUCTOS_REAL)
+
+    primera = caso.sembrar_productos(productos)
+    segunda = caso.sembrar_productos(productos)
+
+    assert len(primera.insertados) == 45
+    assert len(segunda.sin_cambios) == 45
+    assert ProductosPostgres(fabrica).obtener("cebolla_verde").unidad_base is UnidadCanonica.ATADO
