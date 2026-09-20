@@ -64,8 +64,16 @@ class ObservacionesEnMemoria:
         return salida
 
     def guardar_varias(self, observaciones: list[Observacion]) -> int:
-        self._datos.extend(observaciones)
-        return len(observaciones)
+        """Misma regla que el adaptador persistente: un hecho, una fila; otro valor, una revisión."""
+        conocidas = {(o.clave_natural, o.precio.monto) for o in self._datos}
+        nuevas = 0
+        for o in observaciones:
+            if (o.clave_natural, o.precio.monto) in conocidas:
+                continue
+            conocidas.add((o.clave_natural, o.precio.monto))
+            self._datos.append(o)
+            nuevas += 1
+        return nuevas
 
 
 # --- datos de ejemplo para levantar la API sin base de datos --------------

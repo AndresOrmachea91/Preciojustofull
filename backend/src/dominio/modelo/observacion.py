@@ -164,6 +164,36 @@ class Observacion:
         return self.ambito is Ambito.CIUDAD
 
     @property
+    def clave_natural(self) -> tuple:
+        """
+        Lo que identifica al HECHO observado, no a la captura. Dos capturas
+        del mismo hecho son una.
+
+        fuente + nivel: quién lo afirma y a qué altura de la cadena. La
+          misma cifra dicha por el IPC y por un diario que lo copia son
+          dos afirmaciones (el motor luego las colapsa en un clan).
+        producto + ámbito + lugar: de qué y de dónde. El lugar es un
+          punto de venta o una ciudad según el ámbito.
+        período observado (anio, mes, dia): cuándo, según el DATO. La fecha
+          de captura queda fuera a propósito: es cuándo lo supimos, no
+          cuándo pasó.
+        unidad original + cantidad: la presentación. "Bs 9,78 por 946 ml"
+          y "Bs 10,32 por kilo" del mismo producto, mes y ciudad son dos
+          hechos distintos, y el IPC publica los dos.
+
+        No entran: el monto (si difiere, es una REVISIÓN de la fuente, no
+        un hecho nuevo, y se guarda aparte con su captura), la reputación
+        ni la evidencia (describen la captura), ni la variedad (la fuente
+        no la publica; si un día lo hace, entra acá).
+        """
+        return (
+            self.fuente.value, self.nivel.value, self.codigo_producto,
+            self.ambito.value, self.codigo_mercado,
+            self.periodo.anio, self.periodo.mes, self.periodo.dia,
+            self.precio.unidad.texto, self.cantidad,
+        )
+
+    @property
     def es_convertible(self) -> bool:
         """
         Si el par original se puede llevar a una unidad canónica. Una

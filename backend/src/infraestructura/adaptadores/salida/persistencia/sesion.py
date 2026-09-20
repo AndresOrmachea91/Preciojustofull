@@ -8,7 +8,9 @@ from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from src.infraestructura.adaptadores.salida.persistencia.tablas import metadata
+from src.infraestructura.adaptadores.salida.persistencia.tablas import (
+    INDICE_CLAVE_NATURAL, NOMBRE_INDICE_CLAVE_NATURAL, metadata,
+)
 
 log = logging.getLogger(__name__)
 
@@ -59,6 +61,8 @@ _COLUMNAS_AGREGADAS = {
         "fecha_observacion": "DATE NULL",
         "tipo_precio": "VARCHAR(16) NOT NULL DEFAULT 'desconocido'",
         "evidencia": "VARCHAR(512) NULL",
+        "ultima_captura_en": "TIMESTAMP NULL",
+        "revisa_a": "INTEGER NULL REFERENCES observacion_precio(id)",
     },
 }
 
@@ -102,6 +106,17 @@ def crear_esquema(motor: Engine) -> None:
             if rellenadas:
                 log.info("Filas históricas completadas: %s", rellenadas)
     log.info("Esquema verificado")
+
+
+def asegurar_indice_clave_natural(motor: Engine) -> None:
+    """
+    Crea el índice único del hecho observado. Idempotente. Va aparte de
+    crear_esquema porque sobre una tabla con duplicados históricos falla:
+    primero se limpia (script de reparación), después se crea.
+    """
+    with motor.begin() as conexion:
+        conexion.execute(text(INDICE_CLAVE_NATURAL))
+    log.info("Índice %s verificado", NOMBRE_INDICE_CLAVE_NATURAL)
 
 
 def fabrica_sesiones(motor: Engine) -> sessionmaker[Session]:

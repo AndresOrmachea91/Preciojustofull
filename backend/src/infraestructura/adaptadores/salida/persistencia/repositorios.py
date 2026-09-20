@@ -16,9 +16,9 @@ from __future__ import annotations
 
 import logging
 
-from sqlalchemy import select
-from sqlalchemy.dialects.postgresql import insert as insert_pg
-from sqlalchemy.dialects.sqlite import insert as insert_sqlite
+from datetime import datetime, timezone
+
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session, sessionmaker
 
 from src.infraestructura.adaptadores.salida.persistencia.sesion import sesion_de
@@ -192,27 +192,72 @@ class ObservacionesPostgres(_Base):
 
     def guardar_varias(self, observaciones: list[Observacion]) -> int:
         """
-        Inserta ignorando duplicados. Devuelve cuántas filas NUEVAS entraron.
+        Upsert por clave natural. Devuelve cuántos hechos NUEVOS entraron.
 
-        Que sea idempotente es lo que permite correr el recolector tres
-        veces al día sin duplicar la serie: si el dato ya estaba, no pasa
-        nada.
+        - El mismo hecho con el mismo valor: no se inserta. Se anota que se
+          volvió a ver (ultima_captura_en); la primera captura no se pisa.
+        - El mismo hecho con OTRO valor: no es duplicado, es una revisión
+          de la fuente. Se inserta apuntando a la fila anterior (revisa_a)
+          y se conservan las dos con su captura.
+        - Un hecho desconocido: se inserta.
+
+        Se resuelve en Python y no con ON CONFLICT porque la tercera regla
+        no se puede expresar ahí, y porque así funciona igual en SQLite y
+        en PostgreSQL. Una sola consulta trae lo ya conocido de los
+        productos del lote; no hay una consulta por observación.
         """
         if not observaciones:
             return 0
 
-        filas = [_de_observacion(o) for o in observaciones]
+        ahora = datetime.now(timezone.utc)
         with sesion_de(self._fabrica) as s:
-            dialecto = s.get_bind().dialect.name
-            insert = insert_pg if dialecto == "postgresql" else insert_sqlite
-            sentencia = insert(ObservacionTabla).values(filas).on_conflict_do_nothing(
-                index_elements=[
-                    "fuente", "codigo_producto", "codigo_mercado", "anio", "mes", "dia",
-                ]
+            conocidas = self._hechos_conocidos(s, observaciones)
+            vistas: list[int] = []
+            nuevas: list[dict] = []
+            en_lote: set[tuple] = set()
+            for o in observaciones:
+                clave, monto = o.clave_natural, o.precio.monto
+                if (clave, monto) in en_lote:
+                    continue   # repetida dentro del mismo lote
+                en_lote.add((clave, monto))
+                previa = conocidas.get(clave)
+                if previa is not None and previa[1] == monto:
+                    vistas.append(previa[0])
+                    continue
+                fila = _de_observacion(o)
+                fila["capturada_en"] = o.capturada_en
+                fila["ultima_captura_en"] = o.capturada_en
+                fila["revisa_a"] = previa[0] if previa is not None else None
+                nuevas.append(fila)
+            if nuevas:
+                s.execute(ObservacionTabla.__table__.insert(), nuevas)
+            if vistas:
+                s.execute(
+                    update(ObservacionTabla)
+                    .where(ObservacionTabla.id.in_(vistas))
+                    .values(ultima_captura_en=ahora)
+                )
+        return len(nuevas)
+
+    @staticmethod
+    def _hechos_conocidos(s: Session, observaciones: list[Observacion]) -> dict[tuple, tuple[int, float]]:
+        """clave natural -> (id, monto) de la fila MÁS RECIENTE conocida de cada hecho."""
+        productos = {o.codigo_producto for o in observaciones}
+        fuentes = {o.fuente.value for o in observaciones}
+        filas = s.execute(
+            select(ObservacionTabla)
+            .where(ObservacionTabla.codigo_producto.in_(productos))
+            .where(ObservacionTabla.fuente.in_(fuentes))
+            .order_by(ObservacionTabla.id)
+        ).scalars()
+        conocidas: dict[tuple, tuple[int, float]] = {}
+        for f in filas:
+            clave = (
+                f.fuente, f.nivel, f.codigo_producto, f.ambito, f.codigo_mercado,
+                f.anio, f.mes, f.dia, f.unidad_texto, f.cantidad if f.cantidad else 1.0,
             )
-            resultado = s.execute(sentencia)
-            nuevas = resultado.rowcount if resultado.rowcount is not None else 0
-        return max(nuevas, 0)
+            conocidas[clave] = (f.id, f.precio_monto)   # la última por id gana
+        return conocidas
 
     def registrar_intento(
         self, fuente: str, url: str | None, exito: bool, duracion_ms: int, detalle: str
