@@ -208,3 +208,24 @@ def test_se_registra_cada_intento_para_medir_disponibilidad():
     assert resumen[0]["intentos"] == 3
     assert resumen[0]["exitosos"] == 2
     assert resumen[0]["porcentaje"] == 66.7
+
+
+def test_el_avance_del_dato_distingue_corridas_con_y_sin_hechos_nuevos():
+    """
+    22 días de corridas "exitosas" sin un hecho nuevo pasaron desapercibidos
+    porque solo se medía la respuesta HTTP. Esta métrica mide si el dato
+    avanza: una corrida con 208 vistos y 0 nuevos es una corrida fallida.
+    """
+    _, _, observaciones = _sqlalchemy()
+
+    observaciones.registrar_corrida("SIIP diario mayorista", "5", vistos=103, nuevos=103)
+    observaciones.registrar_corrida("SIIP diario mayorista", "5", vistos=103, nuevos=0)
+    observaciones.registrar_corrida("SIIP diario mayorista", "5", vistos=103, nuevos=0)
+
+    (avance,) = observaciones.avance_del_dato()
+
+    assert avance["corridas"] == 3
+    assert avance["con_dato_nuevo"] == 1
+    assert avance["porcentaje"] == 33.3
+    assert avance["vistos"] == 309 and avance["nuevos"] == 103
+    assert avance["ultimo_nuevo"] is not None

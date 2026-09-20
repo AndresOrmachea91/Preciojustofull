@@ -23,7 +23,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from src.infraestructura.adaptadores.salida.persistencia.sesion import sesion_de
 from src.infraestructura.adaptadores.salida.persistencia.tablas import (
-    IntentoFuenteTabla, MercadoTabla, ObservacionTabla, ProductoTabla,
+    CorridaFuenteTabla, IntentoFuenteTabla, MercadoTabla, ObservacionTabla, ProductoTabla,
 )
 from src.dominio.modelo import (
     Categoria, Fuente, Mercado, NivelPrecio, Observacion, Producto, TipoPuntoVenta,
@@ -271,8 +271,48 @@ class ObservacionesPostgres(_Base):
                 ocurrido_en=datetime.now(timezone.utc),
             ))
 
+    def registrar_corrida(self, fuente: str, codigo_producto: str, vistos: int, nuevos: int) -> None:
+        with sesion_de(self._fabrica) as s:
+            s.add(CorridaFuenteTabla(
+                fuente=fuente, codigo_producto=codigo_producto,
+                hechos_vistos=vistos, hechos_nuevos=nuevos,
+                ocurrido_en=datetime.now(timezone.utc),
+            ))
+
+    def avance_del_dato(self) -> list[dict]:
+        """
+        Por fuente: cuántas corridas hubo, cuántas trajeron al menos un
+        hecho nuevo, cuántos hechos nuevos en total y cuándo fue la última
+        vez que entró uno. Esto es lo que mide si el dato avanza.
+        """
+        from sqlalchemy import case, func
+
+        with sesion_de(self._fabrica) as s:
+            filas = s.execute(
+                select(
+                    CorridaFuenteTabla.fuente,
+                    func.count().label("corridas"),
+                    func.sum(case((CorridaFuenteTabla.hechos_nuevos > 0, 1), else_=0)).label("con_dato_nuevo"),
+                    func.sum(CorridaFuenteTabla.hechos_vistos).label("vistos"),
+                    func.sum(CorridaFuenteTabla.hechos_nuevos).label("nuevos"),
+                    func.max(case((CorridaFuenteTabla.hechos_nuevos > 0, CorridaFuenteTabla.ocurrido_en))).label("ultimo_nuevo"),
+                ).group_by(CorridaFuenteTabla.fuente)
+            ).all()
+        return [
+            {
+                "fuente": f.fuente,
+                "corridas": f.corridas,
+                "con_dato_nuevo": int(f.con_dato_nuevo or 0),
+                "porcentaje": round(100.0 * (f.con_dato_nuevo or 0) / f.corridas, 1) if f.corridas else 0.0,
+                "vistos": int(f.vistos or 0),
+                "nuevos": int(f.nuevos or 0),
+                "ultimo_nuevo": f.ultimo_nuevo,
+            }
+            for f in filas
+        ]
+
     def disponibilidad(self) -> list[dict]:
-        """Insumo de la métrica de disponibilidad efectiva del dato."""
+        """Insumo de la métrica de disponibilidad de la FUENTE (respuesta HTTP)."""
         from sqlalchemy import func
 
         with sesion_de(self._fabrica) as s:

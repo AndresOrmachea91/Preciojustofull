@@ -11,6 +11,15 @@ GitHub Actions tres veces al día.
 
 Sin BASE_DATOS_URL configurada avisa y no guarda nada: es preferible
 fallar ruidosamente antes que perder días de serie en silencio.
+
+Códigos de salida:
+    0  entró al menos un hecho nuevo
+    1  todos los productos fallaron
+    2  configuración o fuente indisponible
+    3  la fuente respondió pero no trajo NI UN hecho nuevo. Para la tesis
+       es una corrida fallida: el dato no avanzó. Se distingue de 0 para
+       que la falta de datos nuevos sea visible en GitHub y no se
+       confunda con éxito.
 """
 from __future__ import annotations
 
@@ -49,13 +58,27 @@ def _mostrar_disponibilidad(repositorio: ObservacionesPostgres) -> int:
     filas = repositorio.disponibilidad()
     if not filas:
         print("Todavía no hay intentos registrados.")
+    else:
+        print("\n1. DISPONIBILIDAD DE LA FUENTE: intentos crudos contra cada portal (incluye reintentos).")
+        print("   Mide si el servidor responde. No dice nada del dato.")
+        print(f"\n{'FUENTE':<26}{'INTENTOS':>10}{'ÉXITOS':>9}{'%':>8}{'MS':>9}")
+        print("-" * 62)
+        for f in filas:
+            print(f"{f['fuente']:<26}{f['intentos']:>10}{f['exitosos']:>9}"
+                  f"{f['porcentaje']:>7}%{f['ms_promedio']:>9}")
+
+    avance = repositorio.avance_del_dato()
+    print("\n2. AVANCE DEL DATO: corridas que trajeron al menos un hecho NUEVO.")
+    print("   Una corrida con 200 hechos ya conocidos y 0 nuevos cuenta como fallida.")
+    if not avance:
+        print("   Todavía no hay corridas registradas.")
         return 0
-    print("\nIntentos CRUDOS contra cada portal (incluye reintentos):")
-    print(f"\n{'FUENTE':<26}{'INTENTOS':>10}{'ÉXITOS':>9}{'%':>8}{'MS':>9}")
-    print("-" * 62)
-    for f in filas:
-        print(f"{f['fuente']:<26}{f['intentos']:>10}{f['exitosos']:>9}"
-              f"{f['porcentaje']:>7}%{f['ms_promedio']:>9}")
+    print(f"\n{'FUENTE':<26}{'CORRIDAS':>9}{'C/NUEVO':>9}{'%':>8}{'VISTOS':>9}{'NUEVOS':>8}  ÚLTIMO HECHO NUEVO")
+    print("-" * 92)
+    for f in avance:
+        ultimo = f["ultimo_nuevo"].strftime("%Y-%m-%d %H:%M") if f["ultimo_nuevo"] else "nunca"
+        print(f"{f['fuente']:<26}{f['corridas']:>9}{f['con_dato_nuevo']:>9}{f['porcentaje']:>7}%"
+              f"{f['vistos']:>9}{f['nuevos']:>8}  {ultimo}")
     return 0
 
 
@@ -104,19 +127,28 @@ def main() -> int:
             fallidos += 1
             continue
 
+        # "nuevas" son HECHOS nuevos por clave natural, no filas insertadas.
+        # La serie histórica completa viene en cada respuesta del SIIP (no
+        # hay parámetro de rango), así que verla otra vez no cuenta.
         nuevas = repositorio.guardar_varias(observaciones)
+        repositorio.registrar_corrida(fuente.nombre, codigo, len(observaciones), nuevas)
         total_nuevas += nuevas
-        log.info("Producto %s: %s observaciones, %s nuevas",
+        log.info("Producto %s: %s hechos vistos, %s nuevos",
                  codigo, len(observaciones), nuevas)
 
     resueltos = len(codigos) - fallidos
-    log.info("Terminado. %s observaciones nuevas, %s de %s productos resueltos.",
+    log.info("Terminado. %s hechos nuevos, %s de %s productos resueltos.",
              total_nuevas, resueltos, len(codigos))
-    log.info("Disponibilidad efectiva de esta corrida: %.1f%%",
+    log.info("Disponibilidad de la fuente en esta corrida: %.1f%%",
              100.0 * resueltos / len(codigos))
     # Que fallen algunos productos no debe marcar la corrida como rota:
     # la degradación parcial es un comportamiento esperado del sistema.
-    return 1 if fallidos == len(codigos) else 0
+    if fallidos == len(codigos):
+        return 1
+    if total_nuevas == 0:
+        log.warning("La fuente respondió pero NO trajo ningún hecho nuevo: el dato no avanzó.")
+        return 3
+    return 0
 
 
 if __name__ == "__main__":

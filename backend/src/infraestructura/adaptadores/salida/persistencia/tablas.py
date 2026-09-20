@@ -127,6 +127,29 @@ INDICE_CLAVE_NATURAL = (
 )
 
 
+class CorridaFuenteTabla(Base):
+    """
+    Qué trajo cada corrida del recolector, por fuente y producto: cuántos
+    hechos vio y cuántos eran NUEVOS.
+
+    Es la otra mitad de la métrica. intento_fuente mide si el portal
+    responde; esta tabla mide si el dato avanza. Una corrida con 200 hechos
+    vistos y 0 nuevos es una corrida fallida a efectos de la tesis, aunque
+    el servidor haya devuelto 200 veintidós días seguidos.
+    """
+
+    __tablename__ = "corrida_fuente"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    fuente = Column(String(64), nullable=False)
+    codigo_producto = Column(String(64), nullable=False)
+    hechos_vistos = Column(Integer, nullable=False)
+    hechos_nuevos = Column(Integer, nullable=False)
+    ocurrido_en = Column(DateTime(timezone=True), nullable=False)
+
+    __table_args__ = (Index("ix_corrida_fuente", "fuente", "ocurrido_en"),)
+
+
 class IntentoFuenteTabla(Base):
     """
     Registro de cada llamada a cada fuente y su desenlace.
