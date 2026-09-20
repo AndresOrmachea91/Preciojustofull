@@ -13,7 +13,7 @@ mani,Maní,abarrote,kg,no,16,117050201,confirmar_ipc,el IPC especifica crudo
 pollo_entero,Pollo entero eviscerado,carne,kg,si,23,112060101,ok,
 carne_res,Carne de res,carne,kg,si,27,112010107,revisar_corte,el diario cotiza en gancho (mayorista) y el IPC pulpa con hueso (minorista); no son el mismo corte
 carne_cerdo,Carne de cerdo,carne,kg,si,72,112020101,revisar_corte,mismo problema de corte que la res
-huevo,Huevo grande,carne,unidad,si,29,114040101,verificar_unidad,confirmar si el diario cotiza por unidad o por ciento
+huevo,Huevo grande,carne,unidad,si,29,114040101,ok,diario por unid.; IPC por UNIDAD(es); confirmado contra la tabla real
 pacu,Pacú,pescado,kg,si,30,113010112,ok,confirmado en mapeo_productos
 pejerrey,Pejerrey,pescado,kg,si,31,113010103,ok,confirmado en mapeo_productos
 surubi,Surubí,pescado,kg,si,32,113010108,ok,confirmado en mapeo_productos
@@ -28,7 +28,7 @@ cebolla_verde,Cebolla verde,hortaliza,atado,si,51,117011201,verificar_unidad,el 
 zanahoria,Zanahoria Chantenay,hortaliza,kg,si,58,117013201,ok,confirmado en mapeo_productos
 haba_verde,Haba verde,hortaliza,kg,si,52,117013501,ok,
 arveja,Arveja blanca,hortaliza,kg,si,49,117013401,confirmar_ipc,el diario dice blanca y el IPC verde
-choclo,Maíz choclo,hortaliza,unidad,si,54,117011301,verificar_unidad,se vende por unidad y por docena
+choclo,Maíz choclo,hortaliza,unidad,si,54,117011301,verificar_unidad,se vende por unidad y por docena; la columna de unidad del diario dice 100 unid. para todas las frutas y el choclo
 locoto,Locoto,hortaliza,kg,si,53,117012101,ok,confirmado en mapeo_productos
 aji_vaina,Ají en vaina,hortaliza,kg,no,48,117010302,ok,confirmado en mapeo_productos
 ajo,Ajo,hortaliza,kg,no,77,117010401,ok,confirmado en mapeo_productos
@@ -39,8 +39,8 @@ platano,Plátano,fruta,kg,si,69,116016901,colision_ipc,el IPC agrupa plátano/gu
 banana,Banana Cavendish,fruta,kg,si,60,,colision_ipc,el IPC no separa banana de plátano; se deja sin mapeo para no duplicar la serie
 limon,Limón sutil,fruta,kg,si,61,116014101,confirmar_ipc,el IPC dice criollo y el diario sutil
 mandarina,Mandarina criolla,fruta,kg,si,62,116014501,ok,confirmado en mapeo_productos
-manzana,Manzana Red Delicious,fruta,kg,si,64,116014702,verificar_unidad,el diario cotiza por caja de 21 kg
+manzana,Manzana Red Delicious,fruta,kg,si,64,116014702,ok,el diario cotiza por 100 unid.; la caja de 21 kg está solo en el nombre del producto, no en la unidad
 naranja,Naranja criolla,fruta,kg,si,65,116015502,ok,confirmado en mapeo_productos
 papaya,Papaya Salvietti,fruta,kg,si,67,116016301,ok,confirmado en mapeo_productos
-pina,Piña Pucallpa,fruta,unidad,si,68,116016601,verificar_unidad,se vende por unidad
-sandia,Sandía Crimson Sweet,fruta,unidad,si,70,116017001,verificar_unidad,se vende por unidad y por peso
+pina,Piña Pucallpa,fruta,unidad,si,68,116016601,verificar_unidad,se vende por unidad; la columna de unidad del diario dice 100 unid. para todas las frutas y el choclo
+sandia,Sandía Crimson Sweet,fruta,unidad,si,70,116017001,verificar_unidad,se vende por unidad y por peso; la columna de unidad del diario dice 100 unid. para todas las frutas y el choclo
