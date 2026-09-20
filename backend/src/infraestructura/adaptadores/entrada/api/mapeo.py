@@ -14,7 +14,9 @@ def precio_a_salida(p: PrecioConsolidado) -> e.PrecioSalida:
         rango=e.RangoSalida(minimo=p.rango.minimo, maximo=p.rango.maximo, centro=p.rango.centro),
         unidad=p.unidad.value,
         confianza=p.confianza.value,
+        procedencia=p.procedencia.value,
         observaciones_usadas=p.observaciones_usadas,
+        fecha_observacion_mas_reciente=p.fecha_observacion_mas_reciente,
         conflictos=p.conflictos,
     )
 

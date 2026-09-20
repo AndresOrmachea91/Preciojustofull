@@ -34,6 +34,18 @@ class NivelPrecio(str, Enum):
     MINORISTA = "minorista"
 
 
+class Procedencia(str, Enum):
+    """
+    De dónde sale un precio publicado. OBSERVADO: alguien lo midió en ese
+    lugar. ESTIMADO: se calculó a partir de otra cosa (la referencia de la
+    ciudad y un factor). Un precio sin procedencia no se puede construir:
+    la honestidad no depende de que alguien se acuerde de decirlo.
+    """
+
+    OBSERVADO = "observado"
+    ESTIMADO = "estimado"
+
+
 class TipoPrecio(str, Enum):
     """
     Qué clase de precio es el que se observó. Un cartel no es lo mismo que

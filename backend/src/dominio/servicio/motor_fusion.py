@@ -18,7 +18,7 @@ from src.dominio.excepciones import (
 from src.dominio.modelo.mercado import Mercado
 from src.dominio.modelo.observacion import Observacion
 from src.dominio.modelo.precio_consolidado import PrecioConsolidado, RangoPrecio
-from src.dominio.valor import NivelConfianza, UnidadCanonica
+from src.dominio.valor import NivelConfianza, Procedencia, UnidadCanonica
 
 
 class MotorFusion:
@@ -75,6 +75,10 @@ class MotorFusion:
             unidad=ciudad.unidad,
             confianza=confianza,
             observaciones_usadas=ciudad.observaciones_usadas,
+            # Siempre ESTIMADO: aunque el insumo sea una medición, es
+            # medición de otra cosa (la ciudad), no de este local.
+            procedencia=Procedencia.ESTIMADO,
+            fecha_observacion_mas_reciente=ciudad.fecha_observacion_mas_reciente,
             calculado_en=ciudad.calculado_en,
             conflictos=ciudad.conflictos + [
                 f"Estimado desde la referencia de ciudad {referencia[0].codigo_mercado} "
@@ -116,9 +120,16 @@ class MotorFusion:
             unidad=unidad if isinstance(unidad, UnidadCanonica) else UnidadCanonica.KILOGRAMO,
             confianza=confianza,
             observaciones_usadas=len(conservadas),
+            procedencia=Procedencia.OBSERVADO,
+            fecha_observacion_mas_reciente=self._fecha_mas_reciente(conservadas),
             calculado_en=datetime.now(timezone.utc),
             conflictos=conflictos,
         )
+
+    @staticmethod
+    def _fecha_mas_reciente(obs: list[Observacion]):
+        fechas = [o.fecha_observacion for o in obs if o.fecha_observacion_conocida]
+        return max(fechas) if fechas else None
 
     # -- pasos internos --------------------------------------------------
 
