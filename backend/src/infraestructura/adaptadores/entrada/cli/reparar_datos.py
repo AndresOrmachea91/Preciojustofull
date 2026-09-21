@@ -34,7 +34,6 @@ import sys
 import logging
 import argparse
 from collections import defaultdict
-from datetime import date
 
 from sqlalchemy import text
 from sqlalchemy.engine import Connection, Engine
@@ -79,20 +78,22 @@ def sembrar_catalogo(motor: Engine, simular: bool) -> dict:
     }
 
 
+def _contar_o_actualizar(c: Connection, simular: bool, set_sql: str, where_sql: str, params: dict) -> int:
+    """En simulación cuenta las filas que cambiarían; aplicando, las cambia. Una sentencia, no una por fila."""
+    if simular:
+        return c.execute(text(f"SELECT count(*) FROM observacion_precio WHERE {where_sql}"), params).scalar()
+    return c.execute(text(f"UPDATE observacion_precio SET {set_sql} WHERE {where_sql}"), params).rowcount
+
+
 def ciudad_a_su_campo(c: Connection, simular: bool) -> int:
     """'la_paz' no es un mercado. Las filas del SIIP son de ámbito ciudad y la ciudad va en su campo."""
     fuentes = ", ".join(repr(f) for f in FUENTES_CIUDAD)
-    filas = c.execute(text(
-        "SELECT id, codigo_mercado, ciudad FROM observacion_precio "
-        f"WHERE fuente IN ({fuentes}) "
-        "AND (ambito <> 'ciudad' OR ciudad IS NULL OR codigo_mercado IS NOT NULL)"
-    )).all()
-    if not simular and filas:
-        c.execute(
-            text("UPDATE observacion_precio SET ambito = 'ciudad', ciudad = :ciudad, codigo_mercado = NULL WHERE id = :id"),
-            [{"id": f.id, "ciudad": f.ciudad or f.codigo_mercado} for f in filas],
-        )
-    return len(filas)
+    return _contar_o_actualizar(
+        c, simular,
+        "ambito = 'ciudad', ciudad = COALESCE(ciudad, codigo_mercado), codigo_mercado = NULL",
+        f"fuente IN ({fuentes}) AND (ambito <> 'ciudad' OR ciudad IS NULL OR codigo_mercado IS NOT NULL)",
+        {},
+    )
 
 
 def producto_al_codigo_del_catalogo(c: Connection, simular: bool) -> dict:
@@ -120,37 +121,53 @@ def producto_al_codigo_del_catalogo(c: Connection, simular: bool) -> dict:
     return {"remapeados": [(x["viejo"], x["nuevo"]) for x in cambios], "sin_mapeo": sin_mapeo}
 
 
+
 def reprocesar_parseo(c: Connection, simular: bool) -> dict:
-    """El parser de hoy sobre unidad_texto. El par original no se toca."""
-    filas = c.execute(text(
-        "SELECT id, fuente, unidad_texto, cantidad, precio_monto, unidad_canonica, precio_canonico, "
-        "tipo_precio, fecha_observacion, anio, mes, dia FROM observacion_precio"
-    )).all()
-    cambios, no_convertibles = [], 0
-    for f in filas:
-        unidad = Unidad(f.unidad_texto)
-        cantidad = f.cantidad or 1.0
+    """
+    El parser de hoy sobre unidad_texto. El par original no se toca. Se
+    agrupa por texto de unidad: hay decenas de textos distintos, no miles,
+    así que son decenas de sentencias y no una por fila.
+    """
+    unidades = [r[0] for r in c.execute(text("SELECT DISTINCT unidad_texto FROM observacion_precio")).all()]
+    corregidas, no_convertibles = 0, []
+    for texto_unidad in unidades:
+        unidad = Unidad(texto_unidad)
         if unidad.es_conocida():
             canonica, factor = unidad.equivalencia()
-            canonico = round(f.precio_monto / factor / cantidad, 6)
-            unidad_canonica = canonica.value
+            corregidas += _contar_o_actualizar(
+                c, simular,
+                "unidad_canonica = :uc, precio_canonico = precio_monto / :factor / COALESCE(cantidad, 1.0)",
+                "unidad_texto = :u AND (unidad_canonica IS NULL OR unidad_canonica <> :uc OR precio_canonico IS NULL "
+                "OR ABS(precio_canonico - precio_monto / :factor / COALESCE(cantidad, 1.0)) > 0.000001)",
+                {"u": texto_unidad, "uc": canonica.value, "factor": factor},
+            )
         else:
-            canonico, unidad_canonica = None, None
-            no_convertibles += 1
-        tipo = TipoPrecio.COTIZADO.value if f.fuente in FUENTES_CIUDAD else (f.tipo_precio or "desconocido")
-        fecha = f.fecha_observacion
-        if fecha is None and f.mes and f.dia:
-            fecha = date(f.anio, f.mes, f.dia)
-        nuevo = (unidad_canonica, canonico, tipo, fecha)
-        viejo = (f.unidad_canonica, f.precio_canonico, f.tipo_precio, f.fecha_observacion)
-        if nuevo != viejo:
-            cambios.append({"id": f.id, "uc": unidad_canonica, "pc": canonico, "tp": tipo, "fo": fecha})
-    if not simular and cambios:
-        c.execute(text(
-            "UPDATE observacion_precio SET unidad_canonica = :uc, precio_canonico = :pc, "
-            "tipo_precio = :tp, fecha_observacion = :fo WHERE id = :id"
-        ), cambios)
-    return {"revisadas": len(filas), "corregidas": len(cambios), "no_convertibles": no_convertibles}
+            no_convertibles.append(texto_unidad)
+            corregidas += _contar_o_actualizar(
+                c, simular,
+                "unidad_canonica = NULL, precio_canonico = NULL",
+                "unidad_texto = :u AND (unidad_canonica IS NOT NULL OR precio_canonico IS NOT NULL)",
+                {"u": texto_unidad},
+            )
+    fuentes = ", ".join(repr(f) for f in FUENTES_CIUDAD)
+    corregidas += _contar_o_actualizar(
+        c, simular, "tipo_precio = :tp",
+        f"fuente IN ({fuentes}) AND (tipo_precio IS NULL OR tipo_precio <> :tp)",
+        {"tp": TipoPrecio.COTIZADO.value},
+    )
+    # La fecha de observación solo donde el dato trae día; nunca desde la captura.
+    fecha = {
+        "sqlite": "date(printf('%04d-%02d-%02d', anio, mes, dia))",
+        "postgresql": "make_date(anio, mes, dia)",
+    }[c.dialect.name]
+    corregidas += _contar_o_actualizar(
+        c, simular, f"fecha_observacion = {fecha}",
+        "fecha_observacion IS NULL AND mes IS NOT NULL AND dia IS NOT NULL", {},
+    )
+    revisadas = c.execute(text("SELECT count(*) FROM observacion_precio")).scalar()
+    # "cambios" cuenta sentencia por sentencia: una fila puede sumar más de uno
+    # (unidad, tipo y fecha). Cero cambios es lo que prueba la idempotencia.
+    return {"revisadas": revisadas, "cambios": corregidas, "unidades_no_convertibles": no_convertibles}
 
 
 def deduplicar(c: Connection, simular: bool) -> dict:

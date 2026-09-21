@@ -61,7 +61,7 @@ _COLUMNAS_AGREGADAS = {
         "fecha_observacion": "DATE NULL",
         "tipo_precio": "VARCHAR(16) NOT NULL DEFAULT 'desconocido'",
         "evidencia": "VARCHAR(512) NULL",
-        "ultima_captura_en": "TIMESTAMP NULL",
+        "ultima_captura_en": "TIMESTAMP WITH TIME ZONE NULL",
         "revisa_a": "INTEGER NULL REFERENCES observacion_precio(id)",
         "ciudad": "VARCHAR(64) NULL",
     },
@@ -74,6 +74,13 @@ _AJUSTES_POR_DIALECTO = {
     "postgresql": [
         "ALTER TABLE observacion_precio ALTER COLUMN codigo_mercado DROP NOT NULL",
         "ALTER TABLE observacion_precio DROP CONSTRAINT IF EXISTS uq_observacion_unica",
+        # Una version anterior de esta migracion creo la columna sin zona
+        # horaria; capturada_en la tiene. Se iguala, leyendo lo guardado como UTC.
+        "DO $$ BEGIN IF EXISTS (SELECT 1 FROM information_schema.columns "
+        "WHERE table_name = 'observacion_precio' AND column_name = 'ultima_captura_en' "
+        "AND data_type = 'timestamp without time zone') THEN "
+        "ALTER TABLE observacion_precio ALTER COLUMN ultima_captura_en TYPE timestamp with time zone "
+        "USING ultima_captura_en AT TIME ZONE 'UTC'; END IF; END $$",
     ],
 }
 

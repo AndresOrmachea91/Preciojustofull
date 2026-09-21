@@ -75,7 +75,10 @@ def test_la_simulacion_no_escribe_nada():
     despues = motor.connect().execute(text("SELECT count(*) FROM observacion_precio")).scalar()
     assert antes == despues == 12
     assert informe["4_dedup"] == {"filas": 12, "hechos": 6, "borradas": 6}
-    assert informe["3_parseo"]["corregidas"] == 12          # tipo_precio y fecha cambian en todas
+    # Se cuenta por sentencia (unidad, tipo, fecha), no por fila: lo que importa es que
+    # haya trabajo pendiente y que la segunda pasada reporte cero.
+    assert informe["3_parseo"]["cambios"] > 0
+    assert informe["3_parseo"]["unidades_no_convertibles"] == []
     assert informe["1_catalogo"]["puntos_insertados"] == 88
     assert motor.connect().execute(text("SELECT count(*) FROM mercado")).scalar() == 0
 
@@ -116,7 +119,7 @@ def test_la_reparacion_es_idempotente():
     motor = _base_como_neon()
     reparar(motor, simular=False)
     segunda = reparar(motor, simular=False)
-    assert segunda["4_dedup"]["borradas"] == 0 and segunda["3_parseo"]["corregidas"] == 0
+    assert segunda["4_dedup"]["borradas"] == 0 and segunda["3_parseo"]["cambios"] == 0
     assert segunda["verificacion"]["total"] == 6
 
 
