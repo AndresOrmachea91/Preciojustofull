@@ -99,3 +99,18 @@ describe("PreciosApi contra un servidor simulado", () => {
     await expect(api().compararMercados("no_existe")).rejects.toMatchObject({ estado: 404 });
   });
 });
+
+describe("ClienteHttp", () => {
+  it("comparte un GET idéntico en vuelo: dos consumidores, una petición", async () => {
+    const { pedidos } = servidorSimulado();
+    const api = new PreciosApi(new ClienteHttp("http://api.local/api/v1"));
+
+    const [a, b] = await Promise.all([api.mercados(), api.mercados()]);
+
+    expect(pedidos).toEqual(["http://api.local/api/v1/mercados"]);
+    expect(a).toEqual(b);
+    // Terminada la primera, una nueva petición vuelve a ir al servidor.
+    await api.mercados();
+    expect(pedidos).toHaveLength(2);
+  });
+});

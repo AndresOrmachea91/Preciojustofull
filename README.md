@@ -42,15 +42,20 @@ no tocó una sola línea de dominio ni de aplicación.
 
     arrancar.cmd
 
-Levanta la API en `http://localhost:8000` (uvicorn, con recarga) y la
-interfaz en `http://localhost:5173` (vite) apuntando a esa API, cada una en
-su ventana. Requiere `backend\.venv` con `requirements.txt` instalado y
-`frontend
-ode_modules` (`npm install`); el script avisa si falta alguno.
+Verifica Python, dependencias, `backend\.env`, `frontend
+ode_modules` y
+`frontend\.env.local`, avisa con el comando exacto si falta algo, y levanta
+la API en `http://localhost:8000` y la interfaz en `http://localhost:5173`,
+cada una en su ventana (`arrancar_api.cmd` y `arrancar_ui.cmd` levantan una
+sola). La configuración sale de archivos, nunca de la terminal:
 
-Con `BASE_DATOS_URL` definida (en `backend\.env` o en el entorno) la API usa
-esa base y el mapa muestra los 88 puntos de venta reales con sus precios;
-sin ella arranca con los repositorios en memoria.
+    copy backend\.env.example backend\.env          ← pegar BASE_DATOS_URL de Neon
+    copy frontend\.env.example frontend\.env.local  ← http (API) o memoria (sin backend)
+
+Con `BASE_DATOS_URL` la API usa esa base y el mapa muestra los 88 puntos de
+venta reales con sus precios; sin ella arranca con los repositorios en
+memoria. La guía paso a paso, con el plan B y las fallas típicas, está en
+`GUIA_DEMO.md`.
 
 Para trabajar el frontend sin backend: `cd frontend && npm run dev` con
 `VITE_ORIGEN_DATOS=memoria` (el valor por defecto de `.env.example`). Pasar

@@ -66,12 +66,18 @@ class CompararMercadosCasoUso:
         if self._productos.obtener(codigo_producto) is None:
             raise ProductoNoEncontrado(codigo_producto)
 
-        # La referencia de ciudad es una por producto, no una por mercado.
-        referencia = self._observaciones.buscar(codigo_producto, ciudad=self._ciudad)
+        # UNA consulta por producto, no una por mercado: contra una base remota
+        # 88 viajes de medio segundo son casi un minuto. Se agrupa en memoria.
+        todas = self._observaciones.buscar(codigo_producto)
+        referencia = [o for o in todas if o.es_referencia_de_ciudad and o.ciudad == self._ciudad]
+        locales_por_mercado: dict[str, list[Observacion]] = {}
+        for o in todas:
+            if o.codigo_mercado is not None:
+                locales_por_mercado.setdefault(o.codigo_mercado, []).append(o)
 
         resultado: list[PrecioEnMercado] = []
         for mercado in self._mercados.listar(zona):
-            locales = self._observaciones.buscar(codigo_producto, mercado.codigo)
+            locales = locales_por_mercado.get(mercado.codigo, [])
             precio = precio_del_local(self._motor, mercado, locales, referencia)
             if precio is None:
                 continue   # sin medición ni referencia: se omite, no se inventa

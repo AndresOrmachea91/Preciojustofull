@@ -16,6 +16,7 @@ export function useMapa(contenedor: Contenedor, codigoProducto: string) {
     if (!codigoProducto) return;   // el catálogo todavía no eligió producto
     setCargando(true);
     setError(null);
+    setDatos(null);   // nunca mostrar el precio del producto anterior bajo el nombre del nuevo
     try {
       setDatos(await contenedor.verMapa.ejecutar(codigoProducto));
     } catch (e) {

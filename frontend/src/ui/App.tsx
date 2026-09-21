@@ -9,6 +9,10 @@ import { TarjetaMercado } from "@/ui/componentes/TarjetaMercado";
 import { useComparativa } from "@/ui/hooks/useComparativa";
 import { useMapa } from "@/ui/hooks/useMapa";
 
+// Con qué producto abre la pantalla: uno que tenga precio en los 88 puntos.
+// Si el catálogo no lo trae, se usa el primero.
+const PRODUCTO_INICIAL = "arroz_primera";
+
 export default function App() {
   const contenedor = useMemo(() => crearContenedor(), []);
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -19,7 +23,10 @@ export default function App() {
   useEffect(() => {
     void contenedor.catalogo.productos().then((lista) => {
       setProductos(lista);
-      setProducto((actual) => actual ?? lista[0]?.codigo ?? null);
+      setProducto(
+        (actual) =>
+          actual ?? lista.find((p) => p.codigo === PRODUCTO_INICIAL)?.codigo ?? lista[0]?.codigo ?? null,
+      );
     });
   }, [contenedor]);
 
