@@ -69,8 +69,8 @@ def obtener_observaciones():
 
 
 def caso_consultar_precio() -> ConsultarPrecioProducto:
-    p, _, o = _repositorios()
-    return ConsultarPrecioProducto(p, o, obtener_motor())
+    p, m, o = _repositorios()
+    return ConsultarPrecioProducto(p, o, obtener_motor(), mercados=m)
 
 
 def caso_comparar_mercados() -> CompararMercadosCasoUso:

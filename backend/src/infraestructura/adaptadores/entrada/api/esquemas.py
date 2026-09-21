@@ -38,6 +38,9 @@ class PrecioEnMercadoSalida(BaseModel):
     nombre_mercado: str
     tipo: str
     zona: str
+    # mayorista o minorista. Obligatorio: dos números de niveles distintos
+    # no se pueden mostrar como si compitieran.
+    nivel_precio: Literal["mayorista", "minorista"]
     precio: PrecioSalida
 
 
@@ -53,6 +56,10 @@ class MercadoSalida(BaseModel):
     nombre: str
     tipo: str
     zona: str
+    macrodistrito: str
+    # Código del mercado que lo contiene, si es un sector de otro.
+    codigo_padre: str | None
+    nivel_precio: Literal["mayorista", "minorista"]
     latitud: float | None = None
     longitud: float | None = None
     publica_rango: bool

@@ -27,6 +27,7 @@ def precio_en_mercado_a_salida(x: PrecioEnMercado) -> e.PrecioEnMercadoSalida:
         nombre_mercado=x.nombre_mercado,
         tipo=x.tipo,
         zona=x.zona,
+        nivel_precio=x.nivel_precio,
         precio=precio_a_salida(x.precio),
     )
 
@@ -41,6 +42,8 @@ def producto_a_salida(p: Producto) -> e.ProductoSalida:
 def mercado_a_salida(m: Mercado) -> e.MercadoSalida:
     return e.MercadoSalida(
         codigo=m.codigo, nombre=m.nombre, tipo=m.tipo.value, zona=m.zona,
+        macrodistrito=m.macrodistrito, codigo_padre=m.codigo_padre,
+        nivel_precio=m.nivel_precio.value,
         latitud=m.latitud, longitud=m.longitud, publica_rango=m.publica_rango,
     )
 

@@ -25,6 +25,8 @@ class PrecioEnMercado:
     tipo: str
     zona: str
     precio: PrecioConsolidado
+    # mayorista o minorista: dos números que no compiten entre sí.
+    nivel_precio: str = "minorista"
 
 
 @dataclass(frozen=True, slots=True)
