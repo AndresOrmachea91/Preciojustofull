@@ -9,9 +9,17 @@ import {
   ordenarPorConveniencia,
 } from "@/dominio/servicio/ordenarPorConveniencia";
 
-function hacer(codigo: string, centro: number, confianza: NivelConfianza = "alto"): PrecioEnMercado {
+function hacer(
+  codigo: string,
+  centro: number,
+  confianza: NivelConfianza = "alto",
+  nivelPrecio: "minorista" | "mayorista" = "minorista",
+): PrecioEnMercado {
   return {
-    mercado: { codigo, nombre: codigo, tipo: "mercado", zona: "Centro" },
+    mercado: {
+      codigo, nombre: codigo, tipo: nivelPrecio === "mayorista" ? "mayorista" : "mercado",
+      zona: "Centro", macrodistrito: "Centro", codigoPadre: null, nivelPrecio,
+    },
     precio: {
       codigoProducto: "tomate",
       codigoMercado: codigo,
@@ -19,7 +27,9 @@ function hacer(codigo: string, centro: number, confianza: NivelConfianza = "alto
       rango: { minimo: centro * 0.9, maximo: centro * 1.1, centro },
       unidad: "kg",
       confianza,
+      procedencia: "observado",
       observacionesUsadas: 1,
+      fechaObservacionMasReciente: null,
       conflictos: [],
     },
   };
@@ -29,6 +39,13 @@ describe("ordenarPorConveniencia", () => {
   it("sin distancias, ordena de más barato a más caro", () => {
     const orden = ordenarPorConveniencia([hacer("c", 20), hacer("a", 10), hacer("b", 15)]);
     expect(orden.map((o) => o.mercado.codigo)).toEqual(["a", "b", "c"]);
+  });
+
+  it("un mayorista más barato no le gana a los de consumidor final: va aparte, al final", () => {
+    const orden = ordenarPorConveniencia([hacer("makro", 5, "alto", "mayorista"), hacer("a", 10), hacer("b", 15)]);
+    expect(orden.map((o) => o.mercado.codigo)).toEqual(["a", "b", "makro"]);
+    // Y el ahorro anunciado se calcula entre iguales: 15 - 10, no 15 - 5.
+    expect(ahorroPosible(orden)).toBe(5);
   });
 
   it("un mercado lejano deja de convenir aunque sea más barato", () => {

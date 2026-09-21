@@ -33,19 +33,33 @@ export function puntajeConveniencia(
   return base + distancia * costoPorKm;
 }
 
+const ORDEN_NIVEL = { minorista: 0, mayorista: 1 } as const;
+
+/**
+ * Primero por nivel de precio (consumidor final antes que mayorista: son
+ * dos números que no compiten), después por conveniencia dentro del nivel.
+ */
 export function ordenarPorConveniencia(
   items: readonly PrecioEnMercado[],
   opciones: OpcionesOrden = {},
 ): PrecioEnMercado[] {
   return [...items].sort(
-    (a, b) => puntajeConveniencia(a, opciones) - puntajeConveniencia(b, opciones),
+    (a, b) =>
+      ORDEN_NIVEL[a.mercado.nivelPrecio] - ORDEN_NIVEL[b.mercado.nivelPrecio] ||
+      puntajeConveniencia(a, opciones) - puntajeConveniencia(b, opciones),
   );
 }
 
-/** Cuánto se ahorra eligiendo el primero de la lista en vez del último. */
+/**
+ * Cuánto se ahorra eligiendo el más barato en vez del más caro. Solo entre
+ * precios del mismo nivel: comparar un mayorista con un puesto sería
+ * anunciar un ahorro que ninguna familia puede conseguir.
+ */
 export function ahorroPosible(items: readonly PrecioEnMercado[]): number {
-  if (items.length < 2) return 0;
-  const centros = items.map((i) => i.precio.rango.centro);
+  const nivel = items[0]?.mercado.nivelPrecio;
+  const mismoNivel = items.filter((i) => i.mercado.nivelPrecio === nivel);
+  if (mismoNivel.length < 2) return 0;
+  const centros = mismoNivel.map((i) => i.precio.rango.centro);
   return Math.round((Math.max(...centros) - Math.min(...centros)) * 100) / 100;
 }
 

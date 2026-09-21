@@ -1,6 +1,7 @@
 import type { PrecioEnMercado } from "@/dominio/modelo";
-import { publicaRango } from "@/dominio/modelo";
+import { etiquetaTipo, explicacionProcedencia, publicaRango } from "@/dominio/modelo";
 import { Confianza } from "@/ui/componentes/Confianza";
+import { Procedencia } from "@/ui/componentes/Procedencia";
 
 interface Props {
   readonly item: PrecioEnMercado;
@@ -12,13 +13,21 @@ export function TarjetaMercado({ item, destacado = false }: Props) {
   const rango = publicaRango(mercado.tipo);
 
   return (
-    <article className={`tarjeta${destacado ? " tarjeta--destacada" : ""}`}>
+    <article
+      className={`tarjeta tarjeta--${precio.procedencia}${destacado ? " tarjeta--destacada" : ""}`}
+      data-procedencia={precio.procedencia}
+    >
       <header className="tarjeta__cabecera">
         <div>
           <h3 className="tarjeta__nombre">{mercado.nombre}</h3>
-          <p className="tarjeta__zona">{mercado.zona}</p>
+          <p className="tarjeta__zona">
+            {etiquetaTipo(mercado.tipo)} · {mercado.macrodistrito || mercado.zona}
+          </p>
         </div>
-        {destacado && <span className="insignia">Más conveniente</span>}
+        <div className="tarjeta__insignias">
+          <Procedencia valor={precio.procedencia} />
+          {destacado && <span className="insignia">Más conveniente</span>}
+        </div>
       </header>
 
       <p className="tarjeta__precio">
@@ -37,9 +46,13 @@ export function TarjetaMercado({ item, destacado = false }: Props) {
         <Confianza nivel={precio.confianza} />
         <span className="tenue">
           {precio.observacionesUsadas}{" "}
-          {precio.observacionesUsadas === 1 ? "fuente" : "fuentes"}
+          {precio.observacionesUsadas === 1 ? "observación" : "observaciones"}
         </span>
       </footer>
+
+      {precio.procedencia === "estimado" && (
+        <p className="tarjeta__nota tarjeta__nota--estimado">{explicacionProcedencia(precio, mercado)}</p>
+      )}
 
       {rango && (
         <p className="tarjeta__nota">

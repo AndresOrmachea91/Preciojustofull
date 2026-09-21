@@ -9,6 +9,7 @@
 import { CalcularCanasta } from "@/aplicacion/casosUso/calcularCanasta";
 import { CompararMercados } from "@/aplicacion/casosUso/compararMercados";
 import { ConsultarCatalogo } from "@/aplicacion/casosUso/consultarCatalogo";
+import { VerMapa } from "@/aplicacion/casosUso/verMapa";
 import type { CatalogoRepositorio, PrecioRepositorio } from "@/aplicacion/puertos";
 import { ClienteHttp } from "@/infraestructura/http/clienteHttp";
 import { PreciosApi } from "@/infraestructura/http/PreciosApi";
@@ -18,6 +19,7 @@ export interface Contenedor {
   readonly compararMercados: CompararMercados;
   readonly calcularCanasta: CalcularCanasta;
   readonly catalogo: ConsultarCatalogo;
+  readonly verMapa: VerMapa;
 }
 
 export function crearContenedor(origen?: string): Contenedor {
@@ -43,6 +45,7 @@ export function crearContenedor(origen?: string): Contenedor {
     compararMercados: new CompararMercados(precios),
     calcularCanasta: new CalcularCanasta(precios),
     catalogo: new ConsultarCatalogo(catalogo),
+    verMapa: new VerMapa(catalogo, precios),
   };
 }
 

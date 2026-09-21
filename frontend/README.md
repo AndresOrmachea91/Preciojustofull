@@ -39,6 +39,28 @@ es decorativa.
     cp .env.example .env
     npm run dev
 
+Con `VITE_ORIGEN_DATOS=memoria` (el valor por defecto) corre sin backend.
+Con `VITE_ORIGEN_DATOS=http` y `VITE_API_URL=http://localhost:8000/api/v1`
+usa la API real: es el único cambio, y `tests/arquitectura.test.ts` verifica
+que siga siendo el único (ningún archivo fuera de `infraestructura/http`
+llama a `fetch`). Desde la raíz del repositorio, `arrancar.cmd` levanta las
+dos cosas juntas.
+
+## El mapa y la honestidad visible
+
+`ui/componentes/MapaPuntosVenta.tsx` dibuja con Leaflet los puntos de venta
+que le entrega el caso de uso `VerMapa`; Leaflet es una librería de dibujo,
+no de dominio, y es el único archivo que la importa. Cada punto se colorea
+por tipo (mercado, supermercado, minimarket, mayorista) y se dibuja
+punteado cuando su precio es estimado.
+
+Todo precio lleva su **procedencia**: `observado` (alguien lo midió en ese
+lugar) o `estimado` (calculado desde el precio de referencia de la ciudad).
+Hoy todos son estimados, y la interfaz lo dice en un aviso, con la cantidad
+de observaciones que respaldan cada uno. Un precio mayorista se muestra en
+su propia sección: es otro nivel de la cadena y no compite con los de
+consumidor final.
+
 Por defecto usa el adaptador en memoria, así que arranca sin backend.
 Para apuntar a la API real, poné en `.env`:
 

@@ -27,11 +27,14 @@ describe("App sobre React 19", () => {
     });
 
     // El adaptador en memoria devuelve el tomate más barato en Villa Fátima.
+    // Cinco de consumidor final y un mayorista aparte, que no compite.
     const tarjetas = document.querySelectorAll(".tarjeta");
-    expect(tarjetas.length).toBe(4);
+    expect(tarjetas.length).toBe(6);
     expect(tarjetas[0].textContent).toContain("Mercado Villa Fátima");
     expect(tarjetas[0].className).toContain("tarjeta--destacada");
     expect(screen.getByText("Más conveniente")).toBeDefined();
+    expect(screen.getByRole("heading", { name: "Precio mayorista" })).toBeDefined();
+    expect(tarjetas[5].textContent).toContain("Makro");
   });
 
   it("cambia de producto sin que el componente conozca el origen de datos", async () => {
@@ -43,7 +46,7 @@ describe("App sobre React 19", () => {
 
     await waitFor(() => {
       const tarjetas = document.querySelectorAll(".tarjeta");
-      expect(tarjetas.length).toBe(3);
+      expect(tarjetas.length).toBe(5);
       expect(tarjetas[0].textContent).toContain("Mercado Rodríguez");
     });
   });
@@ -52,8 +55,21 @@ describe("App sobre React 19", () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(document.querySelectorAll(".confianza").length).toBe(4);
+      expect(document.querySelectorAll(".tarjeta .confianza").length).toBe(6);
     });
     expect(screen.getAllByText("Verificado en campo").length).toBeGreaterThan(0);
+  });
+
+  it("todo precio dice si es observado o estimado, de un vistazo", async () => {
+    render(<App />);
+    await waitFor(() => expect(document.querySelectorAll(".tarjeta").length).toBe(6));
+
+    const tarjetas = [...document.querySelectorAll(".tarjeta")];
+    expect(tarjetas.every((t) => t.querySelector(".procedencia") !== null)).toBe(true);
+    const estimadas = tarjetas.filter((t) => t.getAttribute("data-procedencia") === "estimado");
+    expect(estimadas.length).toBe(2);   // Ketal y Makro: nadie midió ahí
+    expect(estimadas[0].textContent).toContain("Todavía nadie verificó este precio");
+    // El resumen de honestidad cuenta lo mismo que el mapa.
+    expect(screen.getByLabelText("De dónde salen estos precios").textContent).toContain("2");
   });
 });

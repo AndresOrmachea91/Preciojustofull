@@ -1,14 +1,24 @@
 /**
  * Modelo del dominio.
  *
- * Tipos y reglas puras. No importa React, ni fetch, ni nada del navegador.
- * Si mañana la aplicación se reescribe en otro framework, este archivo no
- * cambia una línea.
+ * Tipos y reglas puras. No importa React, ni fetch, ni Leaflet, ni nada del
+ * navegador. Si mañana la aplicación se reescribe en otro framework, este
+ * archivo no cambia una línea.
  */
 
 export type NivelConfianza = "verificado" | "alto" | "medio" | "bajo";
 
-export type TipoPuntoVenta = "mercado" | "minimarket" | "tienda" | "supermercado";
+export type TipoPuntoVenta = "mercado" | "minimarket" | "tienda" | "supermercado" | "mayorista";
+
+/** A qué altura de la cadena está el precio. Dos números de niveles distintos no compiten. */
+export type NivelPrecio = "mayorista" | "minorista";
+
+/**
+ * De dónde sale un precio. OBSERVADO: alguien lo midió en ese lugar.
+ * ESTIMADO: se calculó desde la referencia de la ciudad y un factor. Un
+ * precio sin procedencia no existe en este modelo.
+ */
+export type Procedencia = "observado" | "estimado";
 
 export interface RangoPrecio {
   readonly minimo: number;
@@ -23,7 +33,10 @@ export interface Precio {
   readonly rango: RangoPrecio;
   readonly unidad: string;
   readonly confianza: NivelConfianza;
+  readonly procedencia: Procedencia;
   readonly observacionesUsadas: number;
+  /** Fecha de la observación más reciente que lo respalda; null si ninguna la trae. */
+  readonly fechaObservacionMasReciente: string | null;
   readonly conflictos: readonly string[];
 }
 
@@ -32,6 +45,10 @@ export interface Mercado {
   readonly nombre: string;
   readonly tipo: TipoPuntoVenta;
   readonly zona: string;
+  readonly macrodistrito: string;
+  /** Código del mercado que lo contiene, si es un sector de otro. */
+  readonly codigoPadre: string | null;
+  readonly nivelPrecio: NivelPrecio;
   readonly latitud?: number;
   readonly longitud?: number;
 }
@@ -46,6 +63,12 @@ export interface Producto {
 export interface PrecioEnMercado {
   readonly mercado: Mercado;
   readonly precio: Precio;
+}
+
+/** Un punto en el mapa: el lugar, y su precio si el sistema tiene uno. */
+export interface MarcadorMapa {
+  readonly mercado: Mercado;
+  readonly precio: Precio | null;
 }
 
 export interface ItemCanasta {
@@ -83,3 +106,38 @@ export function etiquetaConfianza(nivel: NivelConfianza): string {
   return etiquetas[nivel];
 }
 
+export function etiquetaTipo(tipo: TipoPuntoVenta): string {
+  const etiquetas: Record<TipoPuntoVenta, string> = {
+    mercado: "Mercado",
+    minimarket: "Minimarket",
+    tienda: "Tienda",
+    supermercado: "Supermercado",
+    mayorista: "Mayorista",
+  };
+  return etiquetas[tipo];
+}
+
+export function etiquetaNivel(nivel: NivelPrecio): string {
+  return nivel === "mayorista" ? "Precio mayorista" : "Precio al consumidor";
+}
+
+export function etiquetaProcedencia(procedencia: Procedencia): string {
+  return procedencia === "observado" ? "Observado en este lugar" : "Estimado";
+}
+
+/**
+ * La explicación que acompaña a todo precio. No es letra chica: es lo que
+ * el usuario tiene que saber para decidir cuánto creerle.
+ */
+export function explicacionProcedencia(precio: Precio, mercado?: Mercado): string {
+  const n = precio.observacionesUsadas;
+  const respaldo = `${n} ${n === 1 ? "observación" : "observaciones"} de la fuente oficial`;
+  if (precio.procedencia === "estimado") {
+    const lugar = mercado ? `en ${mercado.nombre}` : "en este lugar";
+    return (
+      `Estimado a partir del precio de referencia de la ciudad (${respaldo}). ` +
+      `Todavía nadie verificó este precio ${lugar}.`
+    );
+  }
+  return `Medido en este lugar: ${n} ${n === 1 ? "observación" : "observaciones"}.`;
+}

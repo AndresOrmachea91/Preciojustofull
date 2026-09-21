@@ -27,7 +27,9 @@ interface PrecioDto {
   rango: { minimo: number; maximo: number; centro: number };
   unidad: string;
   confianza: Precio["confianza"];
+  procedencia: Precio["procedencia"];
   observaciones_usadas: number;
+  fecha_observacion_mas_reciente: string | null;
   conflictos: string[];
 }
 
@@ -36,6 +38,7 @@ interface PrecioEnMercadoDto {
   nombre_mercado: string;
   tipo: Mercado["tipo"];
   zona: string;
+  nivel_precio: Mercado["nivelPrecio"];
   precio: PrecioDto;
 }
 
@@ -44,6 +47,9 @@ interface MercadoDto {
   nombre: string;
   tipo: Mercado["tipo"];
   zona: string;
+  macrodistrito: string;
+  codigo_padre: string | null;
+  nivel_precio: Mercado["nivelPrecio"];
   latitud: number | null;
   longitud: number | null;
 }
@@ -74,8 +80,24 @@ function aPrecio(d: PrecioDto): Precio {
     rango: d.rango,
     unidad: d.unidad,
     confianza: d.confianza,
+    procedencia: d.procedencia,
     observacionesUsadas: d.observaciones_usadas,
+    fechaObservacionMasReciente: d.fecha_observacion_mas_reciente ?? null,
     conflictos: d.conflictos ?? [],
+  };
+}
+
+function aMercado(d: MercadoDto): Mercado {
+  return {
+    codigo: d.codigo,
+    nombre: d.nombre,
+    tipo: d.tipo,
+    zona: d.zona,
+    macrodistrito: d.macrodistrito,
+    codigoPadre: d.codigo_padre ?? null,
+    nivelPrecio: d.nivel_precio,
+    latitud: d.latitud ?? undefined,
+    longitud: d.longitud ?? undefined,
   };
 }
 
@@ -90,7 +112,15 @@ export class PreciosApi
       { zona },
     );
     return datos.map((d) => ({
-      mercado: { codigo: d.codigo_mercado, nombre: d.nombre_mercado, tipo: d.tipo, zona: d.zona },
+      mercado: {
+        codigo: d.codigo_mercado,
+        nombre: d.nombre_mercado,
+        tipo: d.tipo,
+        zona: d.zona,
+        macrodistrito: d.zona,
+        codigoPadre: null,
+        nivelPrecio: d.nivel_precio,
+      },
       precio: aPrecio(d.precio),
     }));
   }
@@ -131,14 +161,7 @@ export class PreciosApi
 
   async mercados(zona?: string): Promise<Mercado[]> {
     const datos = await this.http.get<MercadoDto[]>("/mercados", { zona });
-    return datos.map((d) => ({
-      codigo: d.codigo,
-      nombre: d.nombre,
-      tipo: d.tipo,
-      zona: d.zona,
-      latitud: d.latitud ?? undefined,
-      longitud: d.longitud ?? undefined,
-    }));
+    return datos.map(aMercado);
   }
 
   async reportar(entrada: {

@@ -1,14 +1,14 @@
 /**
- * El hook conecta React con el caso de uso. Es el ÚNICO punto de contacto.
- * Ningún componente conoce repositorios ni HTTP.
+ * Conecta React con el caso de uso VerMapa. Único punto de contacto: el
+ * componente del mapa no conoce repositorios ni HTTP.
  */
 import { useCallback, useEffect, useState } from "react";
 
-import type { ResultadoComparativa } from "@/aplicacion/casosUso/compararMercados";
+import type { ResultadoMapa } from "@/aplicacion/casosUso/verMapa";
 import type { Contenedor } from "@/infraestructura/contenedor";
 
-export function useComparativa(contenedor: Contenedor, codigoProducto: string) {
-  const [datos, setDatos] = useState<ResultadoComparativa | null>(null);
+export function useMapa(contenedor: Contenedor, codigoProducto: string) {
+  const [datos, setDatos] = useState<ResultadoMapa | null>(null);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,9 +17,9 @@ export function useComparativa(contenedor: Contenedor, codigoProducto: string) {
     setCargando(true);
     setError(null);
     try {
-      setDatos(await contenedor.compararMercados.ejecutar(codigoProducto));
+      setDatos(await contenedor.verMapa.ejecutar(codigoProducto));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo consultar el precio");
+      setError(e instanceof Error ? e.message : "No se pudo cargar el mapa");
       setDatos(null);
     } finally {
       setCargando(false);
@@ -32,4 +32,3 @@ export function useComparativa(contenedor: Contenedor, codigoProducto: string) {
 
   return { datos, cargando, error, reintentar: consultar };
 }
-

@@ -77,3 +77,40 @@ body {
   }
 }
 
+
+/* --- mapa y panel ------------------------------------------------------- */
+.app { max-width: 960px; }
+.mapa-y-panel { display: grid; grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr); gap: 12px; margin: 16px 0 24px; }
+@media (max-width: 700px) { .mapa-y-panel { grid-template-columns: 1fr; } }
+.mapa { height: 460px; border-radius: 12px; border: 1px solid var(--borde); overflow: hidden; background: #dfe7e3; }
+.panel { background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; padding: 16px 18px; }
+.panel--vacio { color: var(--tenue); display: flex; align-items: center; }
+.panel__nombre { margin: 0; font-size: 1.15rem; color: var(--tinta); }
+.panel__meta { margin: 2px 0 0; color: var(--tenue); font-size: 0.85rem; }
+.panel__nivel { margin: 6px 0 0; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; }
+.panel__nivel--minorista { color: var(--jade); }
+.panel__nivel--mayorista { color: var(--ambar); }
+.panel__precio { margin-top: 14px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--borde); }
+.panel__precio--estimado { border-style: dashed; background: #fbf6ee; }
+.panel__precio--observado { background: var(--jade-claro); }
+.panel__precio--sin-datos { color: var(--tenue); font-size: 0.9rem; }
+.panel__monto { margin: 8px 0 6px; font-size: 1.4rem; font-weight: 600; color: var(--tinta); }
+.panel__explicacion { margin: 0 0 10px; font-size: 0.85rem; }
+.panel__pie { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 0; flex-wrap: wrap; }
+
+/* --- procedencia: se distingue de un vistazo ----------------------------- */
+.procedencia { font-size: 0.78rem; padding: 3px 9px; border-radius: 999px; font-weight: 600; white-space: nowrap; }
+.procedencia--observado { background: var(--jade); color: #fff; }
+.procedencia--estimado { background: #fbf6ee; color: var(--ambar); border: 1px dashed var(--ambar); }
+.tarjeta--estimado { border-style: dashed; }
+.tarjeta__insignias { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.tarjeta__nota--estimado { color: var(--ambar); }
+
+.honestidad { background: var(--superficie); border: 1px solid var(--borde); border-left: 4px solid var(--ambar); border-radius: 10px; padding: 12px 16px; margin: 0 0 12px; font-size: 0.92rem; }
+.honestidad p { margin: 0; }
+.honestidad__aviso { margin-top: 6px !important; color: var(--tenue); }
+.seccion { font-size: 1.1rem; color: var(--tinta); margin: 24px 0 8px; }
+
+@media (prefers-color-scheme: dark) {
+  .panel__precio--estimado, .procedencia--estimado { background: #2a2116; }
+}
