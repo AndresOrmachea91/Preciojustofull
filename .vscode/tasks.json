@@ -1,38 +1,32 @@
 {
   // Tareas de VS Code para la demo.
-  //   Ctrl+Shift+P  ->  "Tasks: Run Task"  ->  elegir una
-  //   o Ctrl+Shift+B, que corre directamente "Demo: arrancar todo".
+  //   Ctrl+Shift+B          -> "Demo: arrancar TODO en un solo servidor"
+  //   Ctrl+Shift+P -> "Tasks: Run Task" -> elegir otra
+  //   F5                    -> lo mismo, pero con depurador (ver launch.json)
   //
   // La configuracion sale de backend\.env y frontend\.env.local, nunca de
   // la terminal. Ver GUIA_DEMO.md.
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Demo: arrancar todo (API + interfaz)",
-      "detail": "Verifica todo y levanta las dos partes en dos terminales de VS Code",
-      "dependsOrder": "parallel",
-      "dependsOn": ["Demo: solo API", "Demo: solo interfaz"],
+      "label": "Demo: arrancar TODO en un solo servidor",
+      "detail": "Construye la interfaz y la sirve junto a la API en http://localhost:8000",
+      "type": "shell",
+      "command": "${workspaceFolder}\\demo.cmd",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
       "group": { "kind": "build", "isDefault": true },
+      "presentation": { "panel": "dedicated", "reveal": "always", "clear": true },
       "problemMatcher": []
     },
     {
-      "label": "Demo: solo API",
-      "detail": "uvicorn en http://localhost:8000 (docs en /docs)",
+      "label": "Demo: PLAN B, sin base de datos",
+      "detail": "Un solo servidor con datos fijos en la interfaz: sobrevive sin Neon y sin internet",
       "type": "shell",
-      "command": "${workspaceFolder}\\arrancar_api.cmd",
+      "command": "${workspaceFolder}\\demo.cmd memoria",
       "options": { "cwd": "${workspaceFolder}" },
       "isBackground": true,
-      "presentation": { "panel": "dedicated", "group": "demo", "reveal": "always" },
-      "problemMatcher": []
-    },
-    {
-      "label": "Demo: solo interfaz",
-      "detail": "vite en http://localhost:5173; usa VITE_ORIGEN_DATOS de frontend\\.env.local",
-      "type": "shell",
-      "command": "${workspaceFolder}\\arrancar_ui.cmd",
-      "options": { "cwd": "${workspaceFolder}" },
-      "isBackground": true,
-      "presentation": { "panel": "dedicated", "group": "demo", "reveal": "always" },
+      "presentation": { "panel": "dedicated", "reveal": "always", "clear": true },
       "problemMatcher": []
     },
     {
@@ -42,6 +36,31 @@
       "command": "${workspaceFolder}\\comprobar.cmd",
       "options": { "cwd": "${workspaceFolder}" },
       "presentation": { "panel": "dedicated", "reveal": "always" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Desarrollo: API y Vite por separado (recarga en caliente)",
+      "detail": "Dos servidores, 8000 y 5173. Para programar, no para presentar",
+      "dependsOrder": "parallel",
+      "dependsOn": ["Desarrollo: solo API", "Desarrollo: solo interfaz"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Desarrollo: solo API",
+      "type": "shell",
+      "command": "${workspaceFolder}\\arrancar_api.cmd",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "presentation": { "panel": "dedicated", "group": "dev", "reveal": "always" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Desarrollo: solo interfaz",
+      "type": "shell",
+      "command": "${workspaceFolder}\\arrancar_ui.cmd",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "presentation": { "panel": "dedicated", "group": "dev", "reveal": "always" },
       "problemMatcher": []
     },
     {

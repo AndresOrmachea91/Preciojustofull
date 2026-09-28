@@ -1,10 +1,30 @@
 {
-  // F5 en VS Code. Sirve para la demo y para poner puntos de interrupcion
-  // y mostrar el recorrido de una peticion por las capas.
+  // F5 en VS Code: arranca el servidor ÚNICO (interfaz + API en el puerto
+  // 8000) con el depurador enganchado. Sirve para la demo y para poner
+  // puntos de interrupción y mostrar el recorrido de una petición.
+  //
+  // Sin "--reload" a propósito: con recarga automática uvicorn crea un
+  // proceso hijo y los puntos de interrupción dejan de dispararse.
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "API con depurador (uvicorn)",
+      "name": "Demo con depurador (interfaz + API en :8000)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": ["src.infraestructura.adaptadores.entrada.api.main:app", "--port", "8000"],
+      "cwd": "${workspaceFolder}/backend",
+      "python": "${workspaceFolder}/backend/.venv/Scripts/python.exe",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "serverReadyAction": {
+        "pattern": "Uvicorn running on (https?://\\S+)",
+        "uriFormat": "http://localhost:8000",
+        "action": "openExternally"
+      }
+    },
+    {
+      "name": "API con recarga automática (sin depurador fiable)",
       "type": "debugpy",
       "request": "launch",
       "module": "uvicorn",
@@ -19,6 +39,5 @@
       "console": "integratedTerminal",
       "justMyCode": true
     }
-  ],
-  "compounds": []
+  ]
 }

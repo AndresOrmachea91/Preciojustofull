@@ -22,7 +22,10 @@ export class ClienteHttp {
   constructor(private readonly baseUrl: string) {}
 
   async get<T>(ruta: string, params?: Record<string, string | undefined>): Promise<T> {
-    const url = new URL(this.baseUrl + ruta);
+    // baseUrl puede ser absoluta ("http://localhost:8000/api/v1", en
+    // desarrollo con Vite) o relativa ("/api/v1", cuando el backend sirve
+    // la interfaz y todo vive en el mismo origen).
+    const url = new URL(this.baseUrl + ruta, globalThis.location?.origin);
     for (const [clave, valor] of Object.entries(params ?? {})) {
       if (valor !== undefined) url.searchParams.set(clave, valor);
     }

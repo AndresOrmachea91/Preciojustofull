@@ -39,52 +39,87 @@ Si dice que la base no responde, la cadena de `BASE_DATOS_URL` está vieja
 (la contraseña de Neon se rota): copiarla de Neon → *Connect*. Si no hay
 internet, ir directo al plan B de la sección 5.
 
-## 2. Arrancar
+## 2. Arrancar: UN SOLO servidor
 
-**Desde Visual Studio Code** (lo más cómodo para presentar):
-
-1. `Archivo → Abrir carpeta` → la carpeta `proyecto integrador preciojusto`.
-2. `Ctrl+Shift+B`, o `Ctrl+Shift+P` → *Tasks: Run Task* → **Demo: arrancar
-   todo (API + interfaz)**. Se abren dos terminales dentro de VS Code, una
-   por parte; se ven los mensajes de arranque y las peticiones entrando.
-3. `Ctrl+clic` en `http://localhost:5173` para abrir el navegador.
-
-Otras tareas disponibles en el mismo menú: *Demo: solo API*, *Demo: solo
-interfaz*, *Demo: comprobar la base de datos*, *Pruebas: backend*,
-*Pruebas: frontend*. Y con **F5** arranca la API con el depurador, para
-poner un punto de interrupción en `comparar_mercados.py` y mostrar en vivo
-el recorrido de una petición.
-
-**Sin VS Code**: doble clic en **`arrancar.cmd`**, o desde una terminal:
+Igual que `mvn spring-boot:run`: un comando, un puerto, una ventana. La
+interfaz se construye y **la sirve el mismo proceso de FastAPI**, así que no
+hay que levantar Vite aparte ni hay CORS de por medio.
 
 ```
-arrancar.cmd
+demo.cmd
 ```
 
-Verifica Python, dependencias, `backend\.env`, `node_modules`,
-`frontend\.env.local` y los puertos, y si falta algo lo dice con el comando
-para arreglarlo. Si todo está, abre dos ventanas (API y UI) y el navegador.
-Cerrar una ventana apaga esa parte. Para levantar una sola:
-`arrancar_api.cmd` o `arrancar_ui.cmd`.
+Doble clic, o en VS Code `Ctrl+Shift+B` (tarea *Demo: arrancar TODO en un
+solo servidor*). Tarda ~20 s la primera vez porque construye la interfaz.
+Abre el navegador solo. Cuando la terminal diga `Application startup
+complete`, todo está en:
 
-Qué debería verse en cada ventana:
+| | |
+|---|---|
+| La aplicación | **http://localhost:8000** |
+| La API (Swagger) | http://localhost:8000/docs |
+| Estado | http://localhost:8000/api/v1/salud → `interfaz_servida: true` |
 
-- **API**: `Uvicorn running on http://127.0.0.1:8000` y `Esquema verificado`.
-- **UI**: `VITE ready` y `Local: http://localhost:5173/`.
+Para detenerlo: `Ctrl+C` en esa terminal, o cerrar la ventana.
+
+**Plan B en el mismo comando**: `demo.cmd memoria` construye la interfaz con
+datos fijos; funciona sin Neon, sin `.env` y sin internet.
+
+### Con depurador (F5)
+
+`F5` → *Demo con depurador (interfaz + API en :8000)*. Hace lo mismo pero
+con el depurador de Python enganchado, y abre el navegador al arrancar.
+
+Para poner un **punto de interrupción**:
+
+1. Abrir `backend/src/aplicacion/casos_uso/comparar_mercados.py`.
+2. Buscar, dentro de `CompararMercadosCasoUso.ejecutar`, la línea
+   `precio = precio_del_local(self._motor, mercado, locales, referencia)`.
+3. Hacer clic en el **margen izquierdo**, justo a la izquierda del número de
+   línea: aparece un punto rojo. (También con `F9` sobre la línea.)
+4. `F5` y, en el navegador, elegir un producto.
+5. VS Code se detiene ahí. En el panel izquierdo, *Variables* muestra
+   `mercado` (el punto de venta que está evaluando), `locales` (mediciones
+   en ese lugar: hoy vacío) y `referencia` (el dato del SIIP para la ciudad).
+   `F10` avanza una línea, `F11` entra en la función, `F5` continúa hasta el
+   siguiente punto de venta.
+
+Es la forma más clara de mostrar por qué un precio sale **estimado**: se ve
+que `locales` está vacío y que el precio se calcula desde `referencia`.
+
+Otros lugares que valen la pena para un punto de interrupción:
+
+| Archivo | Qué se ve |
+|---|---|
+| `dominio/servicio/motor_fusion.py` → `estimar_desde_ciudad` | El cálculo: referencia de ciudad × `factor_mercado`, y la confianza acotada. |
+| `infraestructura/.../api/rutas/precios.py` → `comparar` | La petición HTTP entrando, antes de tocar el dominio. |
+| `infraestructura/.../persistencia/repositorios.py` → `buscar` | La consulta que se manda a Neon. |
+
+Si el punto rojo aparece **hueco** y nunca se detiene: se está usando la
+configuración *API con recarga automática*; con `--reload` uvicorn corre en
+un proceso hijo y los puntos no se disparan. Usar la primera configuración.
+
+### Para programar (no para presentar)
+
+`arrancar.cmd`, o la tarea *Desarrollo: API y Vite por separado*, levanta los
+dos servidores (8000 y 5173) con recarga en caliente: cada cambio en el
+frontend se ve al instante, sin reconstruir. Ahí sí hay dos ventanas, y la
+interfaz se mira en **http://localhost:5173**.
 
 ## 3. Qué abrir y qué se debería ver
 
 | URL | Qué se ve |
 |---|---|
-| http://localhost:5173 | El mapa de La Paz con **88 puntos**, "Arroz de primera" seleccionado, y arriba el aviso: *88 puntos con precio ◌ estimado …, 0 con precio ● observado*. Abajo, 87 tarjetas de consumidor final y Makro aparte como mayorista. |
+| http://localhost:8000 | El mapa de La Paz con **88 puntos**, "Arroz de primera" seleccionado, y arriba el aviso: *88 puntos con precio ◌ estimado …, 0 con precio ● observado*. Abajo, 87 tarjetas de consumidor final y Makro aparte como mayorista. |
 | clic en un punto | Panel a la derecha: nombre, tipo, macrodistrito, **PRECIO AL CONSUMIDOR** o **PRECIO MAYORISTA**, la insignia ◌ Estimado, el rango en Bs/kg, la explicación *"Estimado a partir del precio de referencia de la ciudad (N observaciones). Todavía nadie verificó este precio en …"* y el nivel de confianza. |
 | http://localhost:8000/docs | Swagger de la API con `/mercados`, `/productos`, `/precios/{producto}/comparar`, `/precios/{producto}/mercado/{mercado}`, `/canasta/calcular`, `/reportes`. |
 | F12 → Network (filtrar `api/v1`) | Al cargar: `GET /productos`, `GET /mercados`, `GET /precios/arroz_primera/comparar`. **Una** de cada, aunque dos partes de la pantalla las usen (el cliente HTTP comparte peticiones en vuelo). Al cambiar de producto: una sola `/comparar` nueva. |
 
-Tiempos medidos contra Neon desde La Paz: carga inicial hasta ver los 88
-puntos **9–12 s** en frío (la primera consulta a Neon es lenta),
-cambio de producto **~3 s**. **Abrir la página unos minutos antes de
-presentar**: la segunda carga es más rápida y la conexión ya está caliente.
+Tiempos medidos contra Neon desde La Paz, con el servidor único:
+`/mercados` ~1 s, `/precios/…/comparar` ~3–4 s; la carga inicial hasta ver
+los 88 puntos, **9–12 s en frío** (la primera consulta a Neon despierta la
+base). **Abrir la página unos minutos antes de presentar**: la segunda carga
+va mucho más rápida.
 
 Productos con cobertura completa (88 puntos): arroz, tomate, huevo, cebolla,
 zanahoria, pollo, azúcar, harina… Los que dicen "87 sin precio" (aceite,
@@ -128,15 +163,18 @@ leen los archivos y fallan si alguien salta una capa.
 
 ## 5. Plan B: sin backend, sin base, sin wifi
 
-Si la API o la base no responden, la interfaz corre sola con datos fijos:
+Si la base no responde, o no hay internet, o Neon está caído:
 
 ```
-notepad frontend\.env.local      → cambiar VITE_ORIGEN_DATOS=http por memoria
-arrancar_ui.cmd
+demo.cmd memoria
 ```
 
-Probado: 0 peticiones a la API, 7 puntos en el mapa, 6 tarjetas, panel con
-procedencia (4 observados, 2 estimados, 1 sin precio), mayorista aparte.
+Mismo comando, mismo puerto, misma pantalla: la interfaz se construye con
+datos fijos y no le pide nada a la API. Probado: 0 peticiones, 7 puntos en el
+mapa, 6 tarjetas, panel con procedencia (4 observados, 2 estimados, 1 sin
+precio), mayorista aparte.
+
+Para volver al modo normal: `demo.cmd` (sin argumento) reconstruye.
 El fondo del mapa (OpenStreetMap) sí necesita internet: sin wifi queda gris,
 pero los puntos, los precios y las procedencias se ven igual.
 

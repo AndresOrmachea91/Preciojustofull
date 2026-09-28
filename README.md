@@ -40,14 +40,25 @@ no tocó una sola línea de dominio ni de aplicación.
 
 ## Cómo correrlo todo con un solo comando
 
+    demo.cmd
+
+Un solo servidor, un solo puerto, como `mvn spring-boot:run`: construye la
+interfaz y **la sirve el mismo proceso de FastAPI** en
+**http://localhost:8000** (la API queda en `/api/v1`, Swagger en `/docs`).
+Sin Vite aparte y sin CORS. `demo.cmd memoria` hace lo mismo con datos fijos,
+sin base de datos: es el plan B para una demo sin internet.
+
+Desde **Visual Studio Code**: abrir la carpeta y `Ctrl+Shift+B`; con `F5`
+arranca igual pero con depurador, para poner puntos de interrupción. Antes de
+una demo, `comprobar.cmd` dice en 30 segundos si la base responde y cuántas
+filas tiene.
+
+Para **programar** conviene la recarga en caliente, con los dos servidores
+por separado (8000 y 5173):
+
     arrancar.cmd
 
-Verifica Python, dependencias, `backend\.env`, `frontend
-ode_modules` y
-`frontend\.env.local`, avisa con el comando exacto si falta algo, y levanta
-la API en `http://localhost:8000` y la interfaz en `http://localhost:5173`,
-cada una en su ventana (`arrancar_api.cmd` y `arrancar_ui.cmd` levantan una
-sola). La configuración sale de archivos, nunca de la terminal:
+La configuración sale de archivos, nunca de la terminal:
 
     copy backend\.env.example backend\.env          ← pegar BASE_DATOS_URL de Neon
     copy frontend\.env.example frontend\.env.local  ← http (API) o memoria (sin backend)
@@ -56,16 +67,6 @@ Con `BASE_DATOS_URL` la API usa esa base y el mapa muestra los 88 puntos de
 venta reales con sus precios; sin ella arranca con los repositorios en
 memoria. La guía paso a paso, con el plan B y las fallas típicas, está en
 `GUIA_DEMO.md`.
-
-Desde **Visual Studio Code**: abrir la carpeta y `Ctrl+Shift+B` (tarea
-*Demo: arrancar todo*); `F5` arranca la API con depurador. Antes de una
-demo, `comprobar.cmd` dice en 30 segundos si la base responde y cuántas
-filas tiene.
-
-Para trabajar el frontend sin backend: `cd frontend && npm run dev` con
-`VITE_ORIGEN_DATOS=memoria` (el valor por defecto de `.env.example`). Pasar
-de memoria a la API real es cambiar esa variable a `http`: ningún componente
-se entera.
 
 ## Stack
 

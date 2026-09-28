@@ -15,7 +15,7 @@ export default defineConfig({
     // Las pruebas corren SIEMPRE con el adaptador en memoria, aunque
     // .env.local diga "http": una prueba no debe depender de que haya un
     // backend levantado ni de lo que cada máquina tenga configurado.
-    env: { VITE_ORIGEN_DATOS: "memoria" },
+    env: { VITE_ORIGEN_DATOS: "memoria", VITE_API_URL: "" },
   },
 });
 

@@ -29,9 +29,10 @@ export function crearContenedor(origen?: string): Contenedor {
   let catalogo: CatalogoRepositorio;
 
   if (modo === "http") {
-    const http = new ClienteHttp(
-      import.meta.env?.VITE_API_URL ?? "http://localhost:8000/api/v1",
-    );
+    // Sin VITE_API_URL se asume el MISMO origen: es el caso cuando el
+    // backend sirve la interfaz construida.
+    // "||" y no "??": una VITE_API_URL vacía también significa mismo origen.
+    const http = new ClienteHttp(import.meta.env?.VITE_API_URL || "/api/v1");
     const api = new PreciosApi(http);
     precios = api;
     catalogo = api;
