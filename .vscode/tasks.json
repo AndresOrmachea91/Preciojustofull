@@ -9,10 +9,10 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Demo: arrancar TODO en un solo servidor",
+      "label": "Servidor: arrancar (interfaz + API en :8000)",
       "detail": "Construye la interfaz y la sirve junto a la API en http://localhost:8000",
       "type": "shell",
-      "command": "${workspaceFolder}\\demo.cmd",
+      "command": "${workspaceFolder}\\serve.cmd",
       "options": { "cwd": "${workspaceFolder}" },
       "isBackground": true,
       "group": { "kind": "build", "isDefault": true },
@@ -20,10 +20,10 @@
       "problemMatcher": []
     },
     {
-      "label": "Demo: PLAN B, sin base de datos",
+      "label": "Servidor: PLAN B, sin base de datos",
       "detail": "Un solo servidor con datos fijos en la interfaz: sobrevive sin Neon y sin internet",
       "type": "shell",
-      "command": "${workspaceFolder}\\demo.cmd memoria",
+      "command": "${workspaceFolder}\\serve.cmd memoria",
       "options": { "cwd": "${workspaceFolder}" },
       "isBackground": true,
       "presentation": { "panel": "dedicated", "reveal": "always", "clear": true },

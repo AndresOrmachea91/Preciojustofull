@@ -40,13 +40,13 @@ no tocó una sola línea de dominio ni de aplicación.
 
 ## Cómo correrlo todo con un solo comando
 
-    demo.cmd
+    serve.cmd
 
-Un solo servidor, un solo puerto, como `mvn spring-boot:run`: construye la
-interfaz y **la sirve el mismo proceso de FastAPI** en
-**http://localhost:8000** (la API queda en `/api/v1`, Swagger en `/docs`).
-Sin Vite aparte y sin CORS. `demo.cmd memoria` hace lo mismo con datos fijos,
-sin base de datos: es el plan B para una demo sin internet.
+Como `php artisan serve`: imprime el enlace y se queda corriendo. Un solo
+proceso sirve la interfaz **y** la API en **http://localhost:8000** (la API
+en `/api/v1`, Swagger en `/docs`); sin Vite aparte y sin CORS. Variantes:
+`serve.cmd memoria` (datos fijos, sin base ni internet: el plan B),
+`serve.cmd 9000` (otro puerto), `demo.cmd` (igual, y abre el navegador).
 
 Desde **Visual Studio Code**: abrir la carpeta y `Ctrl+Shift+B`; con `F5`
 arranca igual pero con depurador, para poner puntos de interrupción. Antes de
