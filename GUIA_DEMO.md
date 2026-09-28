@@ -22,9 +22,40 @@ Después editar `backend\.env` y pegar la cadena de Neon (rama `production`) en
 Si `pip` falla en `psycopg2-binary`: `requirements.txt` ya pide `>=2.9.10`
 (la 2.9.9 no tiene wheel para Python 3.13); repetir el comando.
 
-## 1. Arrancar
+## 1. Comprobar que la base responde (30 segundos, antes de presentar)
 
-Doble clic en **`arrancar.cmd`**, o desde una terminal:
+Doble clic en **`comprobar.cmd`** (o en VS Code: `Ctrl+Shift+P` → *Tasks: Run
+Task* → **Demo: comprobar la base de datos**). Tiene que decir:
+
+```
+  [OK] La base responde.
+       observaciones de precio: 31732
+       puntos de venta:         88
+       productos:               45
+  Todo listo para la demo.
+```
+
+Si dice que la base no responde, la cadena de `BASE_DATOS_URL` está vieja
+(la contraseña de Neon se rota): copiarla de Neon → *Connect*. Si no hay
+internet, ir directo al plan B de la sección 5.
+
+## 2. Arrancar
+
+**Desde Visual Studio Code** (lo más cómodo para presentar):
+
+1. `Archivo → Abrir carpeta` → la carpeta `proyecto integrador preciojusto`.
+2. `Ctrl+Shift+B`, o `Ctrl+Shift+P` → *Tasks: Run Task* → **Demo: arrancar
+   todo (API + interfaz)**. Se abren dos terminales dentro de VS Code, una
+   por parte; se ven los mensajes de arranque y las peticiones entrando.
+3. `Ctrl+clic` en `http://localhost:5173` para abrir el navegador.
+
+Otras tareas disponibles en el mismo menú: *Demo: solo API*, *Demo: solo
+interfaz*, *Demo: comprobar la base de datos*, *Pruebas: backend*,
+*Pruebas: frontend*. Y con **F5** arranca la API con el depurador, para
+poner un punto de interrupción en `comparar_mercados.py` y mostrar en vivo
+el recorrido de una petición.
+
+**Sin VS Code**: doble clic en **`arrancar.cmd`**, o desde una terminal:
 
 ```
 arrancar.cmd
@@ -41,7 +72,7 @@ Qué debería verse en cada ventana:
 - **API**: `Uvicorn running on http://127.0.0.1:8000` y `Esquema verificado`.
 - **UI**: `VITE ready` y `Local: http://localhost:5173/`.
 
-## 2. Qué abrir y qué se debería ver
+## 3. Qué abrir y qué se debería ver
 
 | URL | Qué se ve |
 |---|---|
@@ -61,7 +92,7 @@ papa holandesa, quinua, pacú, ajo…) son productos para los que el IPC no
 publica serie para La Paz: solo queda Makro, estimado desde el mayorista.
 Eso es correcto y es parte del mensaje: no se inventa.
 
-## 3. El recorrido de una petición del mapa por las capas
+## 4. El recorrido de una petición del mapa por las capas
 
 Al elegir "Tomate Rio Fuego":
 
@@ -95,7 +126,7 @@ frontend
 `frontend/tests/arquitectura.test.ts` y `backend/tests/test_arquitectura.py`
 leen los archivos y fallan si alguien salta una capa.
 
-## 4. Plan B: sin backend, sin base, sin wifi
+## 5. Plan B: sin backend, sin base, sin wifi
 
 Si la API o la base no responden, la interfaz corre sola con datos fijos:
 
@@ -112,7 +143,7 @@ pero los puntos, los precios y las procedencias se ven igual.
 Es el mismo código y los mismos componentes: cambiar una variable de entorno
 es el único cambio, y eso es justamente la demostración de la arquitectura.
 
-## 5. Las tres fallas más probables
+## 6. Las tres fallas más probables
 
 | Síntoma | Solución en una línea |
 |---|---|

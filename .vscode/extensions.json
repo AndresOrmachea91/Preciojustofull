@@ -1,0 +1,11 @@
+{
+  // Extensiones utiles para trabajar este repositorio. VS Code las ofrece
+  // al abrir la carpeta; ninguna es obligatoria para la demo.
+  "recommendations": [
+    "ms-python.python",
+    "ms-python.debugpy",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "mechatroner.rainbow-csv"
+  ]
+}

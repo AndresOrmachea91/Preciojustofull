@@ -1,0 +1,64 @@
+{
+  // Tareas de VS Code para la demo.
+  //   Ctrl+Shift+P  ->  "Tasks: Run Task"  ->  elegir una
+  //   o Ctrl+Shift+B, que corre directamente "Demo: arrancar todo".
+  //
+  // La configuracion sale de backend\.env y frontend\.env.local, nunca de
+  // la terminal. Ver GUIA_DEMO.md.
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Demo: arrancar todo (API + interfaz)",
+      "detail": "Verifica todo y levanta las dos partes en dos terminales de VS Code",
+      "dependsOrder": "parallel",
+      "dependsOn": ["Demo: solo API", "Demo: solo interfaz"],
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Demo: solo API",
+      "detail": "uvicorn en http://localhost:8000 (docs en /docs)",
+      "type": "shell",
+      "command": "${workspaceFolder}\\arrancar_api.cmd",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "presentation": { "panel": "dedicated", "group": "demo", "reveal": "always" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Demo: solo interfaz",
+      "detail": "vite en http://localhost:5173; usa VITE_ORIGEN_DATOS de frontend\\.env.local",
+      "type": "shell",
+      "command": "${workspaceFolder}\\arrancar_ui.cmd",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "presentation": { "panel": "dedicated", "group": "demo", "reveal": "always" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Demo: comprobar la base de datos",
+      "detail": "Dice si backend\\.env conecta a Neon y cuantas filas hay",
+      "type": "shell",
+      "command": "${workspaceFolder}\\comprobar.cmd",
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": { "panel": "dedicated", "reveal": "always" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Pruebas: backend (pytest)",
+      "type": "shell",
+      "command": "${workspaceFolder}\\backend\\.venv\\Scripts\\python.exe -m pytest -q",
+      "options": { "cwd": "${workspaceFolder}\\backend" },
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Pruebas: frontend (vitest)",
+      "type": "shell",
+      "command": "npm run test",
+      "options": { "cwd": "${workspaceFolder}\\frontend" },
+      "group": "test",
+      "problemMatcher": []
+    }
+  ]
+}

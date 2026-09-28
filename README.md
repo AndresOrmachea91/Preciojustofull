@@ -57,6 +57,11 @@ venta reales con sus precios; sin ella arranca con los repositorios en
 memoria. La guía paso a paso, con el plan B y las fallas típicas, está en
 `GUIA_DEMO.md`.
 
+Desde **Visual Studio Code**: abrir la carpeta y `Ctrl+Shift+B` (tarea
+*Demo: arrancar todo*); `F5` arranca la API con depurador. Antes de una
+demo, `comprobar.cmd` dice en 30 segundos si la base responde y cuántas
+filas tiene.
+
 Para trabajar el frontend sin backend: `cd frontend && npm run dev` con
 `VITE_ORIGEN_DATOS=memoria` (el valor por defecto de `.env.example`). Pasar
 de memoria a la API real es cambiar esa variable a `http`: ningún componente

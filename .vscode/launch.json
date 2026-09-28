@@ -1,0 +1,24 @@
+{
+  // F5 en VS Code. Sirve para la demo y para poner puntos de interrupcion
+  // y mostrar el recorrido de una peticion por las capas.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "API con depurador (uvicorn)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": [
+        "src.infraestructura.adaptadores.entrada.api.main:app",
+        "--reload",
+        "--port",
+        "8000"
+      ],
+      "cwd": "${workspaceFolder}/backend",
+      "python": "${workspaceFolder}/backend/.venv/Scripts/python.exe",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    }
+  ],
+  "compounds": []
+}

@@ -20,4 +20,9 @@ vite.config.ts.timestamp-*.mjs
 .DS_Store
 Thumbs.db
 .idea/
-.vscode/
+.vscode/*
+# ...salvo las tareas y la configuracion de depuracion: sirven para arrancar
+# la demo desde VS Code y son parte del proyecto, no preferencias personales.
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
