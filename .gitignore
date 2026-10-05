@@ -26,3 +26,6 @@ Thumbs.db
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+# Respaldos de la base hechos por el contenedor "respaldos"
+respaldos/

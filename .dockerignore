@@ -1,0 +1,17 @@
+# Lo que NO entra a la imagen: dependencias locales, builds, secretos y datos.
+.git
+**/node_modules
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/*.db
+**/.env
+**/.env.*
+frontend/dist
+frontend/*.tsbuildinfo
+backend/tests
+docs
+respaldos
+docker
+.playwright-mcp
+*.cmd

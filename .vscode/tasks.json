@@ -20,6 +20,58 @@
       "problemMatcher": []
     },
     {
+      "label": "Docker: levantar todo (base, app, recolector, respaldos)",
+      "detail": "docker compose up -d --build. App en http://localhost:8088, base en localhost:5433",
+      "type": "shell",
+      "command": "docker compose up -d --build; docker compose ps",
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": { "panel": "dedicated", "reveal": "always", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Docker: estado de los contenedores",
+      "type": "shell",
+      "command": "docker compose ps",
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": { "panel": "dedicated", "reveal": "always", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Docker: ver registros del recolector",
+      "detail": "Cuándo corre la próxima recolección y qué trajo la última",
+      "type": "shell",
+      "command": "docker compose logs -f --tail 50 recolector",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "presentation": { "panel": "dedicated", "reveal": "always", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Docker: recolectar ahora (sin esperar la hora)",
+      "type": "shell",
+      "command": "docker compose exec recolector python -m src.infraestructura.adaptadores.entrada.cli.recolectar",
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": { "panel": "dedicated", "reveal": "always", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Docker: detener todo (los datos se conservan)",
+      "type": "shell",
+      "command": "docker compose down",
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": { "panel": "dedicated", "reveal": "always", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Docker: copiar la base de Neon al contenedor",
+      "detail": "Neon solo se lee. Reemplaza la base local por una copia fresca",
+      "type": "shell",
+      "command": "${workspaceFolder}\\herramientas\\copiar_desde_neon.cmd",
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": { "panel": "dedicated", "reveal": "always", "clear": true },
+      "problemMatcher": []
+    },
+    {
       "label": "Servidor: PLAN B, sin base de datos",
       "detail": "Un solo servidor con datos fijos en la interfaz: sobrevive sin Neon y sin internet",
       "type": "shell",

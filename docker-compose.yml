@@ -1,0 +1,79 @@
+# PrecioJusto en contenedores: base de datos, aplicación, recolector y respaldos.
+#
+#   docker compose up -d --build     levanta todo (la primera vez tarda unos minutos)
+#   docker compose ps                estado de cada servicio
+#   docker compose logs -f recolector
+#   docker compose down              detiene todo (los datos quedan en el volumen)
+#
+# La configuración y las contraseñas salen de docker/.env (copiar desde
+# docker/.env.example). Ese archivo no se sube al repositorio.
+
+name: preciojusto
+
+services:
+  # PostgreSQL 18 propio: la misma versión mayor que Neon, para que pg_dump
+  # pueda copiar de una a otra. Los datos viven en el volumen "datos_pg" y
+  # sobreviven a detener o reconstruir los contenedores.
+  db:
+    image: postgres:18-alpine
+    env_file: docker/.env
+    volumes:
+      # Desde la versión 18 la imagen guarda los datos bajo /var/lib/postgresql.
+      - datos_pg:/var/lib/postgresql
+    # Solo desde esta máquina (127.0.0.1), en el 5433 para no chocar con el
+    # PostgreSQL instalado en Windows, que usa el 5432. Sirve para mirar la
+    # base con pgAdmin o DBeaver.
+    ports:
+      - "127.0.0.1:5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  # API + interfaz web en un solo proceso, en http://localhost:8088
+  # (el 8000 queda libre para serve.cmd, que sigue usando Neon).
+  app:
+    build: .
+    image: preciojusto-app:local
+    env_file: docker/.env
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8088:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/salud', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    restart: unless-stopped
+
+  # El recolector: duerme hasta RECOLECCION_HORA (hora de Bolivia), recolecta
+  # una vez, reintenta el mismo día si falló, y vuelve a dormir.
+  recolector:
+    build: .
+    image: preciojusto-app:local
+    command: ["python", "-m", "src.infraestructura.adaptadores.entrada.cli.programador"]
+    env_file: docker/.env
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Un respaldo diario de la base en ./respaldos, guardando los últimos días.
+  respaldos:
+    image: postgres:18-alpine
+    env_file: docker/.env
+    entrypoint: ["sh", "/scripts/respaldar.sh"]
+    volumes:
+      - ./respaldos:/respaldos
+      - ./docker:/scripts:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  datos_pg:

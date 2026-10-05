@@ -3,7 +3,7 @@
 Adaptador de entrada por línea de comandos: el recolector.
 
 Es otro adaptador sobre los mismos puertos que usa la API. Lo ejecuta
-GitHub Actions tres veces al día.
+el contenedor "recolector" una vez al día (cli/programador.py).
 
     python -m src.infraestructura.adaptadores.entrada.cli.recolectar                 # todo el catálogo, las dos fuentes
     python -m src.infraestructura.adaptadores.entrada.cli.recolectar --fuente diario
