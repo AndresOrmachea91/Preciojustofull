@@ -79,3 +79,64 @@ class NivelesNoComparables(ErrorDominio):
             "No se pueden consolidar observaciones de niveles distintos: "
             + ", ".join(sorted(niveles))
         )
+
+
+# --- usuarios, sesiones y reportes ---------------------------------------
+
+class CorreoInvalido(ErrorDominio):
+    def __init__(self, correo: str):
+        self.correo = correo
+        super().__init__(f"El correo {correo!r} no es válido")
+
+
+class ContrasenaDebil(ErrorDominio):
+    """La contraseña no cumple la política mínima."""
+
+
+class CorreoYaRegistrado(ErrorDominio):
+    def __init__(self, correo: str):
+        self.correo = correo
+        super().__init__(f"Ya existe una cuenta con el correo {correo}")
+
+
+class CredencialesInvalidas(ErrorDominio):
+    """
+    Correo o contraseña incorrectos, o cuenta desactivada. Es UN solo error
+    a propósito: decir cuál de las dos falló le enseña a un atacante qué
+    correos existen.
+    """
+
+    def __init__(self):
+        super().__init__("Correo o contraseña incorrectos")
+
+
+class UsuarioNoEncontrado(ErrorDominio):
+    def __init__(self, id_usuario: int):
+        self.id_usuario = id_usuario
+        super().__init__(f"No existe el usuario {id_usuario}")
+
+
+class PermisoDenegado(ErrorDominio):
+    def __init__(self, permiso: str):
+        self.permiso = permiso
+        super().__init__(f"No tiene permiso para {permiso}")
+
+
+class SinAdministradores(ErrorDominio):
+    """El cambio dejaría al sistema sin ningún administrador activo."""
+
+    def __init__(self):
+        super().__init__("Debe quedar al menos un administrador activo")
+
+
+class ReporteNoEncontrado(ErrorDominio):
+    def __init__(self, id_reporte: int):
+        self.id_reporte = id_reporte
+        super().__init__(f"No existe el reporte {id_reporte}")
+
+
+class ReporteYaRevisado(ErrorDominio):
+    def __init__(self, id_reporte: int | None, estado: str):
+        self.id_reporte = id_reporte
+        self.estado = estado
+        super().__init__(f"El reporte {id_reporte} ya fue revisado ({estado})")

@@ -5,14 +5,20 @@ FastAPI es un detalle del borde: se puede reemplazar sin tocar el dominio
 ni los casos de uso. Eso es lo que la arquitectura hexagonal compra.
 """
 import logging
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from src.infraestructura.adaptadores.entrada.api.rutas import canasta, catalogo, precios, reportes
+from src.infraestructura.adaptadores.entrada.api.dependencias import asegurar_admin_inicial
+from src.infraestructura.adaptadores.entrada.api.rutas import (
+    auth, canasta, catalogo, precios, reportes, usuarios,
+)
+from src.infraestructura.adaptadores.entrada.api.seguridad import manejar_error_dominio
 from src.configuracion import config
+from src.dominio.excepciones import ErrorDominio
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -23,14 +29,31 @@ log = logging.getLogger(__name__)
 # `npm run dev` en 5173, como en desarrollo.
 INTERFAZ = Path(__file__).resolve().parents[6] / "frontend" / "dist"
 
+
+@asynccontextmanager
+async def ciclo_de_vida(_: FastAPI):
+    # Un fallo acá no debe tumbar la API pública de precios: se registra y
+    # el administrador se puede crear después desde la consola.
+    try:
+        asegurar_admin_inicial()
+    except Exception:
+        log.exception("No se pudo crear el administrador inicial")
+    yield
+
+
 app = FastAPI(
     title="PrecioJusto Bolivia — API",
     description=(
         "Inteligencia de precios de la canasta familiar en La Paz. "
         "Arquitectura hexagonal: esta API es un adaptador de entrada."
     ),
-    version="0.1.0",
+    version="0.2.0",
+    lifespan=ciclo_de_vida,
 )
+
+# Los errores del dominio que una ruta no atrapa se traducen acá a su
+# código HTTP (401, 403, 404, 409 o 400), en un solo lugar.
+app.add_exception_handler(ErrorDominio, manejar_error_dominio)
 
 app.add_middleware(
     CORSMiddleware,
@@ -44,6 +67,8 @@ app.include_router(catalogo.router, prefix="/api/v1")
 app.include_router(precios.router, prefix="/api/v1")
 app.include_router(canasta.router, prefix="/api/v1")
 app.include_router(reportes.router, prefix="/api/v1")
+app.include_router(auth.router, prefix="/api/v1")
+app.include_router(usuarios.router, prefix="/api/v1")
 
 
 @app.get("/api/v1/salud", tags=["salud"])

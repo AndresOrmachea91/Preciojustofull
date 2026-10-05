@@ -12,7 +12,7 @@ en la integración continua, sin levantar un servidor.
 from __future__ import annotations
 
 from sqlalchemy import (
-    Column, Date, DateTime, Float, ForeignKey, Integer, String, Index, MetaData, Table,
+    Boolean, Column, Date, DateTime, Float, ForeignKey, Integer, String, Index, MetaData, Table,
 )
 from sqlalchemy.orm import declarative_base
 
@@ -174,3 +174,43 @@ class IntentoFuenteTabla(Base):
     ocurrido_en = Column(DateTime(timezone=True), nullable=False)
 
     __table_args__ = (Index("ix_intento_fuente", "fuente", "ocurrido_en"),)
+
+
+class UsuarioTabla(Base):
+    """Cuentas del sistema. La contraseña nunca se guarda: solo su hash."""
+
+    __tablename__ = "usuario"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    # Se guarda ya normalizado (minúsculas, sin espacios): la unicidad
+    # simple alcanza y no hace falta un índice por expresión.
+    correo = Column(String(255), nullable=False, unique=True)
+    nombre = Column(String(255), nullable=False)
+    rol = Column(String(16), nullable=False, default="usuario")
+    hash_contrasena = Column(String(255), nullable=False)
+    activo = Column(Boolean, nullable=False, default=True)
+    creado_en = Column(DateTime(timezone=True), nullable=False)
+
+
+class ReporteTabla(Base):
+    """
+    Reportes de precio a la espera de revisión. No se borran nunca: el
+    rechazado queda con su motivo, porque de este historial sale la
+    reputación de quien reporta.
+    """
+
+    __tablename__ = "reporte_precio"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    codigo_producto = Column(String(64), nullable=False)
+    codigo_mercado = Column(String(64), nullable=False)
+    monto = Column(Float, nullable=False)
+    unidad = Column(String(64), nullable=False)
+    id_autor = Column(Integer, ForeignKey("usuario.id"), nullable=False)
+    creado_en = Column(DateTime(timezone=True), nullable=False)
+    estado = Column(String(16), nullable=False, default="pendiente")
+    id_revisor = Column(Integer, ForeignKey("usuario.id"), nullable=True)
+    revisado_en = Column(DateTime(timezone=True), nullable=True)
+    motivo_rechazo = Column(String(512), nullable=True)
+
+    __table_args__ = (Index("ix_reporte_estado", "estado", "creado_en"),)

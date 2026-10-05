@@ -12,7 +12,7 @@ eso perder una fuente no obliga a tocar nada más.
 from __future__ import annotations
 from typing import Protocol, runtime_checkable
 
-from src.dominio.modelo import Mercado, Observacion, Producto
+from src.dominio.modelo import EstadoReporte, Mercado, Observacion, Producto, Reporte, Usuario
 from src.dominio.valor import Periodo
 
 
@@ -60,3 +60,39 @@ class ServicioPrediccion(Protocol):
         """Devuelve (valor estimado, amplitud del intervalo)."""
         ...
 
+
+
+# --- usuarios, sesiones y reportes ---------------------------------------
+# Puertos chicos, uno por responsabilidad: quien solo verifica sesiones no
+# tiene por qué depender de cómo se cifra una contraseña.
+
+@runtime_checkable
+class RepositorioUsuarios(Protocol):
+    def obtener(self, id_usuario: int) -> Usuario | None: ...
+    def obtener_por_correo(self, correo: str) -> Usuario | None: ...
+    def listar(self) -> list[Usuario]: ...
+    def guardar(self, usuario: Usuario) -> Usuario:
+        """Inserta si no tiene id, actualiza si lo tiene. Devuelve el usuario con id."""
+        ...
+    def contar_administradores_activos(self) -> int: ...
+
+
+@runtime_checkable
+class RepositorioReportes(Protocol):
+    def obtener(self, id_reporte: int) -> Reporte | None: ...
+    def listar(self, estado: EstadoReporte | None = None) -> list[Reporte]: ...
+    def guardar(self, reporte: Reporte) -> Reporte: ...
+
+
+@runtime_checkable
+class CifradorContrasenas(Protocol):
+    def cifrar(self, contrasena: str) -> str: ...
+    def verificar(self, contrasena: str, hash_guardado: str) -> bool: ...
+
+
+@runtime_checkable
+class EmisorTokens(Protocol):
+    def emitir(self, usuario: Usuario) -> str: ...
+    def leer(self, token: str) -> int | None:
+        """Id del usuario del token, o None si es inválido o venció."""
+        ...

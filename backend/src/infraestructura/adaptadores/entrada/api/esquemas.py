@@ -6,7 +6,7 @@ cambia, la API no se rompe sola; y si el contrato de la API cambia, el
 dominio no se entera.
 """
 from __future__ import annotations
-from datetime import date
+from datetime import date, datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -97,3 +97,67 @@ class ReporteSalida(BaseModel):
     aceptado: bool
     mensaje: str
 
+
+
+class ReporteRevisionSalida(BaseModel):
+    id: int
+    codigo_producto: str
+    codigo_mercado: str
+    monto: float
+    unidad: str
+    id_autor: int
+    creado_en: datetime
+    estado: Literal["pendiente", "aprobado", "rechazado"]
+    id_revisor: int | None = None
+    revisado_en: datetime | None = None
+    motivo_rechazo: str | None = None
+
+
+class RechazoEntrada(BaseModel):
+    motivo: str = Field(min_length=3, max_length=500)
+
+
+# --- cuentas y sesiones ----------------------------------------------------
+
+RolTexto = Literal["usuario", "recolector", "administrador"]
+
+
+class UsuarioSalida(BaseModel):
+    # Nunca lleva el hash de la contraseña: este DTO es justamente el filtro.
+    id: int
+    correo: str
+    nombre: str
+    rol: RolTexto
+    activo: bool
+    creado_en: datetime
+    permisos: list[str]
+
+
+class RegistroEntrada(BaseModel):
+    correo: str = Field(max_length=255)
+    nombre: str = Field(default="", max_length=255)
+    contrasena: str = Field(min_length=1, max_length=128)
+
+
+class CrearUsuarioEntrada(RegistroEntrada):
+    rol: RolTexto = "usuario"
+
+
+class IngresoEntrada(BaseModel):
+    correo: str = Field(max_length=255)
+    contrasena: str = Field(max_length=128)
+
+
+class SesionSalida(BaseModel):
+    token: str
+    tipo: Literal["bearer"] = "bearer"
+    usuario: UsuarioSalida
+
+
+class ActualizarUsuarioEntrada(BaseModel):
+    rol: RolTexto | None = None
+    activo: bool | None = None
+
+
+class ContrasenaEntrada(BaseModel):
+    contrasena: str = Field(min_length=1, max_length=128)

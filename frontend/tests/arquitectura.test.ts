@@ -53,4 +53,11 @@ describe("arquitectura del frontend", () => {
       .map((r) => r.replace(RAIZ, "src").replace(/\\/g, "/"));
     expect(conFetch).toEqual(["src/infraestructura/http/clienteHttp.ts"]);
   });
+
+  it("solo el almacén de sesión toca localStorage", () => {
+    const conAlmacen = archivos(RAIZ)
+      .filter((r) => /localStorage|sessionStorage/.test(readFileSync(r, "utf-8")))
+      .map((r) => r.replace(RAIZ, "src").replace(/\\/g, "/"));
+    expect(conAlmacen).toEqual(["src/infraestructura/almacen/almacenSesion.ts"]);
+  });
 });

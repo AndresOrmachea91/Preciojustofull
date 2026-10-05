@@ -7,11 +7,15 @@
  */
 import type {
   CostoCanasta,
+  EstadoReporte,
   ItemCanasta,
   Mercado,
   Precio,
   PrecioEnMercado,
   Producto,
+  ReporteEnRevision,
+  Rol,
+  Usuario,
 } from "@/dominio/modelo";
 
 export interface PrecioRepositorio {
@@ -34,3 +38,34 @@ export interface ReporteRepositorio {
   }): Promise<void>;
 }
 
+
+export interface NuevaCuenta {
+  correo: string;
+  nombre: string;
+  contrasena: string;
+}
+
+export interface SesionRepositorio {
+  /** Devuelve el token y la cuenta; rechaza con un error legible si falla. */
+  ingresar(correo: string, contrasena: string): Promise<{ token: string; usuario: Usuario }>;
+  registrarse(cuenta: NuevaCuenta): Promise<Usuario>;
+  /** La cuenta del token vigente; rechaza si el token ya no sirve. */
+  yo(): Promise<Usuario>;
+}
+
+/** Dónde se guarda el token entre recargas. El navegador es un detalle. */
+export interface AlmacenSesion {
+  leer(): string | null;
+  guardar(token: string): void;
+  borrar(): void;
+}
+
+export interface AdministracionRepositorio {
+  usuarios(): Promise<Usuario[]>;
+  crearUsuario(cuenta: NuevaCuenta & { rol: Rol }): Promise<Usuario>;
+  actualizarUsuario(id: number, cambios: { rol?: Rol; activo?: boolean }): Promise<Usuario>;
+  restablecerContrasena(id: number, contrasena: string): Promise<Usuario>;
+  reportes(estado: EstadoReporte | "todos"): Promise<ReporteEnRevision[]>;
+  aprobarReporte(id: number): Promise<ReporteEnRevision>;
+  rechazarReporte(id: number, motivo: string): Promise<ReporteEnRevision>;
+}

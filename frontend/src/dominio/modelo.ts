@@ -141,3 +141,50 @@ export function explicacionProcedencia(precio: Precio, mercado?: Mercado): strin
   }
   return `Medido en este lugar: ${n} ${n === 1 ? "observación" : "observaciones"}.`;
 }
+
+// --- cuentas y sesiones --------------------------------------------------
+
+export type Rol = "usuario" | "recolector" | "administrador";
+
+export type Permiso = "reportar_precio" | "registrar_cotizacion" | "gestionar_usuarios" | "validar_reportes";
+
+export const ROLES: readonly Rol[] = ["usuario", "recolector", "administrador"];
+
+export const NOMBRE_ROL: Record<Rol, string> = {
+  usuario: "Usuario",
+  recolector: "Recolector",
+  administrador: "Administrador",
+};
+
+/**
+ * Los permisos los decide el backend y llegan con el usuario: la interfaz
+ * solo muestra u oculta acciones según esa lista, nunca repite la matriz.
+ * Ocultar un botón es comodidad; quien protege de verdad es la API.
+ */
+export interface Usuario {
+  readonly id: number;
+  readonly correo: string;
+  readonly nombre: string;
+  readonly rol: Rol;
+  readonly activo: boolean;
+  readonly creadoEn: string;
+  readonly permisos: readonly Permiso[];
+}
+
+export function puede(usuario: Usuario | null, permiso: Permiso): boolean {
+  return usuario !== null && usuario.activo && usuario.permisos.includes(permiso);
+}
+
+export type EstadoReporte = "pendiente" | "aprobado" | "rechazado";
+
+export interface ReporteEnRevision {
+  readonly id: number;
+  readonly codigoProducto: string;
+  readonly codigoMercado: string;
+  readonly monto: number;
+  readonly unidad: string;
+  readonly idAutor: number;
+  readonly creadoEn: string;
+  readonly estado: EstadoReporte;
+  readonly motivoRechazo: string | null;
+}

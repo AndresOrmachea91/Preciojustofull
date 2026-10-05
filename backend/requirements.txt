@@ -6,6 +6,8 @@ requests==2.32.3
 beautifulsoup4==4.12.3
 pytest==8.3.3
 httpx==0.27.2
+# Tokens de sesion firmados. Las contrasenas usan scrypt de la biblioteca estandar.
+PyJWT==2.9.0
 
 sqlalchemy==2.0.35
 # psycopg2-binary 2.9.9 no tiene wheel para Python 3.13 y falla al compilar;

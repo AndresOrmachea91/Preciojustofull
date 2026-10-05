@@ -1,3 +1,14 @@
+import os
+
+# Las pruebas NUNCA usan la base de backend/.env: esa es la de producción.
+# Las variables de entorno mandan sobre el archivo, así que esto fuerza los
+# repositorios en memoria igual que en la integración continua. Va antes de
+# cualquier import de src, porque la configuración se lee al importarla.
+os.environ["BASE_DATOS_URL"] = ""
+os.environ["JWT_SECRETO"] = "secreto-de-pruebas-que-no-sirve-en-produccion-0123456789"
+os.environ["ADMIN_INICIAL_CORREO"] = ""
+os.environ["ADMIN_INICIAL_CONTRASENA"] = ""
+
 from datetime import datetime, timezone
 
 import pytest

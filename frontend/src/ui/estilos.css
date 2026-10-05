@@ -114,3 +114,53 @@ body {
 @media (prefers-color-scheme: dark) {
   .panel__precio--estimado, .procedencia--estimado { background: #2a2116; }
 }
+
+/* --- cuenta, formularios y administración ------------------------------- */
+.app__cabecera { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
+.app__marca { color: inherit; text-decoration: none; }
+.app__lema { margin: 0 0 20px; color: var(--tenue); }
+.cuenta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.cuenta__nombre { font-size: 0.9rem; }
+.cuenta__rol { color: var(--tenue); }
+
+.boton {
+  padding: 8px 16px; border-radius: 8px; border: 1px solid var(--tinta);
+  background: var(--tinta); color: #fff; font: inherit; font-size: 0.92rem; cursor: pointer;
+}
+.boton:disabled { opacity: 0.6; cursor: wait; }
+.boton--suave { background: var(--superficie); color: var(--tinta); border-color: var(--borde); }
+.boton:focus-visible, .enlace:focus-visible { outline: 2px solid var(--jade); outline-offset: 2px; }
+.enlace { background: none; border: 0; padding: 0; color: var(--jade); font: inherit; text-decoration: underline; cursor: pointer; }
+
+.formulario-cuenta { max-width: 400px; }
+.formulario { display: flex; flex-direction: column; gap: 14px; margin-bottom: 16px; }
+.formulario--recuadro { background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; padding: 16px 18px; }
+.formulario__fila { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 560px) { .formulario__fila { grid-template-columns: 1fr; } }
+.formulario__botones { display: flex; gap: 8px; flex-wrap: wrap; }
+.campo { display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; }
+.campo input, .campo select, .tabla select {
+  padding: 8px 10px; border-radius: 8px; border: 1px solid var(--borde);
+  background: var(--superficie); color: var(--texto); font: inherit;
+}
+.estado.estado--error { margin: 0; }
+.aviso { background: var(--jade-claro); color: var(--jade); border-radius: 10px; padding: 10px 14px; margin: 12px 0; font-size: 0.92rem; }
+
+.pestanas { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.tabla-envoltura { overflow-x: auto; margin-top: 16px; background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; }
+.tabla { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.tabla th, .tabla td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--borde); vertical-align: middle; }
+.tabla th { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--tenue); }
+.tabla tr:last-child td { border-bottom: 0; }
+.tabla__fila--inactiva td { color: var(--tenue); }
+.tabla__acciones { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+
+.estado-reporte { font-size: 0.75rem; padding: 3px 9px; border-radius: 999px; text-transform: capitalize; white-space: nowrap; }
+.estado-reporte--pendiente { background: #f6efe2; color: var(--ambar); }
+.estado-reporte--aprobado { background: var(--jade-claro); color: var(--jade); }
+.estado-reporte--rechazado { background: #f6e7e2; color: #93301d; }
+
+@media (prefers-color-scheme: dark) {
+  .estado-reporte--pendiente { background: #2a2116; }
+  .estado-reporte--rechazado { background: #2e1a15; color: #f0a08e; }
+}

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from src.infraestructura.adaptadores.entrada.api import esquemas as e
 from src.aplicacion.puertos.entrada import CostoCanastaEnMercado, PrecioEnMercado
-from src.dominio.modelo import Mercado, PrecioConsolidado, Producto
+from src.dominio.modelo import Mercado, PERMISOS_POR_ROL, PrecioConsolidado, Producto, Reporte, Usuario
 
 
 def precio_a_salida(p: PrecioConsolidado) -> e.PrecioSalida:
@@ -56,3 +56,33 @@ def canasta_a_salida(c: CostoCanastaEnMercado) -> e.CanastaSalida:
         faltantes=c.faltantes,
     )
 
+
+
+def usuario_a_salida(u: Usuario) -> e.UsuarioSalida:
+    return e.UsuarioSalida(
+        id=u.id,
+        correo=u.correo,
+        nombre=u.nombre,
+        rol=u.rol.value,
+        activo=u.activo,
+        creado_en=u.creado_en,
+        # Los permisos van en la respuesta para que la interfaz muestre u
+        # oculte acciones sin repetir la matriz del dominio.
+        permisos=sorted(p.value for p in PERMISOS_POR_ROL[u.rol]) if u.activo else [],
+    )
+
+
+def reporte_a_salida(r: Reporte) -> e.ReporteRevisionSalida:
+    return e.ReporteRevisionSalida(
+        id=r.id,
+        codigo_producto=r.codigo_producto,
+        codigo_mercado=r.codigo_mercado,
+        monto=r.monto,
+        unidad=r.unidad,
+        id_autor=r.id_autor,
+        creado_en=r.creado_en,
+        estado=r.estado.value,
+        id_revisor=r.id_revisor,
+        revisado_en=r.revisado_en,
+        motivo_rechazo=r.motivo_rechazo,
+    )
