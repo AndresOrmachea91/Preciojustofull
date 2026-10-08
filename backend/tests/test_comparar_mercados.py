@@ -7,6 +7,8 @@ porque depende de puertos y no de implementaciones.
 """
 import pytest
 
+from src.dominio.servicio.motor_fusion import MotorFusion
+
 from src.aplicacion.casos_uso.calcular_canasta import CalcularCanastaCasoUso
 from src.aplicacion.casos_uso.comparar_mercados import CompararMercadosCasoUso
 from src.aplicacion.puertos.entrada import ItemCanasta
@@ -15,7 +17,7 @@ from src.dominio.excepciones import ProductoNoEncontrado
 
 def test_los_mercados_salen_del_mas_barato_al_mas_caro(repositorios):
     productos, mercados, observaciones = repositorios
-    caso = CompararMercadosCasoUso(productos, mercados, observaciones)
+    caso = CompararMercadosCasoUso(productos, mercados, observaciones, MotorFusion())
 
     resultado = caso.ejecutar("tomate")
 
@@ -26,7 +28,7 @@ def test_los_mercados_salen_del_mas_barato_al_mas_caro(repositorios):
 
 def test_el_minimarket_sale_mas_caro_que_el_mercado(repositorios):
     productos, mercados, observaciones = repositorios
-    caso = CompararMercadosCasoUso(productos, mercados, observaciones)
+    caso = CompararMercadosCasoUso(productos, mercados, observaciones, MotorFusion())
 
     resultado = caso.ejecutar("tomate")
     por_codigo = {r.codigo_mercado: r.precio.rango.centro for r in resultado}
@@ -36,7 +38,7 @@ def test_el_minimarket_sale_mas_caro_que_el_mercado(repositorios):
 
 def test_filtra_por_zona(repositorios):
     productos, mercados, observaciones = repositorios
-    caso = CompararMercadosCasoUso(productos, mercados, observaciones)
+    caso = CompararMercadosCasoUso(productos, mercados, observaciones, MotorFusion())
 
     resultado = caso.ejecutar("tomate", zona="Centro")
 
@@ -45,7 +47,7 @@ def test_filtra_por_zona(repositorios):
 
 def test_producto_inexistente_falla_con_error_de_dominio(repositorios):
     productos, mercados, observaciones = repositorios
-    caso = CompararMercadosCasoUso(productos, mercados, observaciones)
+    caso = CompararMercadosCasoUso(productos, mercados, observaciones, MotorFusion())
 
     with pytest.raises(ProductoNoEncontrado):
         caso.ejecutar("no_existe")
@@ -53,7 +55,7 @@ def test_producto_inexistente_falla_con_error_de_dominio(repositorios):
 
 def test_la_canasta_ordena_por_cobertura_y_luego_por_precio(repositorios):
     _, mercados, observaciones = repositorios
-    caso = CalcularCanastaCasoUso(mercados, observaciones)
+    caso = CalcularCanastaCasoUso(mercados, observaciones, MotorFusion())
 
     resultado = caso.ejecutar([
         ItemCanasta("tomate", 2.0),

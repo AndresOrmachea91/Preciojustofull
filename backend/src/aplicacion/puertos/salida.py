@@ -16,22 +16,47 @@ from src.dominio.modelo import EstadoReporte, Mercado, Observacion, Producto, Re
 from src.dominio.valor import Periodo
 
 
+# --- catálogo y observaciones: lectura y escritura por separado ----------
+# Segregación de interfaces: cada caso de uso declara SOLO lo que usa. Los
+# que publican precios (consultar, comparar, canasta) dependen de los
+# lectores y no pueden escribir ni por descuido; solo la siembra y la
+# validación de reportes reciben un escritor. Los Repositorio* reúnen
+# ambos para los adaptadores, que implementan el paquete completo.
+
 @runtime_checkable
-class RepositorioProductos(Protocol):
+class LectorProductos(Protocol):
     def obtener(self, codigo: str) -> Producto | None: ...
     def listar(self) -> list[Producto]: ...
+
+
+@runtime_checkable
+class EscritorProductos(Protocol):
     def guardar(self, producto: Producto) -> None: ...
 
 
 @runtime_checkable
-class RepositorioMercados(Protocol):
+class RepositorioProductos(LectorProductos, EscritorProductos, Protocol):
+    pass
+
+
+@runtime_checkable
+class LectorMercados(Protocol):
     def obtener(self, codigo: str) -> Mercado | None: ...
     def listar(self, zona: str | None = None) -> list[Mercado]: ...
+
+
+@runtime_checkable
+class EscritorMercados(Protocol):
     def guardar(self, mercado: Mercado) -> None: ...
 
 
 @runtime_checkable
-class RepositorioObservaciones(Protocol):
+class RepositorioMercados(LectorMercados, EscritorMercados, Protocol):
+    pass
+
+
+@runtime_checkable
+class LectorObservaciones(Protocol):
     def buscar(
         self,
         codigo_producto: str,
@@ -39,7 +64,16 @@ class RepositorioObservaciones(Protocol):
         periodo: Periodo | None = None,
         ciudad: str | None = None,
     ) -> list[Observacion]: ...
+
+
+@runtime_checkable
+class EscritorObservaciones(Protocol):
     def guardar_varias(self, observaciones: list[Observacion]) -> int: ...
+
+
+@runtime_checkable
+class RepositorioObservaciones(LectorObservaciones, EscritorObservaciones, Protocol):
+    pass
 
 
 @runtime_checkable

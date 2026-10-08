@@ -3,9 +3,9 @@ from datetime import datetime, timezone
 
 from src.aplicacion.casos_uso.gestionar_usuarios import exigir
 from src.aplicacion.puertos.salida import (
-    RepositorioMercados,
-    RepositorioObservaciones,
-    RepositorioProductos,
+    EscritorObservaciones,
+    LectorMercados,
+    LectorProductos,
     RepositorioReportes,
     RepositorioUsuarios,
 )
@@ -35,8 +35,8 @@ class RegistrarReporteCiudadano:
 
     def __init__(
         self,
-        productos: RepositorioProductos,
-        mercados: RepositorioMercados,
+        productos: LectorProductos,
+        mercados: LectorMercados,
         reportes: RepositorioReportes,
     ):
         self._productos = productos
@@ -74,7 +74,7 @@ class ValidarReportes:
     def __init__(
         self,
         reportes: RepositorioReportes,
-        observaciones: RepositorioObservaciones,
+        observaciones: EscritorObservaciones,
         usuarios: RepositorioUsuarios,
     ):
         self._reportes = reportes

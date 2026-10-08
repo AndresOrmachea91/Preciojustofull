@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from src.aplicacion.puertos.entrada import CostoCanastaEnMercado, ItemCanasta
 from src.aplicacion.puertos.salida import (
-    RepositorioMercados,
-    RepositorioObservaciones,
+    LectorMercados,
+    LectorObservaciones,
 )
 from src.dominio.excepciones import SinObservaciones
 from src.dominio.servicio.motor_fusion import MotorFusion
@@ -22,13 +22,13 @@ class CalcularCanastaCasoUso:
 
     def __init__(
         self,
-        mercados: RepositorioMercados,
-        observaciones: RepositorioObservaciones,
-        motor: MotorFusion | None = None,
+        mercados: LectorMercados,
+        observaciones: LectorObservaciones,
+        motor: MotorFusion,
     ):
         self._mercados = mercados
         self._observaciones = observaciones
-        self._motor = motor or MotorFusion()
+        self._motor = motor
 
     def ejecutar(
         self, items: list[ItemCanasta], zona: str | None = None

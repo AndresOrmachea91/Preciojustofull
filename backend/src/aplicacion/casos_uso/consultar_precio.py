@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from src.aplicacion.casos_uso.comparar_mercados import CIUDAD_POR_DEFECTO, precio_del_local
 from src.aplicacion.puertos.salida import (
-    RepositorioMercados, RepositorioObservaciones, RepositorioProductos,
+    LectorMercados, LectorObservaciones, LectorProductos,
 )
 from src.dominio.excepciones import ProductoNoEncontrado, SinObservaciones
 from src.dominio.modelo import PrecioConsolidado
@@ -18,15 +18,15 @@ class ConsultarPrecioProducto:
 
     def __init__(
         self,
-        productos: RepositorioProductos,
-        observaciones: RepositorioObservaciones,
-        motor: MotorFusion | None = None,
-        mercados: RepositorioMercados | None = None,
+        productos: LectorProductos,
+        observaciones: LectorObservaciones,
+        motor: MotorFusion,
+        mercados: LectorMercados | None = None,
         ciudad: str = CIUDAD_POR_DEFECTO,
     ):
         self._productos = productos
         self._observaciones = observaciones
-        self._motor = motor or MotorFusion()
+        self._motor = motor
         self._mercados = mercados
         self._ciudad = ciudad
 

@@ -1,3 +1,4 @@
+from src.dominio.servicio.motor_fusion import MotorFusion
 """
 Hoy nadie midió en los mercados concretos: todo lo que hay es la referencia
 de ciudad del SIIP. La comparación tiene que mostrar precios igual, pero
@@ -38,7 +39,7 @@ def _repos_con_referencia():
 
 def test_un_mercado_sin_mediciones_recibe_un_precio_estimado_desde_la_ciudad():
     productos, mercados, observaciones = _repos_con_referencia()
-    resultado = CompararMercadosCasoUso(productos, mercados, observaciones).ejecutar("papa")
+    resultado = CompararMercadosCasoUso(productos, mercados, observaciones, MotorFusion()).ejecutar("papa")
     por_codigo = {r.codigo_mercado: r for r in resultado}
 
     # rodriguez tiene mediciones propias: observado. El minimarket no: estimado.
@@ -51,7 +52,7 @@ def test_un_mercado_sin_mediciones_recibe_un_precio_estimado_desde_la_ciudad():
 
 def test_el_mayorista_se_estima_desde_la_referencia_mayorista_y_no_compite():
     productos, mercados, observaciones = _repos_con_referencia()
-    resultado = CompararMercadosCasoUso(productos, mercados, observaciones).ejecutar("papa")
+    resultado = CompararMercadosCasoUso(productos, mercados, observaciones, MotorFusion()).ejecutar("papa")
 
     makro = next(r for r in resultado if r.codigo_mercado == "makro")
     assert makro.nivel_precio == NivelPrecio.MAYORISTA.value
@@ -64,14 +65,14 @@ def test_el_mayorista_se_estima_desde_la_referencia_mayorista_y_no_compite():
 
 def test_sin_medicion_ni_referencia_el_mercado_se_omite():
     productos, mercados, observaciones = datos_de_ejemplo()   # sin referencia de ciudad
-    resultado = CompararMercadosCasoUso(productos, mercados, observaciones).ejecutar("tomate")
+    resultado = CompararMercadosCasoUso(productos, mercados, observaciones, MotorFusion()).ejecutar("tomate")
     assert all(r.precio.procedencia is Procedencia.OBSERVADO for r in resultado)
     assert "minimarket_sopocachi" in {r.codigo_mercado for r in resultado}   # tiene medición propia
 
 
 def test_consultar_un_mercado_sin_mediciones_devuelve_estimado():
     productos, mercados, observaciones = _repos_con_referencia()
-    caso = ConsultarPrecioProducto(productos, observaciones, mercados=mercados)
+    caso = ConsultarPrecioProducto(productos, observaciones, MotorFusion(), mercados=mercados)
     precio = caso.ejecutar("papa", "minimarket_sopocachi")
     assert precio.procedencia is Procedencia.ESTIMADO and precio.codigo_mercado == "minimarket_sopocachi"
 

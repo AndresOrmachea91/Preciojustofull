@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from src.aplicacion.puertos.entrada import PrecioEnMercado
 from src.aplicacion.puertos.salida import (
-    RepositorioMercados,
-    RepositorioObservaciones,
-    RepositorioProductos,
+    LectorMercados,
+    LectorObservaciones,
+    LectorProductos,
 )
 from src.dominio.excepciones import ProductoNoEncontrado, SinObservaciones
 from src.dominio.modelo import Mercado, Observacion, PrecioConsolidado
@@ -50,16 +50,16 @@ class CompararMercadosCasoUso:
 
     def __init__(
         self,
-        productos: RepositorioProductos,
-        mercados: RepositorioMercados,
-        observaciones: RepositorioObservaciones,
-        motor: MotorFusion | None = None,
+        productos: LectorProductos,
+        mercados: LectorMercados,
+        observaciones: LectorObservaciones,
+        motor: MotorFusion,
         ciudad: str = CIUDAD_POR_DEFECTO,
     ):
         self._productos = productos
         self._mercados = mercados
         self._observaciones = observaciones
-        self._motor = motor or MotorFusion()
+        self._motor = motor
         self._ciudad = ciudad
 
     def ejecutar(self, codigo_producto: str, zona: str | None = None) -> list[PrecioEnMercado]:
