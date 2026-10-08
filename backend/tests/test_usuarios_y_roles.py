@@ -8,10 +8,11 @@ from datetime import datetime, timezone
 
 import pytest
 
-from src.aplicacion.casos_uso.gestionar_usuarios import (
-    AdministrarUsuarios, IniciarSesion, RegistrarUsuario, ResolverSesion,
-)
-from src.aplicacion.casos_uso.registrar_reporte import RegistrarReporteCiudadano, ValidarReportes
+from src.aplicacion.casos_uso.administracion.gestionar_usuarios import AdministrarUsuarios
+from src.aplicacion.casos_uso.cuentas.iniciar_sesion import IniciarSesion, ResolverSesion
+from src.aplicacion.casos_uso.cuentas.registrar_usuario import RegistrarUsuario
+from src.aplicacion.casos_uso.administracion.validar_reportes import ValidarReportes
+from src.aplicacion.casos_uso.usuario.reportar_precio import RegistrarReporteCiudadano
 from src.dominio.excepciones import (
     ContrasenaDebil, CorreoInvalido, CorreoYaRegistrado, CredencialesInvalidas, PermisoDenegado,
     ReporteYaRevisado, SinAdministradores, UnidadDesconocida,
@@ -38,7 +39,7 @@ def entorno(repositorios):
         "alta": alta, "admin": admin,
         "ingresar": IniciarSesion(usuarios, cifrador, tokens),
         "resolver": ResolverSesion(usuarios, tokens),
-        "administrar": AdministrarUsuarios(usuarios, cifrador),
+        "administrar": AdministrarUsuarios(usuarios, cifrador, mercados),
         "reportar": RegistrarReporteCiudadano(productos, mercados, reportes),
         "validar": ValidarReportes(reportes, observaciones, usuarios),
     }
@@ -52,9 +53,9 @@ def _usuario(rol, activo=True):
 
 def test_cada_rol_tiene_solo_sus_permisos():
     assert _usuario(Rol.USUARIO).puede(Permiso.REPORTAR_PRECIO)
-    assert not _usuario(Rol.USUARIO).puede(Permiso.REGISTRAR_COTIZACION)
-    assert _usuario(Rol.RECOLECTOR).puede(Permiso.REGISTRAR_COTIZACION)
-    assert not _usuario(Rol.RECOLECTOR).puede(Permiso.GESTIONAR_USUARIOS)
+    assert not _usuario(Rol.USUARIO).puede(Permiso.PUBLICAR_PRECIO_PROPIO)
+    assert _usuario(Rol.VENDEDOR).puede(Permiso.PUBLICAR_PRECIO_PROPIO)
+    assert not _usuario(Rol.VENDEDOR).puede(Permiso.GESTIONAR_USUARIOS)
     assert all(_usuario(Rol.ADMINISTRADOR).puede(p) for p in Permiso)
 
 
@@ -141,10 +142,10 @@ def test_solo_el_administrador_crea_y_lista_cuentas(entorno):
     with pytest.raises(PermisoDenegado):
         entorno["administrar"].listar(ana)
 
-    rec = entorno["alta"].crear(entorno["admin"], "rec@pj.bo", "Rec", "clave1234", Rol.RECOLECTOR)
-    assert rec.rol is Rol.RECOLECTOR
+    vend = entorno["alta"].crear(entorno["admin"], "vend@pj.bo", "Vend", "clave1234", Rol.VENDEDOR)
+    assert vend.rol is Rol.VENDEDOR
     assert [u.correo for u in entorno["administrar"].listar(entorno["admin"])] == [
-        "admin@pj.bo", "ana@correo.bo", "rec@pj.bo",
+        "admin@pj.bo", "ana@correo.bo", "vend@pj.bo",
     ]
 
 
@@ -152,9 +153,9 @@ def test_el_cambio_de_rol_rige_en_la_siguiente_peticion(entorno):
     ana = entorno["alta"].registrarse("ana@correo.bo", "Ana", "clave1234")
     token = entorno["ingresar"].ejecutar("ana@correo.bo", "clave1234").token
 
-    entorno["administrar"].actualizar(entorno["admin"], ana.id, rol=Rol.RECOLECTOR)
+    entorno["administrar"].actualizar(entorno["admin"], ana.id, rol=Rol.VENDEDOR)
 
-    assert entorno["resolver"].ejecutar(token).rol is Rol.RECOLECTOR
+    assert entorno["resolver"].ejecutar(token).rol is Rol.VENDEDOR
 
 
 def test_no_se_puede_quedar_sin_administradores(entorno):
@@ -201,16 +202,16 @@ def test_un_reporte_con_unidad_desconocida_se_rechaza_al_recibirlo(entorno):
 
 def test_aprobar_convierte_el_reporte_en_observacion_con_la_reputacion_del_rol(entorno):
     admin = entorno["admin"]
-    rec = entorno["alta"].crear(admin, "rec@pj.bo", "Rec", "clave1234", Rol.RECOLECTOR)
+    vend = entorno["alta"].crear(admin, "vend@pj.bo", "Vend", "clave1234", Rol.VENDEDOR)
     antes = len(_ciudadanas(entorno))
-    r = entorno["reportar"].ejecutar(rec, "tomate", "rodriguez", 9.5, "KILO")
+    r = entorno["reportar"].ejecutar(vend, "tomate", "rodriguez", 9.5, "KILO")
 
     aprobado = entorno["validar"].aprobar(admin, r.id)
 
     assert aprobado.estado is EstadoReporte.APROBADO and aprobado.id_revisor == admin.id
     nuevas = _ciudadanas(entorno)[antes:]
     assert len(nuevas) == 1
-    assert nuevas[0].reputacion_informante == 0.8
+    assert nuevas[0].reputacion_informante == 0.6
     assert nuevas[0].evidencia == f"reporte:{r.id}"
     assert nuevas[0].fecha_observacion == r.creado_en.date()
 
@@ -239,9 +240,23 @@ def test_un_reporte_revisado_no_se_vuelve_a_revisar(entorno):
 
 
 def test_solo_el_administrador_revisa_reportes(entorno):
-    rec = entorno["alta"].crear(entorno["admin"], "rec@pj.bo", "Rec", "clave1234", Rol.RECOLECTOR)
-    r = entorno["reportar"].ejecutar(rec, "tomate", "rodriguez", 9.5, "KILO")
+    vend = entorno["alta"].crear(entorno["admin"], "vend@pj.bo", "Vend", "clave1234", Rol.VENDEDOR)
+    r = entorno["reportar"].ejecutar(vend, "tomate", "rodriguez", 9.5, "KILO")
     with pytest.raises(PermisoDenegado):
-        entorno["validar"].aprobar(rec, r.id)
+        entorno["validar"].aprobar(vend, r.id)
     with pytest.raises(PermisoDenegado):
-        entorno["validar"].listar(rec)
+        entorno["validar"].listar(vend)
+
+
+def test_el_vendedor_tiene_su_puesto_y_solo_uno_que_exista(entorno):
+    from src.dominio.excepciones import MercadoNoEncontrado
+    admin = entorno["admin"]
+    vend = entorno["alta"].crear(admin, "vend@pj.bo", "Vend", "clave1234", Rol.VENDEDOR)
+
+    asignado = entorno["administrar"].actualizar(admin, vend.id, punto_venta="rodriguez")
+    assert asignado.codigo_punto_venta == "rodriguez"
+    # Cambiar otra cosa no le quita el puesto.
+    assert entorno["administrar"].actualizar(admin, vend.id, activo=False).codigo_punto_venta == "rodriguez"
+    with pytest.raises(MercadoNoEncontrado):
+        entorno["administrar"].actualizar(admin, vend.id, punto_venta="no_existe")
+    assert entorno["administrar"].actualizar(admin, vend.id, punto_venta=None).codigo_punto_venta is None

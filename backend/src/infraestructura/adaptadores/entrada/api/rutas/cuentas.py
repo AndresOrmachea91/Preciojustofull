@@ -1,3 +1,4 @@
+"""Cuentas, comunes a todos los roles: /api/v1/auth/registro, /ingresar y /yo."""
 from fastapi import APIRouter, Depends
 
 from src.infraestructura.adaptadores.entrada.api import esquemas as e
@@ -6,14 +7,17 @@ from src.infraestructura.adaptadores.entrada.api.dependencias import (
 )
 from src.infraestructura.adaptadores.entrada.api.mapeo import usuario_a_salida
 from src.infraestructura.adaptadores.entrada.api.seguridad import usuario_actual
+from src.infraestructura.adaptadores.salida.persistencia.auditable import como_actor
 
-router = APIRouter(prefix="/auth", tags=["sesión"])
+router = APIRouter(prefix="/auth", tags=["cuentas"])
 
 
 @router.post("/registro", response_model=e.UsuarioSalida, status_code=201)
 def registrarse(cuerpo: e.RegistroEntrada, caso=Depends(caso_registrar_usuario)):
     """Crea una cuenta de usuario común. Los demás roles los asigna un administrador."""
-    return usuario_a_salida(caso.registrarse(cuerpo.correo, cuerpo.nombre, cuerpo.contrasena))
+    # En la auditoría, la cuenta queda "creada por autoregistro".
+    with como_actor("autoregistro"):
+        return usuario_a_salida(caso.registrarse(cuerpo.correo, cuerpo.nombre, cuerpo.contrasena))
 
 
 @router.post("/ingresar", response_model=e.SesionSalida)

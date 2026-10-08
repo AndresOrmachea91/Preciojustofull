@@ -51,11 +51,12 @@ def test_guardar_asigna_id_y_se_recupera_por_id_y_por_correo(repos):
 def test_guardar_con_id_actualiza_sin_duplicar(repos):
     usuarios, _ = repos
     u = usuarios.guardar(_usuario())
-    usuarios.guardar(u.con_rol(Rol.RECOLECTOR).con_activo(False))
+    usuarios.guardar(u.con_rol(Rol.VENDEDOR).con_activo(False).con_punto_venta("rodriguez"))
 
     assert len(usuarios.listar()) == 1
     leido = usuarios.obtener(u.id)
-    assert leido.rol is Rol.RECOLECTOR and leido.activo is False
+    assert leido.rol is Rol.VENDEDOR and leido.activo is False
+    assert leido.codigo_punto_venta == "rodriguez"
     assert leido.creado_en == AHORA
 
 
@@ -63,7 +64,7 @@ def test_cuenta_solo_administradores_activos(repos):
     usuarios, _ = repos
     usuarios.guardar(_usuario("a@pj.bo", Rol.ADMINISTRADOR))
     usuarios.guardar(_usuario("b@pj.bo", Rol.ADMINISTRADOR, activo=False))
-    usuarios.guardar(_usuario("c@pj.bo", Rol.RECOLECTOR))
+    usuarios.guardar(_usuario("c@pj.bo", Rol.VENDEDOR))
     assert usuarios.contar_administradores_activos() == 1
 
 

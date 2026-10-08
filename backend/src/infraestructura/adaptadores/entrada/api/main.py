@@ -13,10 +13,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from src.infraestructura.adaptadores.entrada.api.dependencias import asegurar_admin_inicial
-from src.infraestructura.adaptadores.entrada.api.rutas import (
-    auth, canasta, catalogo, precios, reportes, usuarios,
+from src.infraestructura.adaptadores.entrada.api.rutas import cuentas
+from src.infraestructura.adaptadores.entrada.api.rutas.administracion import (
+    reportes as admin_reportes, usuarios as admin_usuarios,
 )
-from src.infraestructura.adaptadores.entrada.api.seguridad import manejar_error_dominio
+from src.infraestructura.adaptadores.entrada.api.rutas.publico import canasta, catalogo, precios
+from src.infraestructura.adaptadores.entrada.api.rutas.usuario import reportes
+from src.infraestructura.adaptadores.entrada.api.seguridad import ActorPorPeticion, manejar_error_dominio
 from src.configuracion import config
 from src.dominio.excepciones import ErrorDominio
 
@@ -63,12 +66,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.add_middleware(ActorPorPeticion)
+
+# Rutas agrupadas por quién las usa (ver rutas/<rol>/).
+# Públicas: no piden sesión.
 app.include_router(catalogo.router, prefix="/api/v1")
 app.include_router(precios.router, prefix="/api/v1")
 app.include_router(canasta.router, prefix="/api/v1")
+# Cuentas: registro, ingreso, mi cuenta.
+app.include_router(cuentas.router, prefix="/api/v1")
+# Usuario.
 app.include_router(reportes.router, prefix="/api/v1")
-app.include_router(auth.router, prefix="/api/v1")
-app.include_router(usuarios.router, prefix="/api/v1")
+# Administrador: todo bajo /api/v1/admin.
+app.include_router(admin_usuarios.router, prefix="/api/v1")
+app.include_router(admin_reportes.router, prefix="/api/v1")
 
 
 @app.get("/api/v1/salud", tags=["salud"])

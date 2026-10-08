@@ -18,7 +18,7 @@ import logging
 import argparse
 from pathlib import Path
 
-from src.aplicacion.casos_uso.sembrar_catalogo import ResumenSiembra, SembrarCatalogo
+from src.aplicacion.casos_uso.administracion.sembrar_catalogo import ResumenSiembra, SembrarCatalogo
 from src.dominio.excepciones import JerarquiaInvalida
 from src.infraestructura.adaptadores.salida.catalogo.lector_csv import (
     CatalogoCorrupto, leer_productos, leer_puntos_venta,
@@ -30,6 +30,7 @@ from src.infraestructura.adaptadores.salida.persistencia.sesion import (
     crear_esquema, crear_motor, fabrica_sesiones,
 )
 from src.configuracion import config
+from src.infraestructura.adaptadores.salida.persistencia.auditable import actor_actual
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("sembrar")
@@ -52,6 +53,8 @@ def _imprimir(resumen: ResumenSiembra, que: str) -> None:
 
 
 def main() -> int:
+    # Auditoría: lo que guarde este comando queda a nombre de "siembra".
+    actor_actual.set("siembra")
     p = argparse.ArgumentParser(description="Siembra el catálogo de puntos de venta")
     p.add_argument("--archivo", type=Path, default=CATALOGO_POR_DEFECTO,
                    help=f"CSV de puntos de venta (por defecto {CATALOGO_POR_DEFECTO})")

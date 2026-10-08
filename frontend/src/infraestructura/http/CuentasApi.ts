@@ -19,6 +19,7 @@ interface UsuarioDto {
   activo: boolean;
   creado_en: string;
   permisos: Permiso[];
+  codigo_punto_venta?: string | null;
 }
 
 interface ReporteDto {
@@ -42,6 +43,7 @@ function aUsuario(d: UsuarioDto): Usuario {
     activo: d.activo,
     creadoEn: d.creado_en,
     permisos: d.permisos,
+    codigoPuntoVenta: d.codigo_punto_venta ?? null,
   };
 }
 
@@ -79,30 +81,36 @@ export class CuentasApi implements SesionRepositorio, AdministracionRepositorio 
   }
 
   async usuarios(): Promise<Usuario[]> {
-    return (await this.http.get<UsuarioDto[]>("/usuarios")).map(aUsuario);
+    return (await this.http.get<UsuarioDto[]>("/admin/usuarios")).map(aUsuario);
   }
 
   async crearUsuario(cuenta: NuevaCuenta & { rol: Rol }): Promise<Usuario> {
-    return aUsuario(await this.http.post<UsuarioDto>("/usuarios", cuenta));
+    return aUsuario(await this.http.post<UsuarioDto>("/admin/usuarios", cuenta));
   }
 
-  async actualizarUsuario(id: number, cambios: { rol?: Rol; activo?: boolean }): Promise<Usuario> {
-    return aUsuario(await this.http.patch<UsuarioDto>(`/usuarios/${id}`, cambios));
+  async actualizarUsuario(
+    id: number,
+    cambios: { rol?: Rol; activo?: boolean; codigoPuntoVenta?: string | null },
+  ): Promise<Usuario> {
+    const { codigoPuntoVenta, ...resto } = cambios;
+    // El puesto viaja solo si se quiere cambiar: null lo quita, ausente lo deja.
+    const cuerpo = codigoPuntoVenta === undefined ? resto : { ...resto, codigo_punto_venta: codigoPuntoVenta };
+    return aUsuario(await this.http.patch<UsuarioDto>(`/admin/usuarios/${id}`, cuerpo));
   }
 
   async restablecerContrasena(id: number, contrasena: string): Promise<Usuario> {
-    return aUsuario(await this.http.put<UsuarioDto>(`/usuarios/${id}/contrasena`, { contrasena }));
+    return aUsuario(await this.http.put<UsuarioDto>(`/admin/usuarios/${id}/contrasena`, { contrasena }));
   }
 
   async reportes(estado: EstadoReporte | "todos"): Promise<ReporteEnRevision[]> {
-    return (await this.http.get<ReporteDto[]>("/reportes", { estado })).map(aReporte);
+    return (await this.http.get<ReporteDto[]>("/admin/reportes", { estado })).map(aReporte);
   }
 
   async aprobarReporte(id: number): Promise<ReporteEnRevision> {
-    return aReporte(await this.http.post<ReporteDto>(`/reportes/${id}/aprobar`));
+    return aReporte(await this.http.post<ReporteDto>(`/admin/reportes/${id}/aprobar`));
   }
 
   async rechazarReporte(id: number, motivo: string): Promise<ReporteEnRevision> {
-    return aReporte(await this.http.post<ReporteDto>(`/reportes/${id}/rechazar`, { motivo }));
+    return aReporte(await this.http.post<ReporteDto>(`/admin/reportes/${id}/rechazar`, { motivo }));
   }
 }

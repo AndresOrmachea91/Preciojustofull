@@ -34,6 +34,7 @@ def _a_usuario(f: UsuarioTabla) -> Usuario:
         hash_contrasena=f.hash_contrasena,
         activo=bool(f.activo),
         creado_en=_con_zona(f.creado_en),
+        codigo_punto_venta=f.codigo_punto_venta,
     )
 
 
@@ -62,16 +63,18 @@ class UsuariosPostgres(_Base):
     def obtener(self, id_usuario: int) -> Usuario | None:
         with sesion_de(self._fabrica) as s:
             fila = s.get(UsuarioTabla, id_usuario)
-            return _a_usuario(fila) if fila else None
+            return _a_usuario(fila) if fila is not None and not fila.eliminado else None
 
     def obtener_por_correo(self, correo: str) -> Usuario | None:
         with sesion_de(self._fabrica) as s:
-            fila = s.scalars(select(UsuarioTabla).where(UsuarioTabla.correo == correo)).first()
+            fila = s.scalars(select(UsuarioTabla).where(
+                UsuarioTabla.correo == correo, UsuarioTabla.eliminado.is_(False))).first()
             return _a_usuario(fila) if fila else None
 
     def listar(self) -> list[Usuario]:
         with sesion_de(self._fabrica) as s:
-            return [_a_usuario(f) for f in s.scalars(select(UsuarioTabla).order_by(UsuarioTabla.id))]
+            return [_a_usuario(f) for f in s.scalars(
+                select(UsuarioTabla).where(UsuarioTabla.eliminado.is_(False)).order_by(UsuarioTabla.id))]
 
     def guardar(self, usuario: Usuario) -> Usuario:
         with sesion_de(self._fabrica) as s:
@@ -84,6 +87,7 @@ class UsuariosPostgres(_Base):
             fila.rol = usuario.rol.value
             fila.hash_contrasena = usuario.hash_contrasena
             fila.activo = usuario.activo
+            fila.codigo_punto_venta = usuario.codigo_punto_venta
             s.flush()
             return _a_usuario(fila)
 
@@ -92,6 +96,7 @@ class UsuariosPostgres(_Base):
             return s.scalar(
                 select(func.count()).select_from(UsuarioTabla).where(
                     UsuarioTabla.rol == Rol.ADMINISTRADOR.value, UsuarioTabla.activo.is_(True),
+                    UsuarioTabla.eliminado.is_(False),
                 )
             ) or 0
 
@@ -100,10 +105,10 @@ class ReportesPostgres(_Base):
     def obtener(self, id_reporte: int) -> Reporte | None:
         with sesion_de(self._fabrica) as s:
             fila = s.get(ReporteTabla, id_reporte)
-            return _a_reporte(fila) if fila else None
+            return _a_reporte(fila) if fila is not None and not fila.eliminado else None
 
     def listar(self, estado: EstadoReporte | None = None) -> list[Reporte]:
-        consulta = select(ReporteTabla).order_by(ReporteTabla.creado_en)
+        consulta = select(ReporteTabla).where(ReporteTabla.eliminado.is_(False)).order_by(ReporteTabla.creado_en)
         if estado is not None:
             consulta = consulta.where(ReporteTabla.estado == estado.value)
         with sesion_de(self._fabrica) as s:
@@ -113,14 +118,14 @@ class ReportesPostgres(_Base):
         with sesion_de(self._fabrica) as s:
             fila = s.get(ReporteTabla, reporte.id) if reporte.id is not None else None
             if fila is None:
-                fila = ReporteTabla()
+                # La fecha de creación se fija UNA vez: es auditoría y no se modifica.
+                fila = ReporteTabla(creado_en=reporte.creado_en)
                 s.add(fila)
             fila.codigo_producto = reporte.codigo_producto
             fila.codigo_mercado = reporte.codigo_mercado
             fila.monto = reporte.monto
             fila.unidad = reporte.unidad
             fila.id_autor = reporte.id_autor
-            fila.creado_en = reporte.creado_en
             fila.estado = reporte.estado.value
             fila.id_revisor = reporte.id_revisor
             fila.revisado_en = reporte.revisado_en

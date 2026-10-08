@@ -1,6 +1,9 @@
 """
 Esquema de la base de datos.
 
+TODAS las tablas heredan de Auditable (auditable.py): creado_en, creado_por,
+modificado_en, modificado_por y eliminado (borrado lógico).
+
 Vive en los ADAPTADORES, no en el dominio. Las entidades del dominio no
 saben que existe una base de datos: estas tablas son un detalle de cómo se
 guardan, y podrían cambiar sin tocar el núcleo.
@@ -16,11 +19,13 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import declarative_base
 
+from src.infraestructura.adaptadores.salida.persistencia.auditable import Auditable
+
 metadata = MetaData()
 Base = declarative_base(metadata=metadata)
 
 
-class ProductoTabla(Base):
+class ProductoTabla(Base, Auditable):
     __tablename__ = "producto"
 
     codigo = Column(String(64), primary_key=True)
@@ -31,7 +36,7 @@ class ProductoTabla(Base):
     unidad_base = Column(String(8), nullable=False, default="kg")
 
 
-class MercadoTabla(Base):
+class MercadoTabla(Base, Auditable):
     __tablename__ = "mercado"
 
     codigo = Column(String(64), primary_key=True)
@@ -49,7 +54,7 @@ class MercadoTabla(Base):
     codigo_padre = Column(String(64), ForeignKey("mercado.codigo"), nullable=True)
 
 
-class ObservacionTabla(Base):
+class ObservacionTabla(Base, Auditable):
     """
     Una observación es INMUTABLE: se guarda lo que dijo la fuente, con su
     unidad original, y nunca se corrige. El precio consolidado se deriva
@@ -130,7 +135,7 @@ INDICE_CLAVE_NATURAL = (
 )
 
 
-class CorridaFuenteTabla(Base):
+class CorridaFuenteTabla(Base, Auditable):
     """
     Qué trajo cada corrida del recolector, por fuente y producto: cuántos
     hechos vio y cuántos eran NUEVOS.
@@ -153,7 +158,7 @@ class CorridaFuenteTabla(Base):
     __table_args__ = (Index("ix_corrida_fuente", "fuente", "ocurrido_en"),)
 
 
-class IntentoFuenteTabla(Base):
+class IntentoFuenteTabla(Base, Auditable):
     """
     Registro de cada llamada a cada fuente y su desenlace.
 
@@ -176,7 +181,7 @@ class IntentoFuenteTabla(Base):
     __table_args__ = (Index("ix_intento_fuente", "fuente", "ocurrido_en"),)
 
 
-class UsuarioTabla(Base):
+class UsuarioTabla(Base, Auditable):
     """Cuentas del sistema. La contraseña nunca se guarda: solo su hash."""
 
     __tablename__ = "usuario"
@@ -189,10 +194,11 @@ class UsuarioTabla(Base):
     rol = Column(String(16), nullable=False, default="usuario")
     hash_contrasena = Column(String(255), nullable=False)
     activo = Column(Boolean, nullable=False, default=True)
-    creado_en = Column(DateTime(timezone=True), nullable=False)
+    # Puesto o tienda del vendedor. creado_en, creado_por, etc. los hereda de Auditable.
+    codigo_punto_venta = Column(String(64), ForeignKey("mercado.codigo"), nullable=True)
 
 
-class ReporteTabla(Base):
+class ReporteTabla(Base, Auditable):
     """
     Reportes de precio a la espera de revisión. No se borran nunca: el
     rechazado queda con su motivo, porque de este historial sale la
@@ -207,7 +213,6 @@ class ReporteTabla(Base):
     monto = Column(Float, nullable=False)
     unidad = Column(String(64), nullable=False)
     id_autor = Column(Integer, ForeignKey("usuario.id"), nullable=False)
-    creado_en = Column(DateTime(timezone=True), nullable=False)
     estado = Column(String(16), nullable=False, default="pendiente")
     id_revisor = Column(Integer, ForeignKey("usuario.id"), nullable=True)
     revisado_en = Column(DateTime(timezone=True), nullable=True)

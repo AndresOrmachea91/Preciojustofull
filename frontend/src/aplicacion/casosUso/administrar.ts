@@ -25,6 +25,11 @@ export class Administrar {
     return this.repositorio.actualizarUsuario(id, { activo });
   }
 
+  /** Asigna (o quita, con null) el puesto o tienda de un vendedor. */
+  asignarPuntoVenta(id: number, codigo: string | null): Promise<Usuario> {
+    return this.repositorio.actualizarUsuario(id, { codigoPuntoVenta: codigo });
+  }
+
   restablecerContrasena(id: number, contrasena: string): Promise<Usuario> {
     return this.repositorio.restablecerContrasena(id, contrasena);
   }

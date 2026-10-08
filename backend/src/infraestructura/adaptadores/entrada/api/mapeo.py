@@ -69,6 +69,7 @@ def usuario_a_salida(u: Usuario) -> e.UsuarioSalida:
         # Los permisos van en la respuesta para que la interfaz muestre u
         # oculte acciones sin repetir la matriz del dominio.
         permisos=sorted(p.value for p in PERMISOS_POR_ROL[u.rol]) if u.activo else [],
+        codigo_punto_venta=u.codigo_punto_venta,
     )
 
 

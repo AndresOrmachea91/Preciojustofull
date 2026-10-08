@@ -5,6 +5,7 @@ import {
   ROLES,
   puede,
   type EstadoReporte,
+  type Mercado,
   type ReporteEnRevision,
   type Rol,
   type Usuario,
@@ -61,8 +62,14 @@ export function PaginaAdmin({ contenedor, usuario }: { contenedor: Contenedor; u
 
 function Usuarios({ contenedor, yo }: { contenedor: Contenedor; yo: Usuario }) {
   const [lista, setLista] = useState<Usuario[] | null>(null);
+  const [puntos, setPuntos] = useState<Mercado[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
+
+  // Los puestos y tiendas que se le pueden asignar a un vendedor.
+  useEffect(() => {
+    void contenedor.catalogo.mercados().then(setPuntos, () => setPuntos([]));
+  }, [contenedor]);
 
   const cargar = useCallback(() => {
     contenedor.administrar.usuarios().then(setLista, (e) => setError(mensaje(e)));
@@ -117,6 +124,7 @@ function Usuarios({ contenedor, yo }: { contenedor: Contenedor; yo: Usuario }) {
                 <th>Nombre</th>
                 <th>Correo</th>
                 <th>Rol</th>
+                <th>Puesto</th>
                 <th>Estado</th>
                 <th aria-label="Acciones" />
               </tr>
@@ -146,6 +154,31 @@ function Usuarios({ contenedor, yo }: { contenedor: Contenedor; yo: Usuario }) {
                         </option>
                       ))}
                     </select>
+                  </td>
+                  <td>
+                    {u.rol === "vendedor" ? (
+                      <select
+                        aria-label={`Puesto de ${u.correo}`}
+                        value={u.codigoPuntoVenta ?? ""}
+                        onChange={(e) =>
+                          void aplicar(
+                            contenedor.administrar.asignarPuntoVenta(u.id, e.target.value || null),
+                            e.target.value
+                              ? `${u.correo} vende en ${puntos.find((p) => p.codigo === e.target.value)?.nombre ?? e.target.value}.`
+                              : `${u.correo} ya no tiene puesto asignado.`,
+                          )
+                        }
+                      >
+                        <option value="">Sin asignar</option>
+                        {puntos.map((p) => (
+                          <option key={p.codigo} value={p.codigo}>
+                            {p.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="tenue">—</span>
+                    )}
                   </td>
                   <td>{u.activo ? "Activa" : "Desactivada"}</td>
                   <td className="tabla__acciones">
@@ -180,7 +213,7 @@ function NuevoUsuario({ contenedor, alCrear }: { contenedor: Contenedor; alCrear
   const [correo, setCorreo] = useState("");
   const [nombre, setNombre] = useState("");
   const [contrasena, setContrasena] = useState("");
-  const [rol, setRol] = useState<Rol>("recolector");
+  const [rol, setRol] = useState<Rol>("vendedor");
   const [error, setError] = useState<string | null>(null);
 
   async function enviar(evento: FormEvent) {

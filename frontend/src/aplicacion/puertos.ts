@@ -63,7 +63,10 @@ export interface AlmacenSesion {
 export interface AdministracionRepositorio {
   usuarios(): Promise<Usuario[]>;
   crearUsuario(cuenta: NuevaCuenta & { rol: Rol }): Promise<Usuario>;
-  actualizarUsuario(id: number, cambios: { rol?: Rol; activo?: boolean }): Promise<Usuario>;
+  actualizarUsuario(
+    id: number,
+    cambios: { rol?: Rol; activo?: boolean; codigoPuntoVenta?: string | null },
+  ): Promise<Usuario>;
   restablecerContrasena(id: number, contrasena: string): Promise<Usuario>;
   reportes(estado: EstadoReporte | "todos"): Promise<ReporteEnRevision[]>;
   aprobarReporte(id: number): Promise<ReporteEnRevision>;

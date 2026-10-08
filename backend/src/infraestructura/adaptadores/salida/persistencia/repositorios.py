@@ -125,15 +125,22 @@ class _Base:
         self._fabrica = fabrica
 
 
+def _vigente(fila) -> bool:
+    """Existe y no tiene borrado lógico. Las filas eliminadas no se borran: se dejan de ver."""
+    return fila is not None and not fila.eliminado
+
+
 class ProductosPostgres(_Base):
     def obtener(self, codigo: str) -> Producto | None:
         with sesion_de(self._fabrica) as s:
             fila = s.get(ProductoTabla, codigo)
-            return _a_producto(fila) if fila else None
+            return _a_producto(fila) if _vigente(fila) else None
 
     def listar(self) -> list[Producto]:
         with sesion_de(self._fabrica) as s:
-            filas = s.scalars(select(ProductoTabla).order_by(ProductoTabla.nombre)).all()
+            filas = s.scalars(
+                select(ProductoTabla).where(ProductoTabla.eliminado.is_(False)).order_by(ProductoTabla.nombre)
+            ).all()
             return [_a_producto(f) for f in filas]
 
     def guardar(self, producto: Producto) -> None:
@@ -153,11 +160,13 @@ class MercadosPostgres(_Base):
     def obtener(self, codigo: str) -> Mercado | None:
         with sesion_de(self._fabrica) as s:
             fila = s.get(MercadoTabla, codigo)
-            return _a_mercado(fila) if fila else None
+            return _a_mercado(fila) if _vigente(fila) else None
 
     def listar(self, zona: str | None = None) -> list[Mercado]:
         with sesion_de(self._fabrica) as s:
-            consulta = select(MercadoTabla).order_by(MercadoTabla.nombre)
+            consulta = (
+                select(MercadoTabla).where(MercadoTabla.eliminado.is_(False)).order_by(MercadoTabla.nombre)
+            )
             if zona:
                 consulta = consulta.where(MercadoTabla.zona.ilike(zona))
             return [_a_mercado(f) for f in s.scalars(consulta).all()]
@@ -188,7 +197,8 @@ class ObservacionesPostgres(_Base):
     ) -> list[Observacion]:
         with sesion_de(self._fabrica) as s:
             consulta = select(ObservacionTabla).where(
-                ObservacionTabla.codigo_producto == codigo_producto
+                ObservacionTabla.codigo_producto == codigo_producto,
+                ObservacionTabla.eliminado.is_(False),
             )
             if codigo_mercado:
                 consulta = consulta.where(ObservacionTabla.codigo_mercado == codigo_mercado)

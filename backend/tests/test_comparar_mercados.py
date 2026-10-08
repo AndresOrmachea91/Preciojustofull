@@ -9,8 +9,8 @@ import pytest
 
 from src.dominio.servicio.motor_fusion import MotorFusion
 
-from src.aplicacion.casos_uso.calcular_canasta import CalcularCanastaCasoUso
-from src.aplicacion.casos_uso.comparar_mercados import CompararMercadosCasoUso
+from src.aplicacion.casos_uso.precios.calcular_canasta import CalcularCanastaCasoUso
+from src.aplicacion.casos_uso.precios.comparar_mercados import CompararMercadosCasoUso
 from src.aplicacion.puertos.entrada import ItemCanasta
 from src.dominio.excepciones import ProductoNoEncontrado
 

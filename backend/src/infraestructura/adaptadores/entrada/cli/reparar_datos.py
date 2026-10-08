@@ -38,7 +38,7 @@ from collections import defaultdict
 from sqlalchemy import text
 from sqlalchemy.engine import Connection, Engine
 
-from src.aplicacion.casos_uso.sembrar_catalogo import SembrarCatalogo
+from src.aplicacion.casos_uso.administracion.sembrar_catalogo import SembrarCatalogo
 from src.dominio.modelo import Fuente
 from src.dominio.valor import TipoPrecio, Unidad
 from src.infraestructura.adaptadores.entrada.cli.sembrar import (
@@ -54,6 +54,7 @@ from src.infraestructura.adaptadores.salida.persistencia.sesion import (
     asegurar_indice_clave_natural, crear_esquema, crear_motor, fabrica_sesiones,
 )
 from src.configuracion import config
+from src.infraestructura.adaptadores.salida.persistencia.auditable import actor_actual
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("reparar")
@@ -267,6 +268,8 @@ def reparar(motor: Engine, simular: bool) -> dict:
 
 
 def main() -> int:
+    # Auditoría: lo que guarde este comando queda a nombre de "reparacion".
+    actor_actual.set("reparacion")
     p = argparse.ArgumentParser(description="Repara los datos existentes de observacion_precio")
     p.add_argument("--aplicar", action="store_true",
                    help="Escribe. Sin esto es una simulación y no toca nada.")

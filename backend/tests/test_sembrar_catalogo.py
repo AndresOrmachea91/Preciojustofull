@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy import event
 
-from src.aplicacion.casos_uso.sembrar_catalogo import SembrarCatalogo
+from src.aplicacion.casos_uso.administracion.sembrar_catalogo import SembrarCatalogo
 from src.dominio.excepciones import JerarquiaInvalida
 from src.dominio.modelo import Categoria, Mercado, Producto, TipoPuntoVenta
 from src.dominio.valor import UnidadCanonica

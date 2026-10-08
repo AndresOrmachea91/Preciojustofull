@@ -14,9 +14,17 @@ import type {
 import type { EstadoReporte, Permiso, ReporteEnRevision, Rol, Usuario } from "@/dominio/modelo";
 
 const PERMISOS: Record<Rol, Permiso[]> = {
-  usuario: ["reportar_precio"],
-  recolector: ["registrar_cotizacion", "reportar_precio"],
-  administrador: ["gestionar_usuarios", "registrar_cotizacion", "reportar_precio", "validar_reportes"],
+  usuario: ["gestionar_listas", "reportar_precio"],
+  vendedor: ["gestionar_listas", "publicar_precio_propio", "reportar_precio"],
+  administrador: [
+    "gestionar_catalogo",
+    "gestionar_listas",
+    "gestionar_usuarios",
+    "publicar_precio_propio",
+    "reportar_precio",
+    "validar_reportes",
+    "ver_auditoria",
+  ],
 };
 
 /** Cuenta de demostración del modo memoria. */
@@ -27,7 +35,14 @@ interface Cuenta {
   contrasena: string;
 }
 
-function crear(id: number, correo: string, nombre: string, rol: Rol, activo = true): Usuario {
+function crear(
+  id: number,
+  correo: string,
+  nombre: string,
+  rol: Rol,
+  activo = true,
+  codigoPuntoVenta: string | null = null,
+): Usuario {
   return {
     id,
     correo,
@@ -36,6 +51,7 @@ function crear(id: number, correo: string, nombre: string, rol: Rol, activo = tr
     activo,
     creadoEn: "2026-10-01T12:00:00Z",
     permisos: activo ? PERMISOS[rol] : [],
+    codigoPuntoVenta,
   };
 }
 
@@ -46,7 +62,7 @@ export class CuentasMemoria implements SesionRepositorio, AdministracionReposito
 
   constructor(private readonly almacen: AlmacenSesion) {
     this.agregar(crear(0, ADMIN_DEMO.correo, "Administración", "administrador"), ADMIN_DEMO.contrasena);
-    this.agregar(crear(0, "recolector@preciojusto.bo", "Rosa Mamani", "recolector"), "campo1234");
+    this.agregar(crear(0, "vendedora@preciojusto.bo", "Rosa Mamani", "vendedor", true, "rodriguez"), "puesto1234");
     this.agregar(crear(0, "vecino@correo.bo", "Juan Quispe", "usuario"), "vecino1234");
     for (const [i, [producto, mercado, monto]] of (
       [
@@ -122,12 +138,22 @@ export class CuentasMemoria implements SesionRepositorio, AdministracionReposito
     return this.alta(cuenta, cuenta.rol);
   }
 
-  async actualizarUsuario(id: number, cambios: { rol?: Rol; activo?: boolean }): Promise<Usuario> {
+  async actualizarUsuario(
+    id: number,
+    cambios: { rol?: Rol; activo?: boolean; codigoPuntoVenta?: string | null },
+  ): Promise<Usuario> {
     this.exigir("gestionar_usuarios");
     const cuenta = this.cuentas.get(id);
     if (!cuenta) throw new Error(`No existe el usuario ${id}`);
     const antes = cuenta.usuario;
-    const despues = crear(id, antes.correo, antes.nombre, cambios.rol ?? antes.rol, cambios.activo ?? antes.activo);
+    const despues = crear(
+      id,
+      antes.correo,
+      antes.nombre,
+      cambios.rol ?? antes.rol,
+      cambios.activo ?? antes.activo,
+      cambios.codigoPuntoVenta === undefined ? antes.codigoPuntoVenta : cambios.codigoPuntoVenta,
+    );
     const esAdmin = (u: Usuario) => u.activo && u.rol === "administrador";
     const admins = [...this.cuentas.values()].filter((c) => esAdmin(c.usuario)).length;
     if (esAdmin(antes) && !esAdmin(despues) && admins <= 1) {

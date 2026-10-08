@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from src.aplicacion.casos_uso.comparar_mercados import CIUDAD_POR_DEFECTO, precio_del_local
+from src.aplicacion.casos_uso.precios.comparar_mercados import CIUDAD_POR_DEFECTO, precio_del_local
 from src.aplicacion.puertos.salida import (
     LectorMercados, LectorObservaciones, LectorProductos,
 )

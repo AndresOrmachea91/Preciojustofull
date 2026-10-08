@@ -25,13 +25,14 @@ from src.infraestructura.adaptadores.salida.persistencia.sesion import (
 )
 from src.infraestructura.adaptadores.salida.seguridad.cifrador import CifradorScrypt
 from src.infraestructura.adaptadores.salida.seguridad.tokens import EmisorJwt
-from src.aplicacion.casos_uso.calcular_canasta import CalcularCanastaCasoUso
-from src.aplicacion.casos_uso.comparar_mercados import CompararMercadosCasoUso
-from src.aplicacion.casos_uso.consultar_precio import ConsultarPrecioProducto
-from src.aplicacion.casos_uso.gestionar_usuarios import (
-    AdministrarUsuarios, IniciarSesion, RegistrarUsuario, ResolverSesion,
-)
-from src.aplicacion.casos_uso.registrar_reporte import RegistrarReporteCiudadano, ValidarReportes
+from src.aplicacion.casos_uso.precios.calcular_canasta import CalcularCanastaCasoUso
+from src.aplicacion.casos_uso.precios.comparar_mercados import CompararMercadosCasoUso
+from src.aplicacion.casos_uso.precios.consultar_precio import ConsultarPrecioProducto
+from src.aplicacion.casos_uso.administracion.gestionar_usuarios import AdministrarUsuarios
+from src.aplicacion.casos_uso.cuentas.iniciar_sesion import IniciarSesion, ResolverSesion
+from src.aplicacion.casos_uso.cuentas.registrar_usuario import RegistrarUsuario
+from src.aplicacion.casos_uso.administracion.validar_reportes import ValidarReportes
+from src.aplicacion.casos_uso.usuario.reportar_precio import RegistrarReporteCiudadano
 from src.configuracion import config
 from src.dominio.modelo import Rol
 from src.dominio.servicio.motor_fusion import MotorFusion
@@ -143,7 +144,7 @@ def caso_resolver_sesion() -> ResolverSesion:
 
 
 def caso_administrar_usuarios() -> AdministrarUsuarios:
-    return AdministrarUsuarios(_cuentas()[0], _cifrador())
+    return AdministrarUsuarios(_cuentas()[0], _cifrador(), _repositorios()[1])
 
 
 def asegurar_admin_inicial() -> None:

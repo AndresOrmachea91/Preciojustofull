@@ -9,8 +9,8 @@ from datetime import datetime, timezone
 
 from fastapi.testclient import TestClient
 
-from src.aplicacion.casos_uso.comparar_mercados import CompararMercadosCasoUso
-from src.aplicacion.casos_uso.consultar_precio import ConsultarPrecioProducto
+from src.aplicacion.casos_uso.precios.comparar_mercados import CompararMercadosCasoUso
+from src.aplicacion.casos_uso.precios.consultar_precio import ConsultarPrecioProducto
 from src.dominio.modelo import Fuente, Mercado, NivelPrecio, Observacion, TipoPuntoVenta
 from src.dominio.valor import Dinero, Periodo, Procedencia, Unidad
 from src.infraestructura.adaptadores.entrada.api.main import app

@@ -44,7 +44,7 @@ describe("GestionarSesion", () => {
     const { sesion } = enMemoria();
     const u = await sesion.registrarse({ correo: "Ana@Correo.bo", nombre: "Ana", contrasena: "clave1234" });
     expect(u.rol).toBe("usuario");
-    expect(u.permisos).toEqual(["reportar_precio"]);
+    expect(u.permisos).toEqual(["gestionar_listas", "reportar_precio"]);
     expect((await sesion.restaurar())?.correo).toBe("ana@correo.bo");
   });
 
@@ -93,8 +93,8 @@ describe("CuentasApi", () => {
   }
 
   const USUARIO = {
-    id: 7, correo: "ana@pj.bo", nombre: "Ana", rol: "recolector", activo: true,
-    creado_en: "2026-10-04T12:00:00Z", permisos: ["registrar_cotizacion", "reportar_precio"],
+    id: 7, correo: "ana@pj.bo", nombre: "Ana", rol: "vendedor", activo: true,
+    creado_en: "2026-10-04T12:00:00Z", permisos: ["publicar_precio_propio", "reportar_precio"], codigo_punto_venta: "rodriguez",
   };
 
   it("traduce la sesión y manda el token en las peticiones siguientes", async () => {
@@ -108,14 +108,14 @@ describe("CuentasApi", () => {
 
     const u = await sesion.ingresar("ana@pj.bo", "clave1234");
 
-    expect(u).toMatchObject({ id: 7, rol: "recolector", creadoEn: "2026-10-04T12:00:00Z" });
+    expect(u).toMatchObject({ id: 7, rol: "vendedor", creadoEn: "2026-10-04T12:00:00Z", codigoPuntoVenta: "rodriguez" });
     expect(new Headers(pedidos[0].init.headers).get("Authorization")).toBeNull();
     await sesion.restaurar();
     expect(new Headers(pedidos[1].init.headers).get("Authorization")).toBe("Bearer abc.def.ghi");
   });
 
   it("muestra el texto del error del backend, no su JSON", async () => {
-    servidor({ "/usuarios/1": { estado: 409, cuerpo: { detail: "Debe quedar al menos un administrador activo" } } });
+    servidor({ "/admin/usuarios/1": { estado: 409, cuerpo: { detail: "Debe quedar al menos un administrador activo" } } });
     const api = new CuentasApi(new ClienteHttp("http://api.test/api/v1"));
     await expect(api.actualizarUsuario(1, { rol: "usuario" })).rejects.toThrow(
       /^Debe quedar al menos un administrador activo$/,
@@ -124,7 +124,7 @@ describe("CuentasApi", () => {
 
   it("traduce los reportes y manda el motivo del rechazo", async () => {
     const pedidos = servidor({
-      "/reportes/3/rechazar": {
+      "/admin/reportes/3/rechazar": {
         cuerpo: {
           id: 3, codigo_producto: "tomate", codigo_mercado: "rodriguez", monto: 95, unidad: "KILO",
           id_autor: 7, creado_en: "2026-10-04T12:00:00Z", estado: "rechazado", motivo_rechazo: "Fuera de rango",

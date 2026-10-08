@@ -44,12 +44,20 @@ describe("administración", () => {
     await ingresar(ADMIN_DEMO.correo, ADMIN_DEMO.contrasena);
 
     const tabla = await screen.findByRole("table");
-    expect(within(tabla).getByText("recolector@preciojusto.bo")).toBeDefined();
+    expect(within(tabla).getByText("vendedora@preciojusto.bo")).toBeDefined();
 
-    fireEvent.change(within(tabla).getByLabelText("Rol de vecino@correo.bo"), { target: { value: "recolector" } });
+    fireEvent.change(within(tabla).getByLabelText("Rol de vecino@correo.bo"), { target: { value: "vendedor" } });
     expect(await screen.findByRole("status")).toHaveProperty(
       "textContent",
-      "vecino@correo.bo ahora es recolector.",
+      "vecino@correo.bo ahora es vendedor.",
+    );
+
+    // Ahora que es vendedor, se le asigna su puesto.
+    fireEvent.change(await within(tabla).findByLabelText("Puesto de vecino@correo.bo"), {
+      target: { value: "rodriguez" },
+    });
+    await waitFor(() =>
+      expect(screen.getByRole("status").textContent).toMatch(/^vecino@correo.bo vende en /),
     );
 
     fireEvent.click(screen.getByRole("tab", { name: "Reportes por revisar" }));

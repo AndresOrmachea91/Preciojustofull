@@ -21,28 +21,38 @@ LARGO_MINIMO_CONTRASENA = 8
 
 class Rol(str, Enum):
     """
-    Tres roles, de menos a más privilegio. Una sola cuenta tiene un solo
-    rol: el recolector no es "un usuario con permisos extra", es otro
-    trabajo, y el administrador opera el sistema.
+    Tres roles. Una cuenta tiene un solo rol:
+
+    - USUARIO: consulta precios, arma sus listas y reporta lo que ve.
+    - VENDEDOR: además publica los precios de SU puesto o tienda, que le
+      asigna el administrador. No es "un usuario con permisos extra": su
+      precio es una declaración sobre su propio negocio.
+    - ADMINISTRADOR: opera el sistema (cuentas, catálogo, reportes, auditoría)
+      y hace las rondas de campo.
     """
 
     USUARIO = "usuario"
-    RECOLECTOR = "recolector"
+    VENDEDOR = "vendedor"
     ADMINISTRADOR = "administrador"
 
 
 class Permiso(str, Enum):
     REPORTAR_PRECIO = "reportar_precio"
-    REGISTRAR_COTIZACION = "registrar_cotizacion"
+    GESTIONAR_LISTAS = "gestionar_listas"
+    PUBLICAR_PRECIO_PROPIO = "publicar_precio_propio"
     GESTIONAR_USUARIOS = "gestionar_usuarios"
+    GESTIONAR_CATALOGO = "gestionar_catalogo"
     VALIDAR_REPORTES = "validar_reportes"
+    VER_AUDITORIA = "ver_auditoria"
 
 
 # La matriz de permisos es una regla del negocio, no de la API: vive acá
 # para que la web, la app móvil y la línea de comandos apliquen la misma.
 PERMISOS_POR_ROL: dict[Rol, frozenset[Permiso]] = {
-    Rol.USUARIO: frozenset({Permiso.REPORTAR_PRECIO}),
-    Rol.RECOLECTOR: frozenset({Permiso.REPORTAR_PRECIO, Permiso.REGISTRAR_COTIZACION}),
+    Rol.USUARIO: frozenset({Permiso.REPORTAR_PRECIO, Permiso.GESTIONAR_LISTAS}),
+    Rol.VENDEDOR: frozenset({
+        Permiso.REPORTAR_PRECIO, Permiso.GESTIONAR_LISTAS, Permiso.PUBLICAR_PRECIO_PROPIO,
+    }),
     Rol.ADMINISTRADOR: frozenset(Permiso),
 }
 
@@ -69,6 +79,9 @@ class Usuario:
     hash_contrasena: str
     creado_en: datetime
     activo: bool = True
+    # Código del puesto o tienda del VENDEDOR (un punto de venta del
+    # catálogo). Lo asigna el administrador; los otros roles no lo usan.
+    codigo_punto_venta: str | None = None
     # None hasta que el repositorio lo guarda por primera vez.
     id: int | None = None
 
@@ -88,3 +101,6 @@ class Usuario:
 
     def con_hash(self, hash_contrasena: str) -> Usuario:
         return replace(self, hash_contrasena=hash_contrasena)
+
+    def con_punto_venta(self, codigo: str | None) -> Usuario:
+        return replace(self, codigo_punto_venta=codigo)

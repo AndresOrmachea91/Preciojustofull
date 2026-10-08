@@ -21,7 +21,7 @@ import logging
 import os
 import sys
 
-from src.aplicacion.casos_uso.gestionar_usuarios import RegistrarUsuario
+from src.aplicacion.casos_uso.cuentas.registrar_usuario import RegistrarUsuario
 from src.dominio.excepciones import ErrorDominio
 from src.dominio.modelo import Rol
 from src.dominio.modelo.usuario import normalizar_correo
@@ -31,6 +31,7 @@ from src.infraestructura.adaptadores.salida.persistencia.sesion import (
 )
 from src.infraestructura.adaptadores.salida.seguridad.cifrador import CifradorScrypt
 from src.configuracion import config
+from src.infraestructura.adaptadores.salida.persistencia.auditable import actor_actual
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("crear_admin")
@@ -48,6 +49,8 @@ def _pedir_contrasena() -> str:
 
 
 def main() -> int:
+    # Auditoría: lo que guarde este comando queda a nombre de "consola".
+    actor_actual.set("consola")
     p = argparse.ArgumentParser(description="Crea o promueve una cuenta de administrador")
     p.add_argument("--correo", required=True)
     p.add_argument("--nombre", default="Administrador")

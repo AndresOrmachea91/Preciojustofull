@@ -43,6 +43,7 @@ from src.infraestructura.adaptadores.salida.persistencia.sesion import (
     crear_esquema, crear_motor, fabrica_sesiones,
 )
 from src.configuracion import config
+from src.infraestructura.adaptadores.salida.persistencia.auditable import actor_actual
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("recolector")
@@ -132,6 +133,8 @@ def _recolectar_fuente(repositorio, nombre_fuente: str, mapeo: dict[str, str], c
 
 
 def main() -> int:
+    # Auditoría: lo que guarde este comando queda a nombre de "recolector-automatico".
+    actor_actual.set("recolector-automatico")
     p = argparse.ArgumentParser(description="Recolector de fuentes de precios")
     p.add_argument("--fuente", choices=list(FUENTES), help="Una sola fuente; por defecto las dos")
     p.add_argument("--productos", help="Códigos del CATÁLOGO separados por coma; por defecto todo el catálogo")

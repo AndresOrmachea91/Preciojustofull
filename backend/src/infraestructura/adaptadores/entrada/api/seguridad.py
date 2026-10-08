@@ -10,8 +10,10 @@ from __future__ import annotations
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from starlette.concurrency import run_in_threadpool
 
 from src.infraestructura.adaptadores.entrada.api.dependencias import caso_resolver_sesion
+from src.infraestructura.adaptadores.salida.persistencia.auditable import actor_actual
 from src.dominio import excepciones as ex
 from src.dominio.modelo import Usuario
 
@@ -20,18 +22,44 @@ from src.dominio.modelo import Usuario
 _portador = HTTPBearer(auto_error=False, description="Token de /api/v1/auth/ingresar")
 
 
-def usuario_actual(
+async def usuario_actual(
     credenciales: HTTPAuthorizationCredentials | None = Depends(_portador),
     resolver=Depends(caso_resolver_sesion),
 ) -> Usuario:
-    usuario = resolver.ejecutar(credenciales.credentials) if credenciales else None
+    usuario = (
+        await run_in_threadpool(resolver.ejecutar, credenciales.credentials) if credenciales else None
+    )
     if usuario is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Sesión inválida o vencida. Vuelva a ingresar.",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    # Auditoría: todo lo que se guarde en esta petición queda a nombre de
+    # este usuario. Es async a propósito: así el valor se fija en el
+    # contexto de la petición y lo ven la ruta y los repositorios.
+    actor_actual.set(usuario.correo)
     return usuario
+
+
+class ActorPorPeticion:
+    """
+    Middleware ASGI: cada petición empieza como "anonimo". Sin esto, una
+    conexión que se reutiliza (keep-alive) podría heredar el actor de la
+    petición anterior y firmar cambios a nombre de otra persona.
+    """
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            return await self.app(scope, receive, send)
+        marca = actor_actual.set("anonimo")
+        try:
+            await self.app(scope, receive, send)
+        finally:
+            actor_actual.reset(marca)
 
 
 _ESTADO_POR_ERROR: list[tuple[type[ex.ErrorDominio], int]] = [

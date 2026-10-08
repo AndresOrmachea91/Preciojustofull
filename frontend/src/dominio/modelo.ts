@@ -144,15 +144,22 @@ export function explicacionProcedencia(precio: Precio, mercado?: Mercado): strin
 
 // --- cuentas y sesiones --------------------------------------------------
 
-export type Rol = "usuario" | "recolector" | "administrador";
+export type Rol = "usuario" | "vendedor" | "administrador";
 
-export type Permiso = "reportar_precio" | "registrar_cotizacion" | "gestionar_usuarios" | "validar_reportes";
+export type Permiso =
+  | "reportar_precio"
+  | "gestionar_listas"
+  | "publicar_precio_propio"
+  | "gestionar_usuarios"
+  | "gestionar_catalogo"
+  | "validar_reportes"
+  | "ver_auditoria";
 
-export const ROLES: readonly Rol[] = ["usuario", "recolector", "administrador"];
+export const ROLES: readonly Rol[] = ["usuario", "vendedor", "administrador"];
 
 export const NOMBRE_ROL: Record<Rol, string> = {
   usuario: "Usuario",
-  recolector: "Recolector",
+  vendedor: "Vendedor",
   administrador: "Administrador",
 };
 
@@ -169,6 +176,8 @@ export interface Usuario {
   readonly activo: boolean;
   readonly creadoEn: string;
   readonly permisos: readonly Permiso[];
+  /** Solo vendedores: el código del puesto o tienda que le asignó el administrador. */
+  readonly codigoPuntoVenta: string | null;
 }
 
 export function puede(usuario: Usuario | null, permiso: Permiso): boolean {

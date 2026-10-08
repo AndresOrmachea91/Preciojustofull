@@ -1,73 +1,26 @@
+"""El administrador revisa los reportes de precio: los aprueba (entran al motor) o los rechaza con motivo."""
 from __future__ import annotations
+
 from datetime import datetime, timezone
 
-from src.aplicacion.casos_uso.gestionar_usuarios import exigir
+from src.aplicacion.casos_uso.cuentas.permisos import exigir
 from src.aplicacion.puertos.salida import (
-    EscritorObservaciones,
-    LectorMercados,
-    LectorProductos,
-    RepositorioReportes,
-    RepositorioUsuarios,
+    EscritorObservaciones, RepositorioReportes, RepositorioUsuarios,
 )
-from src.dominio.excepciones import (
-    MercadoNoEncontrado, ProductoNoEncontrado, ReporteNoEncontrado,
-)
+from src.dominio.excepciones import ReporteNoEncontrado
 from src.dominio.modelo import (
     EstadoReporte, Fuente, NivelPrecio, Observacion, Permiso, Reporte, Rol, Usuario,
 )
 from src.dominio.valor import Dinero, Periodo, Unidad
 
 # Cuánto pesa en el motor de fusión el reporte de cada rol, una vez
-# aprobado. El recolector sigue un instrumento de campo; un ciudadano no.
+# aprobado. El administrador hace las rondas de campo con un instrumento
+# validado; un vendedor conoce el mercado; un ciudadano reporta de paso.
 REPUTACION_POR_ROL = {
     Rol.USUARIO: 0.5,
-    Rol.RECOLECTOR: 0.8,
+    Rol.VENDEDOR: 0.6,
     Rol.ADMINISTRADOR: 0.8,
 }
-
-
-class RegistrarReporteCiudadano:
-    """
-    Un reporte NO se publica directo ni entra directo al motor de fusión:
-    queda pendiente hasta que un administrador lo revisa. Recién aprobado
-    se convierte en una observación más, con la reputación de quien lo hizo.
-    """
-
-    def __init__(
-        self,
-        productos: LectorProductos,
-        mercados: LectorMercados,
-        reportes: RepositorioReportes,
-    ):
-        self._productos = productos
-        self._mercados = mercados
-        self._reportes = reportes
-
-    def ejecutar(
-        self,
-        autor: Usuario,
-        codigo_producto: str,
-        codigo_mercado: str,
-        monto: float,
-        unidad: str,
-    ) -> Reporte:
-        exigir(autor, Permiso.REPORTAR_PRECIO)
-        if self._productos.obtener(codigo_producto) is None:
-            raise ProductoNoEncontrado(codigo_producto)
-        if self._mercados.obtener(codigo_mercado) is None:
-            raise MercadoNoEncontrado(codigo_mercado)
-        # Se valida al recibirlo, no al aprobarlo: el informante es quien
-        # puede corregir la unidad, no el revisor días después. Lanza
-        # UnidadDesconocida si no es convertible.
-        Unidad(unidad).equivalencia()
-        return self._reportes.guardar(Reporte(
-            codigo_producto=codigo_producto,
-            codigo_mercado=codigo_mercado,
-            monto=monto,
-            unidad=unidad,
-            id_autor=autor.id,
-            creado_en=datetime.now(timezone.utc),
-        ))
 
 
 class ValidarReportes:

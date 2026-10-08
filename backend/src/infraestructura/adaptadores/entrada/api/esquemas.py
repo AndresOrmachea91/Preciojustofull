@@ -119,7 +119,7 @@ class RechazoEntrada(BaseModel):
 
 # --- cuentas y sesiones ----------------------------------------------------
 
-RolTexto = Literal["usuario", "recolector", "administrador"]
+RolTexto = Literal["usuario", "vendedor", "administrador"]
 
 
 class UsuarioSalida(BaseModel):
@@ -131,6 +131,8 @@ class UsuarioSalida(BaseModel):
     activo: bool
     creado_en: datetime
     permisos: list[str]
+    # Solo para vendedores: su puesto o tienda.
+    codigo_punto_venta: str | None = None
 
 
 class RegistroEntrada(BaseModel):
@@ -157,6 +159,8 @@ class SesionSalida(BaseModel):
 class ActualizarUsuarioEntrada(BaseModel):
     rol: RolTexto | None = None
     activo: bool | None = None
+    # Mandarlo en null le quita el puesto; no mandarlo lo deja como está.
+    codigo_punto_venta: str | None = None
 
 
 class ContrasenaEntrada(BaseModel):

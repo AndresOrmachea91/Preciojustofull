@@ -4,9 +4,10 @@ import { NOMBRE_ROL, puede } from "@/dominio/modelo";
 import { crearContenedor } from "@/infraestructura/contenedor";
 import { useRuta } from "@/ui/hooks/useRuta";
 import { useSesion } from "@/ui/hooks/useSesion";
-import { PaginaAdmin } from "@/ui/paginas/PaginaAdmin";
-import { PaginaIngreso } from "@/ui/paginas/PaginaIngreso";
-import { PaginaPrecios } from "@/ui/paginas/PaginaPrecios";
+// Pantallas agrupadas por quién las usa: publico/, cuentas/, usuario/, vendedor/, administracion/.
+import { PaginaAdmin } from "@/ui/paginas/administracion/PaginaAdmin";
+import { PaginaIngreso } from "@/ui/paginas/cuentas/PaginaIngreso";
+import { PaginaPrecios } from "@/ui/paginas/publico/PaginaPrecios";
 
 export default function App() {
   const contenedor = useMemo(() => crearContenedor(), []);

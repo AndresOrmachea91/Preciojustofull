@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from src.infraestructura.adaptadores.salida.persistencia.tablas import (
     INDICE_CLAVE_NATURAL, NOMBRE_INDICE_CLAVE_NATURAL, metadata,
 )
+from src.infraestructura.adaptadores.salida.persistencia.auditable import COLUMNAS_AUDITORIA
 
 log = logging.getLogger(__name__)
 
@@ -65,6 +66,39 @@ _COLUMNAS_AGREGADAS = {
         "revisa_a": "INTEGER NULL REFERENCES observacion_precio(id)",
         "ciudad": "VARCHAR(64) NULL",
     },
+    "usuario": {
+        "codigo_punto_venta": "VARCHAR(64) NULL REFERENCES mercado(codigo)",
+    },
+}
+
+# Las 5 columnas de Auditable, para las tablas que existían antes de la
+# auditoría. Las filas viejas quedan "creadas por sistema"; su fecha de
+# creación se corrige abajo con la fecha real que cada tabla ya tenía.
+_TABLAS_AUDITADAS = (
+    "producto", "mercado", "observacion_precio", "corrida_fuente", "intento_fuente",
+    "usuario", "reporte_precio",
+)
+
+
+def _definicion_auditoria(columna: str, dialecto: str) -> str:
+    # SQLite no acepta CURRENT_TIMESTAMP como valor por defecto en un ALTER;
+    # solo importa en bases SQLite viejas, que en la práctica no existen.
+    creado = "CURRENT_TIMESTAMP" if dialecto == "postgresql" else "'1970-01-01 00:00:00'"
+    return {
+        "creado_en": f"TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT {creado}",
+        "creado_por": "VARCHAR(255) NOT NULL DEFAULT 'sistema'",
+        "modificado_en": "TIMESTAMP WITH TIME ZONE NULL",
+        "modificado_por": "VARCHAR(255) NULL",
+        "eliminado": "BOOLEAN NOT NULL DEFAULT FALSE",
+    }[columna]
+
+
+# Recién agregada la auditoría, la fecha de creación honesta de una fila
+# histórica es la que la tabla ya guardaba, no el momento de la migración.
+_FECHA_REAL_DE_CREACION = {
+    "observacion_precio": "capturada_en",
+    "corrida_fuente": "ocurrido_en",
+    "intento_fuente": "ocurrido_en",
 }
 
 # Cambios que SQLite no sabe hacer con ALTER (soltar un NOT NULL). En
@@ -93,14 +127,19 @@ _AMBITO_POR_FUENTE = (
     "UPDATE observacion_precio SET ambito = 'ciudad' "
     "WHERE fuente IN ('siip_diario', 'siip_ipc') AND ambito <> 'ciudad'"
 )
+# El rol "recolector" pasó a llamarse "vendedor" (decisión del 8 de octubre).
+_ROL_RENOMBRADO = "UPDATE usuario SET rol = 'vendedor' WHERE rol = 'recolector'"
+
 _RELLENOS_HISTORICOS = {
     "sqlite": [
+        _ROL_RENOMBRADO,
         _AMBITO_POR_FUENTE,
         "UPDATE observacion_precio SET fecha_observacion = "
         "date(printf('%04d-%02d-%02d', anio, mes, dia)) "
         "WHERE fecha_observacion IS NULL AND mes IS NOT NULL AND dia IS NOT NULL",
     ],
     "postgresql": [
+        _ROL_RENOMBRADO,
         _AMBITO_POR_FUENTE,
         "UPDATE observacion_precio SET fecha_observacion = make_date(anio, mes, dia) "
         "WHERE fecha_observacion IS NULL AND mes IS NOT NULL AND dia IS NOT NULL",
@@ -112,6 +151,7 @@ def crear_esquema(motor: Engine) -> None:
     """Crea las tablas y columnas que falten. Es idempotente."""
     metadata.create_all(motor)
     inspector = inspect(motor)
+    dialecto = motor.dialect.name
     with motor.begin() as conexion:
         for tabla, columnas in _COLUMNAS_AGREGADAS.items():
             existentes = {c["name"] for c in inspector.get_columns(tabla)}
@@ -119,6 +159,19 @@ def crear_esquema(motor: Engine) -> None:
                 if nombre not in existentes:
                     conexion.execute(text(f"ALTER TABLE {tabla} ADD COLUMN {nombre} {definicion}"))
                     log.info("Columna %s.%s agregada", tabla, nombre)
+        for tabla in _TABLAS_AUDITADAS:
+            existentes = {c["name"] for c in inspector.get_columns(tabla)}
+            faltantes = [c for c in COLUMNAS_AUDITORIA if c not in existentes]
+            for nombre in faltantes:
+                conexion.execute(text(
+                    f"ALTER TABLE {tabla} ADD COLUMN {nombre} {_definicion_auditoria(nombre, dialecto)}"
+                ))
+            if faltantes:
+                log.info("Auditoría agregada a %s: %s", tabla, ", ".join(faltantes))
+            if "creado_en" in faltantes and tabla in _FECHA_REAL_DE_CREACION:
+                conexion.execute(text(
+                    f"UPDATE {tabla} SET creado_en = {_FECHA_REAL_DE_CREACION[tabla]}"
+                ))
         for sentencia in _AJUSTES_POR_DIALECTO.get(motor.dialect.name, []):
             conexion.execute(text(sentencia))
         for sentencia in _RELLENOS_HISTORICOS.get(motor.dialect.name, []):
