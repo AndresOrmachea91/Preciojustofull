@@ -58,6 +58,11 @@ export interface Producto {
   readonly nombre: string;
   readonly categoria: string;
   readonly esPerecedero: boolean;
+  /** En qué se publica el precio: kg, l, u (unidad) o atado. */
+  readonly unidadBase: UnidadBase;
+  /** Cómo se vende: kilo, libra, arroba, quintal... Siempre incluye la de factor 1. */
+  readonly presentaciones: readonly Presentacion[];
+  readonly diasConservacion: number;
 }
 
 export interface PrecioEnMercado {
@@ -196,4 +201,83 @@ export interface ReporteEnRevision {
   readonly creadoEn: string;
   readonly estado: EstadoReporte;
   readonly motivoRechazo: string | null;
+}
+
+// --- presentaciones de venta y catálogo -------------------------------------
+
+export type UnidadBase = "kg" | "l" | "u" | "atado";
+
+/** Una presentación de venta. `factor`: cuántas unidades base trae (un quintal = 46 kg). */
+export interface Presentacion {
+  readonly codigo: string;
+  readonly nombre: string;
+  readonly factor: number;
+}
+
+/**
+ * Las presentaciones que existen, por unidad base. Es la misma tabla que
+ * dominio/modelo/presentacion.py del backend: una libra de mercado son
+ * 0,46 kg, una arroba 11,5 kg, un quintal 46 kg y un maple 30 huevos.
+ */
+export const PRESENTACIONES_POR_UNIDAD: Record<UnidadBase, readonly Presentacion[]> = {
+  kg: [
+    { codigo: "libra", nombre: "Libra", factor: 0.46 },
+    { codigo: "kilo", nombre: "Kilo", factor: 1 },
+    { codigo: "arroba", nombre: "Arroba", factor: 11.5 },
+    { codigo: "quintal", nombre: "Quintal", factor: 46 },
+  ],
+  l: [{ codigo: "litro", nombre: "Litro", factor: 1 }],
+  u: [
+    { codigo: "unidad", nombre: "Unidad", factor: 1 },
+    { codigo: "docena", nombre: "Docena", factor: 12 },
+    { codigo: "maple", nombre: "Maple (30)", factor: 30 },
+  ],
+  atado: [{ codigo: "atado", nombre: "Atado", factor: 1 }],
+};
+
+export const NOMBRE_UNIDAD_BASE: Record<UnidadBase, string> = {
+  kg: "Kilo",
+  l: "Litro",
+  u: "Unidad",
+  atado: "Atado",
+};
+
+/** La presentación de factor 1: la unidad en la que el sistema guarda y compara. */
+export function presentacionBase(producto: Producto): Presentacion {
+  return producto.presentaciones.find((p) => p.factor === 1) ?? { codigo: producto.unidadBase, nombre: NOMBRE_UNIDAD_BASE[producto.unidadBase], factor: 1 };
+}
+
+/**
+ * El mismo precio expresado en otra presentación: el rango se multiplica
+ * por el factor y la unidad pasa a ser la presentación. La procedencia, la
+ * confianza y las observaciones no cambian: es el mismo dato, otra escala.
+ */
+export function precioEnPresentacion(precio: Precio, presentacion: Presentacion): Precio {
+  if (presentacion.factor === 1) return precio;
+  const f = presentacion.factor;
+  return {
+    ...precio,
+    rango: { minimo: precio.rango.minimo * f, maximo: precio.rango.maximo * f, centro: precio.rango.centro * f },
+    unidad: presentacion.nombre.toLowerCase(),
+  };
+}
+
+export const TIPOS_PUNTO_VENTA: readonly TipoPuntoVenta[] = ["mercado", "supermercado", "minimarket", "tienda", "mayorista"];
+
+export const CATEGORIAS: readonly { codigo: string; nombre: string }[] = [
+  { codigo: "hortaliza", nombre: "Hortaliza" },
+  { codigo: "tuberculo", nombre: "Tubérculo" },
+  { codigo: "fruta", nombre: "Fruta" },
+  { codigo: "carne", nombre: "Carne" },
+  { codigo: "pescado", nombre: "Pescado" },
+  { codigo: "lacteo", nombre: "Lácteo" },
+  { codigo: "abarrote", nombre: "Abarrote" },
+  { codigo: "otro", nombre: "Otro" },
+];
+
+/** Área que cubre el sistema (La Paz y El Alto). La misma regla que el backend. */
+export function ubicacionValida(latitud: number | null, longitud: number | null): boolean {
+  if (latitud === null && longitud === null) return true;
+  if (latitud === null || longitud === null) return false;
+  return latitud >= -16.7 && latitud <= -16.3 && longitud >= -68.35 && longitud <= -67.95;
 }

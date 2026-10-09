@@ -75,6 +75,10 @@ export class ClienteHttp {
     return this.conCuerpo<T>("PUT", ruta, cuerpo);
   }
 
+  async delete(ruta: string): Promise<void> {
+    await this.enviar<void>(this.baseUrl + ruta, { method: "DELETE" });
+  }
+
   private conCuerpo<T>(method: string, ruta: string, cuerpo: unknown): Promise<T> {
     return this.enviar<T>(this.baseUrl + ruta, {
       method,
@@ -92,6 +96,8 @@ export class ClienteHttp {
       const detalle = await respuesta.text().catch(() => "");
       throw new ErrorApi(mensajeDeError(detalle, respuesta.status), respuesta.status);
     }
+    // 204: la operación salió bien y no hay nada que devolver (un DELETE).
+    if (respuesta.status === 204) return undefined as T;
     return (await respuesta.json()) as T;
   }
 }

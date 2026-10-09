@@ -164,3 +164,14 @@ body {
   .estado-reporte--pendiente { background: #2a2116; }
   .estado-reporte--rechazado { background: #2e1a15; color: #f0a08e; }
 }
+
+/* --- catálogo del administrador y presentaciones ------------------------ */
+.barra { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.barra__buscar { flex: 1; min-width: 200px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--borde); background: var(--superficie); color: var(--texto); font: inherit; }
+.boton--peligro { background: #93301d; border-color: #93301d; color: #fff; }
+.mapa--selector { height: 280px; cursor: crosshair; }
+.campo--grupo { border: 1px solid var(--borde); border-radius: 8px; padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.campo--grupo legend { padding: 0 4px; font-size: 0.9rem; }
+.casilla { display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem; }
+.presentaciones { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: -8px 0 16px; }
+.selector__opcion--chica { padding: 4px 12px; font-size: 0.82rem; }

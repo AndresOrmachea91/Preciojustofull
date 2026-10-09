@@ -11,8 +11,10 @@ import {
   type Usuario,
 } from "@/dominio/modelo";
 import type { Contenedor } from "@/infraestructura/contenedor";
+import { CatalogoProductos } from "@/ui/paginas/administracion/CatalogoProductos";
+import { CatalogoPuntosVenta } from "@/ui/paginas/administracion/CatalogoPuntosVenta";
 
-type Pestana = "usuarios" | "reportes";
+type Pestana = "usuarios" | "reportes" | "puntos" | "productos";
 
 function mensaje(e: unknown): string {
   return e instanceof Error ? e.message : "No se pudo completar la operación";
@@ -21,7 +23,15 @@ function mensaje(e: unknown): string {
 export function PaginaAdmin({ contenedor, usuario }: { contenedor: Contenedor; usuario: Usuario }) {
   const verUsuarios = puede(usuario, "gestionar_usuarios");
   const verReportes = puede(usuario, "validar_reportes");
-  const [pestana, setPestana] = useState<Pestana>(verUsuarios ? "usuarios" : "reportes");
+  const verCatalogo = puede(usuario, "gestionar_catalogo");
+  const [pestana, setPestana] = useState<Pestana>(verUsuarios ? "usuarios" : verReportes ? "reportes" : "puntos");
+
+  const pestanas: { id: Pestana; texto: string; visible: boolean }[] = [
+    { id: "usuarios", texto: "Usuarios", visible: verUsuarios },
+    { id: "puntos", texto: "Mercados y tiendas", visible: verCatalogo },
+    { id: "productos", texto: "Productos", visible: verCatalogo },
+    { id: "reportes", texto: "Reportes por revisar", visible: verReportes },
+  ];
 
   return (
     <section aria-labelledby="titulo-admin">
@@ -29,30 +39,24 @@ export function PaginaAdmin({ contenedor, usuario }: { contenedor: Contenedor; u
         Administración
       </h2>
       <div className="pestanas" role="tablist">
-        {verUsuarios && (
-          <button
-            type="button"
-            role="tab"
-            aria-selected={pestana === "usuarios"}
-            className={`selector__opcion${pestana === "usuarios" ? " selector__opcion--activa" : ""}`}
-            onClick={() => setPestana("usuarios")}
-          >
-            Usuarios
-          </button>
-        )}
-        {verReportes && (
-          <button
-            type="button"
-            role="tab"
-            aria-selected={pestana === "reportes"}
-            className={`selector__opcion${pestana === "reportes" ? " selector__opcion--activa" : ""}`}
-            onClick={() => setPestana("reportes")}
-          >
-            Reportes por revisar
-          </button>
-        )}
+        {pestanas
+          .filter((p) => p.visible)
+          .map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              role="tab"
+              aria-selected={pestana === p.id}
+              className={`selector__opcion${pestana === p.id ? " selector__opcion--activa" : ""}`}
+              onClick={() => setPestana(p.id)}
+            >
+              {p.texto}
+            </button>
+          ))}
       </div>
       {pestana === "usuarios" && verUsuarios && <Usuarios contenedor={contenedor} yo={usuario} />}
+      {pestana === "puntos" && verCatalogo && <CatalogoPuntosVenta contenedor={contenedor} />}
+      {pestana === "productos" && verCatalogo && <CatalogoProductos contenedor={contenedor} />}
       {pestana === "reportes" && verReportes && <Reportes contenedor={contenedor} />}
     </section>
   );

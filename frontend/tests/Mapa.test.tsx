@@ -4,6 +4,7 @@
  * El mapa monta con datos que vienen del caso de uso, y al elegir un punto
  * muestra su precio con procedencia. Leaflet solo dibuja.
  */
+import { PRESENTACIONES_POR_UNIDAD } from "@/dominio/modelo";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
@@ -48,7 +49,7 @@ describe("PanelPunto", () => {
     const { marcadores } = await new VerMapa(memoria, memoria).ejecutar("tomate");
     const ketal = marcadores.find((m) => m.mercado.codigo === "ketal_san_pedro")!;
 
-    render(<PanelPunto marcador={ketal} producto={{ codigo: "tomate", nombre: "Tomate", categoria: "hortaliza", esPerecedero: true }} />);
+    render(<PanelPunto marcador={ketal} producto={{ codigo: "tomate", nombre: "Tomate", categoria: "hortaliza", esPerecedero: true, unidadBase: "kg", diasConservacion: 5, presentaciones: PRESENTACIONES_POR_UNIDAD.kg }} />);
 
     expect(screen.getByRole("heading", { name: "Ketal San Pedro" })).toBeDefined();
     expect(screen.getByText(/Supermercado · Cotahuma/)).toBeDefined();

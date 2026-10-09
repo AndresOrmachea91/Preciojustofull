@@ -83,6 +83,24 @@ por eso desactivar una cuenta corta su sesión al instante.
 | Largo de campos que llegan por HTTP                | `infraestructura/adaptadores/entrada/api/esquemas.py` |
 | Todos los mensajes de error                        | `dominio/excepciones.py` |
 
+## Catálogo y presentaciones (kilo, libra, arroba, quintal)
+
+| Qué                                                  | Dónde |
+|------------------------------------------------------|-------|
+| Las presentaciones y sus factores (quintal = 46 kg)  | `dominio/modelo/presentacion.py` |
+| Qué presentaciones admite cada producto              | `dominio/modelo/producto.py` → `Producto.presentaciones` |
+| Ubicación dentro de La Paz o El Alto                 | `dominio/modelo/mercado.py` → `ubicacion_valida` |
+| Crear, editar y eliminar mercados y tiendas          | `aplicacion/casos_uso/administracion/gestionar_catalogo.py` → `GestionarPuntosVenta` |
+| No eliminar un mercado con sectores o vendedores     | `gestionar_catalogo.py` → `GestionarPuntosVenta.eliminar` |
+| Crear, editar y eliminar productos                   | `gestionar_catalogo.py` → `GestionarProductos` |
+| Rutas `/api/v1/admin/mercados` y `/admin/productos`  | `api/rutas/administracion/catalogo.py` |
+| Pantallas                                            | `frontend/src/ui/paginas/administracion/CatalogoPuntosVenta.tsx`, `CatalogoProductos.tsx` |
+| Marcar la ubicación con un clic                      | `frontend/src/ui/componentes/MapaSelectorUbicacion.tsx` |
+| Ver el precio por quintal en la página pública       | `frontend/src/dominio/modelo.ts` → `precioEnPresentacion`; `ui/paginas/publico/PaginaPrecios.tsx` |
+
+Ojo: `cli/sembrar.py` vuelve a cargar los CSV del catálogo. Si se corre después de
+editar algo desde el panel, pisa esos cambios. Se usa solo para la carga inicial.
+
 ## Rutas de la API
 
 | Ruta                                  | Quién            | Archivo |
@@ -91,6 +109,7 @@ por eso desactivar una cuenta corta su sesión al instante.
 | `POST /reportes`                      | usuario (con sesión) | `api/rutas/usuario/reportes.py` |
 | `GET/POST /admin/usuarios`, `PATCH /admin/usuarios/{id}` (rol, activo, puesto), `PUT /admin/usuarios/{id}/contrasena` | administrador | `api/rutas/administracion/usuarios.py` |
 | `GET /admin/reportes`, `POST /admin/reportes/{id}/aprobar` y `/rechazar` | administrador | `api/rutas/administracion/reportes.py` |
+| `POST/PUT/DELETE /admin/mercados[/{codigo}]` y `/admin/productos[/{codigo}]` | administrador | `api/rutas/administracion/catalogo.py` |
 | Precios, comparar, canasta, catálogo  | público          | `api/rutas/publico/precios.py`, `canasta.py`, `catalogo.py` |
 
 Todas cuelgan de `/api/v1`. Con el servidor arriba, `/docs` las muestra y deja probarlas.

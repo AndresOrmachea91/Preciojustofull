@@ -1,7 +1,8 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
+from src.dominio.modelo.presentacion import Presentacion, compatibles, validar_presentaciones
 from src.dominio.valor import UnidadCanonica
 
 
@@ -28,6 +29,17 @@ class Producto:
     # En qué unidad se publica el precio de este producto. Un huevo o un
     # choclo se venden por unidad; un atado de cebolla verde no se pesa.
     unidad_base: UnidadCanonica = UnidadCanonica.KILOGRAMO
+    # Cómo se vende (kilo, libra, arroba, quintal...). Vacío = todas las
+    # compatibles con la unidad base; las elige el administrador.
+    presentaciones: tuple[Presentacion, ...] = field(default=())
+
+    def __post_init__(self):
+        if not self.nombre.strip():
+            raise ValueError("Un producto necesita nombre")
+        if self.presentaciones:
+            validar_presentaciones(self.unidad_base, self.presentaciones)
+        else:
+            object.__setattr__(self, "presentaciones", compatibles(self.unidad_base))
 
     @property
     def es_perecedero(self) -> bool:

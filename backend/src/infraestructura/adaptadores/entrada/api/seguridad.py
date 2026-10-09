@@ -72,6 +72,8 @@ _ESTADO_POR_ERROR: list[tuple[type[ex.ErrorDominio], int]] = [
     (ex.CorreoYaRegistrado, status.HTTP_409_CONFLICT),
     (ex.ReporteYaRevisado, status.HTTP_409_CONFLICT),
     (ex.SinAdministradores, status.HTTP_409_CONFLICT),
+    (ex.CodigoYaExiste, status.HTTP_409_CONFLICT),
+    (ex.PuntoVentaConDependientes, status.HTTP_409_CONFLICT),
 ]
 
 

@@ -14,7 +14,8 @@ export default function App() {
   const sesion = useSesion(contenedor);
   const [ruta, ir] = useRuta();
   const { usuario } = sesion;
-  const esAdmin = puede(usuario, "gestionar_usuarios") || puede(usuario, "validar_reportes");
+  const esAdmin =
+    puede(usuario, "gestionar_usuarios") || puede(usuario, "validar_reportes") || puede(usuario, "gestionar_catalogo");
 
   return (
     <div className="app">

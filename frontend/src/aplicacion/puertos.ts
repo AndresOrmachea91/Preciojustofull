@@ -7,6 +7,8 @@
  */
 import type {
   CostoCanasta,
+  TipoPuntoVenta,
+  UnidadBase,
   EstadoReporte,
   ItemCanasta,
   Mercado,
@@ -71,4 +73,33 @@ export interface AdministracionRepositorio {
   reportes(estado: EstadoReporte | "todos"): Promise<ReporteEnRevision[]>;
   aprobarReporte(id: number): Promise<ReporteEnRevision>;
   rechazarReporte(id: number, motivo: string): Promise<ReporteEnRevision>;
+}
+
+export interface DatosPuntoVenta {
+  nombre: string;
+  tipo: TipoPuntoVenta;
+  zona: string;
+  macrodistrito: string;
+  latitud: number | null;
+  longitud: number | null;
+  codigoPadre: string | null;
+}
+
+export interface DatosProducto {
+  nombre: string;
+  categoria: string;
+  unidadBase: UnidadBase;
+  /** Códigos de presentación (kilo, quintal...). Vacío = todas las compatibles. */
+  presentaciones: string[];
+  diasConservacion: number;
+}
+
+/** Lo que el administrador hace con el catálogo. Listar usa CatalogoRepositorio, el público. */
+export interface CatalogoAdminRepositorio {
+  crearPuntoVenta(datos: DatosPuntoVenta): Promise<Mercado>;
+  actualizarPuntoVenta(codigo: string, datos: DatosPuntoVenta): Promise<Mercado>;
+  eliminarPuntoVenta(codigo: string): Promise<void>;
+  crearProducto(datos: DatosProducto): Promise<Producto>;
+  actualizarProducto(codigo: string, datos: DatosProducto): Promise<Producto>;
+  eliminarProducto(codigo: string): Promise<void>;
 }

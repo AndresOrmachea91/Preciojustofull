@@ -7,6 +7,7 @@
  * entera.
  */
 import { Administrar } from "@/aplicacion/casosUso/administrar";
+import { AdministrarCatalogo } from "@/aplicacion/casosUso/administrarCatalogo";
 import { CalcularCanasta } from "@/aplicacion/casosUso/calcularCanasta";
 import { CompararMercados } from "@/aplicacion/casosUso/compararMercados";
 import { ConsultarCatalogo } from "@/aplicacion/casosUso/consultarCatalogo";
@@ -15,11 +16,13 @@ import { VerMapa } from "@/aplicacion/casosUso/verMapa";
 import type {
   AdministracionRepositorio,
   AlmacenSesion,
+  CatalogoAdminRepositorio,
   CatalogoRepositorio,
   PrecioRepositorio,
   SesionRepositorio,
 } from "@/aplicacion/puertos";
 import { AlmacenSesionLocal, AlmacenSesionMemoria } from "@/infraestructura/almacen/almacenSesion";
+import { CatalogoAdminApi } from "@/infraestructura/http/CatalogoAdminApi";
 import { ClienteHttp } from "@/infraestructura/http/clienteHttp";
 import { CuentasApi } from "@/infraestructura/http/CuentasApi";
 import { PreciosApi } from "@/infraestructura/http/PreciosApi";
@@ -33,6 +36,7 @@ export interface Contenedor {
   readonly verMapa: VerMapa;
   readonly sesion: GestionarSesion;
   readonly administrar: Administrar;
+  readonly administrarCatalogo: AdministrarCatalogo;
 }
 
 export function crearContenedor(origen?: string, almacen?: AlmacenSesion): Contenedor {
@@ -41,6 +45,7 @@ export function crearContenedor(origen?: string, almacen?: AlmacenSesion): Conte
   let precios: PrecioRepositorio;
   let catalogo: CatalogoRepositorio;
   let cuentas: SesionRepositorio & AdministracionRepositorio;
+  let catalogoAdmin: CatalogoAdminRepositorio;
 
   if (modo === "http") {
     const almacenSesion = almacen ?? new AlmacenSesionLocal();
@@ -52,11 +57,13 @@ export function crearContenedor(origen?: string, almacen?: AlmacenSesion): Conte
     precios = api;
     catalogo = api;
     cuentas = new CuentasApi(http);
+    catalogoAdmin = new CatalogoAdminApi(http);
     almacen = almacenSesion;
   } else {
     const memoria = new PreciosMemoria();
     precios = memoria;
     catalogo = memoria;
+    catalogoAdmin = memoria;
     // En memoria la sesión tampoco sobrevive a la recarga: es coherente
     // con unos datos que se reinician en cada carga.
     almacen = almacen ?? new AlmacenSesionMemoria();
@@ -70,5 +77,6 @@ export function crearContenedor(origen?: string, almacen?: AlmacenSesion): Conte
     verMapa: new VerMapa(catalogo, precios),
     sesion: new GestionarSesion(cuentas, almacen),
     administrar: new Administrar(cuentas),
+    administrarCatalogo: new AdministrarCatalogo(catalogo, catalogoAdmin),
   };
 }

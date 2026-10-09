@@ -11,8 +11,11 @@ import type {
   Mercado,
   Precio,
   PrecioEnMercado,
+  Presentacion,
   Producto,
+  UnidadBase,
 } from "@/dominio/modelo";
+import { PRESENTACIONES_POR_UNIDAD } from "@/dominio/modelo";
 import type {
   CatalogoRepositorio,
   PrecioRepositorio,
@@ -59,7 +62,26 @@ interface ProductoDto {
   nombre: string;
   categoria: string;
   es_perecedero: boolean;
+  unidad_base?: UnidadBase;
+  dias_conservacion?: number;
+  presentaciones?: Presentacion[];
 }
+
+/** Traducción de un producto de la API al dominio. La usa también el adaptador del administrador. */
+export function aProducto(d: ProductoDto): Producto {
+  const unidadBase = d.unidad_base ?? "kg";
+  return {
+    codigo: d.codigo,
+    nombre: d.nombre,
+    categoria: d.categoria,
+    esPerecedero: d.es_perecedero,
+    unidadBase,
+    diasConservacion: d.dias_conservacion ?? 30,
+    presentaciones: d.presentaciones?.length ? d.presentaciones : PRESENTACIONES_POR_UNIDAD[unidadBase],
+  };
+}
+
+export type { ProductoDto, MercadoDto };
 
 interface CanastaDto {
   codigo_mercado: string;
@@ -87,7 +109,7 @@ function aPrecio(d: PrecioDto): Precio {
   };
 }
 
-function aMercado(d: MercadoDto): Mercado {
+export function aMercado(d: MercadoDto): Mercado {
   return {
     codigo: d.codigo,
     nombre: d.nombre,
@@ -151,12 +173,7 @@ export class PreciosApi
 
   async productos(): Promise<Producto[]> {
     const datos = await this.http.get<ProductoDto[]>("/productos");
-    return datos.map((d) => ({
-      codigo: d.codigo,
-      nombre: d.nombre,
-      categoria: d.categoria,
-      esPerecedero: d.es_perecedero,
-    }));
+    return datos.map(aProducto);
   }
 
   async mercados(zona?: string): Promise<Mercado[]> {

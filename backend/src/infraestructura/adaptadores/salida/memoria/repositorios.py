@@ -28,6 +28,9 @@ class ProductosEnMemoria:
     def guardar(self, producto: Producto) -> None:
         self._datos[producto.codigo] = producto
 
+    def eliminar(self, codigo: str) -> None:
+        self._datos.pop(codigo, None)
+
 
 class MercadosEnMemoria:
     def __init__(self, mercados: list[Mercado] | None = None):
@@ -44,6 +47,9 @@ class MercadosEnMemoria:
 
     def guardar(self, mercado: Mercado) -> None:
         self._datos[mercado.codigo] = mercado
+
+    def eliminar(self, codigo: str) -> None:
+        self._datos.pop(codigo, None)
 
 
 class ObservacionesEnMemoria:

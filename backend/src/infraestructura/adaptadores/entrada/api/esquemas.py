@@ -44,11 +44,21 @@ class PrecioEnMercadoSalida(BaseModel):
     precio: PrecioSalida
 
 
+class PresentacionSalida(BaseModel):
+    codigo: str
+    nombre: str
+    # Cuántas unidades base trae: un quintal = 46 (kg).
+    factor: float
+
+
 class ProductoSalida(BaseModel):
     codigo: str
     nombre: str
     categoria: str
     es_perecedero: bool
+    unidad_base: str = "kg"
+    dias_conservacion: int = 30
+    presentaciones: list[PresentacionSalida] = Field(default_factory=list)
 
 
 class MercadoSalida(BaseModel):
@@ -165,3 +175,40 @@ class ActualizarUsuarioEntrada(BaseModel):
 
 class ContrasenaEntrada(BaseModel):
     contrasena: str = Field(min_length=1, max_length=128)
+
+
+# --- catálogo (administrador) -----------------------------------------------
+
+TipoPuntoVentaTexto = Literal["mercado", "minimarket", "tienda", "supermercado", "mayorista"]
+CategoriaTexto = Literal["hortaliza", "tuberculo", "fruta", "carne", "pescado", "lacteo", "abarrote", "otro"]
+UnidadBaseTexto = Literal["kg", "l", "u", "atado"]
+PresentacionTexto = Literal["kilo", "libra", "arroba", "quintal", "litro", "unidad", "docena", "maple", "atado"]
+
+
+class PuntoVentaEntrada(BaseModel):
+    nombre: str = Field(min_length=1, max_length=255)
+    tipo: TipoPuntoVentaTexto
+    zona: str = Field(default="", max_length=128)
+    macrodistrito: str = Field(default="", max_length=64)
+    latitud: float | None = None
+    longitud: float | None = None
+    # Si es un sector de un mercado, el código del mercado.
+    codigo_padre: str | None = None
+
+
+class NuevoPuntoVentaEntrada(PuntoVentaEntrada):
+    # Opcional: si no viene, se arma desde el nombre ("Mercado Lanza" -> "mercado_lanza").
+    codigo: str | None = Field(default=None, pattern=r"^[a-z0-9_]{2,64}$")
+
+
+class ProductoEntrada(BaseModel):
+    nombre: str = Field(min_length=1, max_length=255)
+    categoria: CategoriaTexto = "otro"
+    unidad_base: UnidadBaseTexto = "kg"
+    # Vacío = todas las presentaciones compatibles con la unidad base.
+    presentaciones: list[PresentacionTexto] = Field(default_factory=list)
+    dias_conservacion: int = Field(default=30, ge=1, le=3650)
+
+
+class NuevoProductoEntrada(ProductoEntrada):
+    codigo: str | None = Field(default=None, pattern=r"^[a-z0-9_]{2,64}$")

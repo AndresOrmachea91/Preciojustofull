@@ -41,6 +41,22 @@ class TipoPuntoVenta(str, Enum):
         return self is TipoPuntoVenta.MERCADO
 
 
+# Área que cubre el sistema: La Paz y El Alto, con margen. Un punto fuera
+# de acá es casi siempre un error de tipeo (el signo de la longitud, o
+# latitud y longitud invertidas), no un mercado nuevo.
+AREA_SERVICIO = {"latitud": (-16.70, -16.30), "longitud": (-68.35, -67.95)}
+
+
+def ubicacion_valida(latitud: float | None, longitud: float | None) -> bool:
+    """Sin ubicación es válido (se completa después); con ubicación, ambas y dentro del área."""
+    if latitud is None and longitud is None:
+        return True
+    if latitud is None or longitud is None:
+        return False
+    (lat_min, lat_max), (lon_min, lon_max) = AREA_SERVICIO["latitud"], AREA_SERVICIO["longitud"]
+    return lat_min <= latitud <= lat_max and lon_min <= longitud <= lon_max
+
+
 @dataclass(frozen=True, slots=True)
 class Mercado:
     codigo: str

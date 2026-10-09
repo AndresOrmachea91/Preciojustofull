@@ -15,7 +15,7 @@ from fastapi.staticfiles import StaticFiles
 from src.infraestructura.adaptadores.entrada.api.dependencias import asegurar_admin_inicial
 from src.infraestructura.adaptadores.entrada.api.rutas import cuentas
 from src.infraestructura.adaptadores.entrada.api.rutas.administracion import (
-    reportes as admin_reportes, usuarios as admin_usuarios,
+    catalogo as admin_catalogo, reportes as admin_reportes, usuarios as admin_usuarios,
 )
 from src.infraestructura.adaptadores.entrada.api.rutas.publico import canasta, catalogo, precios
 from src.infraestructura.adaptadores.entrada.api.rutas.usuario import reportes
@@ -80,6 +80,7 @@ app.include_router(reportes.router, prefix="/api/v1")
 # Administrador: todo bajo /api/v1/admin.
 app.include_router(admin_usuarios.router, prefix="/api/v1")
 app.include_router(admin_reportes.router, prefix="/api/v1")
+app.include_router(admin_catalogo.router, prefix="/api/v1")
 
 
 @app.get("/api/v1/salud", tags=["salud"])

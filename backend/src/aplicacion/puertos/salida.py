@@ -32,6 +32,9 @@ class LectorProductos(Protocol):
 @runtime_checkable
 class EscritorProductos(Protocol):
     def guardar(self, producto: Producto) -> None: ...
+    def eliminar(self, codigo: str) -> None:
+        """Borrado LÓGICO: la fila queda (auditoría), pero ya no se lista ni se obtiene."""
+        ...
 
 
 @runtime_checkable
@@ -48,6 +51,9 @@ class LectorMercados(Protocol):
 @runtime_checkable
 class EscritorMercados(Protocol):
     def guardar(self, mercado: Mercado) -> None: ...
+    def eliminar(self, codigo: str) -> None:
+        """Borrado LÓGICO, igual que en productos."""
+        ...
 
 
 @runtime_checkable

@@ -26,7 +26,7 @@ from src.infraestructura.adaptadores.salida.persistencia.tablas import (
     CorridaFuenteTabla, IntentoFuenteTabla, MercadoTabla, ObservacionTabla, ProductoTabla,
 )
 from src.dominio.modelo import (
-    Categoria, Fuente, Mercado, NivelPrecio, Observacion, Producto, TipoPuntoVenta,
+    Categoria, Fuente, Mercado, NivelPrecio, Observacion, Presentacion, Producto, TipoPuntoVenta,
 )
 from src.dominio.valor import (
     VARIEDAD_DESCONOCIDA, Ambito, Dinero, Periodo, TipoPrecio, Unidad, UnidadCanonica,
@@ -45,6 +45,7 @@ def _a_producto(f: ProductoTabla) -> Producto:
         dias_conservacion=f.dias_conservacion,
         zona_origen=f.zona_origen,
         unidad_base=UnidadCanonica(f.unidad_base or "kg"),
+        presentaciones=tuple(Presentacion(x) for x in (f.presentaciones or "").split(",") if x),
     )
 
 
@@ -154,6 +155,13 @@ class ProductosPostgres(_Base):
             fila.dias_conservacion = producto.dias_conservacion
             fila.zona_origen = producto.zona_origen
             fila.unidad_base = producto.unidad_base.value
+            fila.presentaciones = ",".join(p.value for p in producto.presentaciones)
+
+    def eliminar(self, codigo: str) -> None:
+        with sesion_de(self._fabrica) as s:
+            fila = s.get(ProductoTabla, codigo)
+            if fila is not None:
+                fila.eliminado = True
 
 
 class MercadosPostgres(_Base):
@@ -185,6 +193,12 @@ class MercadosPostgres(_Base):
             fila.factor_mercado = mercado.factor_mercado
             fila.macrodistrito = mercado.macrodistrito
             fila.codigo_padre = mercado.codigo_padre
+
+    def eliminar(self, codigo: str) -> None:
+        with sesion_de(self._fabrica) as s:
+            fila = s.get(MercadoTabla, codigo)
+            if fila is not None:
+                fila.eliminado = True
 
 
 class ObservacionesPostgres(_Base):

@@ -49,6 +49,7 @@ def crear_motor(url: str, eco: bool = False) -> Engine:
 _COLUMNAS_AGREGADAS = {
     "producto": {
         "unidad_base": "VARCHAR(8) NOT NULL DEFAULT 'kg'",
+        "presentaciones": "VARCHAR(128) NULL",
     },
     "mercado": {
         "macrodistrito": "VARCHAR(64) NOT NULL DEFAULT ''",

@@ -34,6 +34,8 @@ class ProductoTabla(Base, Auditable):
     dias_conservacion = Column(Integer, nullable=False, default=30)
     zona_origen = Column(String(128), nullable=True)
     unidad_base = Column(String(8), nullable=False, default="kg")
+    # "kilo,libra,arroba,quintal". NULL = todas las compatibles con la unidad base.
+    presentaciones = Column(String(128), nullable=True)
 
 
 class MercadoTabla(Base, Auditable):

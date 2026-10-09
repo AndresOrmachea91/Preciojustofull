@@ -17,7 +17,14 @@ import type {
   PrecioEnMercado,
   Producto,
 } from "@/dominio/modelo";
-import type { CatalogoRepositorio, PrecioRepositorio } from "@/aplicacion/puertos";
+import { PRESENTACIONES_POR_UNIDAD, ubicacionValida } from "@/dominio/modelo";
+import type {
+  CatalogoAdminRepositorio,
+  CatalogoRepositorio,
+  DatosProducto,
+  DatosPuntoVenta,
+  PrecioRepositorio,
+} from "@/aplicacion/puertos";
 
 const MERCADOS: Mercado[] = [
   { codigo: "rodriguez", nombre: "Mercado Rodríguez", tipo: "mercado", zona: "Cotahuma", macrodistrito: "Cotahuma", codigoPadre: null, nivelPrecio: "minorista", latitud: -16.500192, longitud: -68.138992 },
@@ -30,9 +37,9 @@ const MERCADOS: Mercado[] = [
 ];
 
 const PRODUCTOS: Producto[] = [
-  { codigo: "tomate", nombre: "Tomate", categoria: "hortaliza", esPerecedero: true },
-  { codigo: "papa", nombre: "Papa holandesa", categoria: "tuberculo", esPerecedero: false },
-  { codigo: "arroz", nombre: "Arroz de primera", categoria: "abarrote", esPerecedero: false },
+  { codigo: "tomate", nombre: "Tomate", categoria: "hortaliza", esPerecedero: true, unidadBase: "kg", diasConservacion: 5, presentaciones: PRESENTACIONES_POR_UNIDAD.kg },
+  { codigo: "papa", nombre: "Papa holandesa", categoria: "tuberculo", esPerecedero: false, unidadBase: "kg", diasConservacion: 60, presentaciones: PRESENTACIONES_POR_UNIDAD.kg },
+  { codigo: "arroz", nombre: "Arroz de primera", categoria: "abarrote", esPerecedero: false, unidadBase: "kg", diasConservacion: 365, presentaciones: PRESENTACIONES_POR_UNIDAD.kg },
 ];
 
 interface Fila {
@@ -84,10 +91,33 @@ function aPrecio(f: Fila): Precio {
 
 const ORDEN_NIVEL = { minorista: 0, mayorista: 1 } as const;
 
-export class PreciosMemoria implements PrecioRepositorio, CatalogoRepositorio {
+function codigoDesdeNombre(nombre: string): string {
+  return (
+    nombre
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .slice(0, 60) || "sin_nombre"
+  );
+}
+
+function codigoLibre(base: string, existe: (codigo: string) => boolean): string {
+  let codigo = base;
+  for (let n = 2; existe(codigo); n++) codigo = `${base}_${n}`;
+  return codigo;
+}
+
+export class PreciosMemoria implements PrecioRepositorio, CatalogoRepositorio, CatalogoAdminRepositorio {
+  // Copias por instancia: lo que el administrador cambie en una sesión de
+  // memoria no se filtra a otra (ni a otra prueba).
+  private readonly listaMercados: Mercado[] = [...MERCADOS];
+  private readonly listaProductos: Producto[] = [...PRODUCTOS];
+
   async compararMercados(codigoProducto: string, zona?: string): Promise<PrecioEnMercado[]> {
     return PRECIOS.filter((f) => f.producto === codigoProducto)
-      .map((f) => ({ mercado: MERCADOS.find((m) => m.codigo === f.mercado)!, precio: aPrecio(f) }))
+      .map((f) => ({ mercado: this.listaMercados.find((m) => m.codigo === f.mercado)!, precio: aPrecio(f) }))
       .filter((x) => !zona || x.mercado.zona === zona)
       .sort(
         (a, b) =>
@@ -103,7 +133,7 @@ export class PreciosMemoria implements PrecioRepositorio, CatalogoRepositorio {
   }
 
   async calcularCanasta(items: readonly ItemCanasta[], zona?: string): Promise<CostoCanasta[]> {
-    const mercados = MERCADOS.filter((m) => !zona || m.zona === zona);
+    const mercados = this.listaMercados.filter((m) => !zona || m.zona === zona);
     const resultado: CostoCanasta[] = [];
 
     for (const mercado of mercados) {
@@ -142,10 +172,93 @@ export class PreciosMemoria implements PrecioRepositorio, CatalogoRepositorio {
   }
 
   async productos(): Promise<Producto[]> {
-    return PRODUCTOS;
+    return [...this.listaProductos];
   }
 
   async mercados(zona?: string): Promise<Mercado[]> {
-    return zona ? MERCADOS.filter((m) => m.zona === zona) : MERCADOS;
+    return zona ? this.listaMercados.filter((m) => m.zona === zona) : [...this.listaMercados];
+  }
+
+  // --- catálogo del administrador (mismas reglas mínimas que el backend) ---
+
+  async crearPuntoVenta(datos: DatosPuntoVenta): Promise<Mercado> {
+    const codigo = codigoLibre(codigoDesdeNombre(datos.nombre), (c) => this.listaMercados.some((m) => m.codigo === c));
+    const mercado = this.aMercado(codigo, datos);
+    this.listaMercados.push(mercado);
+    return mercado;
+  }
+
+  async actualizarPuntoVenta(codigo: string, datos: DatosPuntoVenta): Promise<Mercado> {
+    const i = this.listaMercados.findIndex((m) => m.codigo === codigo);
+    if (i < 0) throw new Error(`No existe el mercado ${codigo}`);
+    const mercado = this.aMercado(codigo, datos);
+    this.listaMercados[i] = mercado;
+    return mercado;
+  }
+
+  async eliminarPuntoVenta(codigo: string): Promise<void> {
+    if (this.listaMercados.some((m) => m.codigoPadre === codigo)) {
+      throw new Error(`No se puede eliminar ${codigo}: tiene sectores`);
+    }
+    const i = this.listaMercados.findIndex((m) => m.codigo === codigo);
+    if (i < 0) throw new Error(`No existe el mercado ${codigo}`);
+    this.listaMercados.splice(i, 1);
+  }
+
+  async crearProducto(datos: DatosProducto): Promise<Producto> {
+    const codigo = codigoLibre(codigoDesdeNombre(datos.nombre), (c) => this.listaProductos.some((p) => p.codigo === c));
+    const producto = this.aProducto(codigo, datos);
+    this.listaProductos.push(producto);
+    return producto;
+  }
+
+  async actualizarProducto(codigo: string, datos: DatosProducto): Promise<Producto> {
+    const i = this.listaProductos.findIndex((p) => p.codigo === codigo);
+    if (i < 0) throw new Error(`No existe el producto ${codigo}`);
+    const producto = this.aProducto(codigo, datos);
+    this.listaProductos[i] = producto;
+    return producto;
+  }
+
+  async eliminarProducto(codigo: string): Promise<void> {
+    const i = this.listaProductos.findIndex((p) => p.codigo === codigo);
+    if (i < 0) throw new Error(`No existe el producto ${codigo}`);
+    this.listaProductos.splice(i, 1);
+  }
+
+  private aMercado(codigo: string, d: DatosPuntoVenta): Mercado {
+    if (!d.nombre.trim()) throw new Error("El punto de venta necesita un nombre");
+    if (!ubicacionValida(d.latitud, d.longitud)) {
+      throw new Error("La ubicación tiene que tener latitud y longitud, dentro de La Paz o El Alto");
+    }
+    return {
+      codigo,
+      nombre: d.nombre.trim(),
+      tipo: d.tipo,
+      zona: d.zona,
+      macrodistrito: d.macrodistrito,
+      codigoPadre: d.codigoPadre,
+      nivelPrecio: d.tipo === "mayorista" ? "mayorista" : "minorista",
+      latitud: d.latitud ?? undefined,
+      longitud: d.longitud ?? undefined,
+    };
+  }
+
+  private aProducto(codigo: string, d: DatosProducto): Producto {
+    if (!d.nombre.trim()) throw new Error("El producto necesita un nombre");
+    const posibles = PRESENTACIONES_POR_UNIDAD[d.unidadBase];
+    const elegidas = d.presentaciones.length ? posibles.filter((p) => d.presentaciones.includes(p.codigo)) : posibles;
+    if (!elegidas.some((p) => p.factor === 1)) {
+      throw new Error("Falta la presentación de la unidad base (kilo, litro, unidad o atado)");
+    }
+    return {
+      codigo,
+      nombre: d.nombre.trim(),
+      categoria: d.categoria,
+      esPerecedero: d.diasConservacion <= 7,
+      unidadBase: d.unidadBase,
+      diasConservacion: d.diasConservacion,
+      presentaciones: elegidas,
+    };
   }
 }

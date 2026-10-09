@@ -31,6 +31,9 @@ from src.aplicacion.casos_uso.precios.consultar_precio import ConsultarPrecioPro
 from src.aplicacion.casos_uso.administracion.gestionar_usuarios import AdministrarUsuarios
 from src.aplicacion.casos_uso.cuentas.iniciar_sesion import IniciarSesion, ResolverSesion
 from src.aplicacion.casos_uso.cuentas.registrar_usuario import RegistrarUsuario
+from src.aplicacion.casos_uso.administracion.gestionar_catalogo import (
+    GestionarProductos, GestionarPuntosVenta,
+)
 from src.aplicacion.casos_uso.administracion.validar_reportes import ValidarReportes
 from src.aplicacion.casos_uso.usuario.reportar_precio import RegistrarReporteCiudadano
 from src.configuracion import config
@@ -145,6 +148,14 @@ def caso_resolver_sesion() -> ResolverSesion:
 
 def caso_administrar_usuarios() -> AdministrarUsuarios:
     return AdministrarUsuarios(_cuentas()[0], _cifrador(), _repositorios()[1])
+
+
+def caso_gestionar_puntos_venta() -> GestionarPuntosVenta:
+    return GestionarPuntosVenta(_repositorios()[1], _cuentas()[0])
+
+
+def caso_gestionar_productos() -> GestionarProductos:
+    return GestionarProductos(_repositorios()[0])
 
 
 def asegurar_admin_inicial() -> None:

@@ -40,11 +40,15 @@ describe("arquitectura del frontend", () => {
     expect(infracciones("dominio", [...RED, /from "react"/, /from "leaflet"/, /@\/aplicacion/, /@\/infraestructura/])).toEqual([]);
   });
 
-  it("solo el componente del mapa importa Leaflet", () => {
+  it("solo los componentes de mapa importan Leaflet", () => {
     const conLeaflet = archivos(RAIZ)
       .filter((r) => /from "leaflet"/.test(readFileSync(r, "utf-8")))
-      .map((r) => r.replace(RAIZ, "src").replace(/\\/g, "/"));
-    expect(conLeaflet).toEqual(["src/ui/componentes/MapaPuntosVenta.tsx"]);
+      .map((r) => r.replace(RAIZ, "src").replace(/\\/g, "/"))
+      .sort();
+    expect(conLeaflet).toEqual([
+      "src/ui/componentes/MapaPuntosVenta.tsx",
+      "src/ui/componentes/MapaSelectorUbicacion.tsx",
+    ]);
   });
 
   it("solo el cliente HTTP llama a fetch", () => {

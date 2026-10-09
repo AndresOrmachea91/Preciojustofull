@@ -36,6 +36,10 @@ def producto_a_salida(p: Producto) -> e.ProductoSalida:
     return e.ProductoSalida(
         codigo=p.codigo, nombre=p.nombre,
         categoria=p.categoria.value, es_perecedero=p.es_perecedero,
+        unidad_base=p.unidad_base.value, dias_conservacion=p.dias_conservacion,
+        presentaciones=[
+            e.PresentacionSalida(codigo=x.value, nombre=x.nombre, factor=x.factor) for x in p.presentaciones
+        ],
     )
 
 

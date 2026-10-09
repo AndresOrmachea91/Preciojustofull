@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { Producto } from "@/dominio/modelo";
+import { precioEnPresentacion, presentacionBase } from "@/dominio/modelo";
 import { ahorroPosible } from "@/dominio/servicio/ordenarPorConveniencia";
 import type { Contenedor } from "@/infraestructura/contenedor";
 import { MapaPuntosVenta } from "@/ui/componentes/MapaPuntosVenta";
@@ -33,11 +34,29 @@ export function PaginaPrecios({ contenedor }: { contenedor: Contenedor }) {
   const mapa = useMapa(contenedor, codigo);
   const comparativa = useComparativa(contenedor, codigo);
   const productoActual = productos.find((p) => p.codigo === producto) ?? null;
-  const marcadorSeleccionado =
-    mapa.datos?.marcadores.find((m) => m.mercado.codigo === seleccionado) ?? null;
 
-  const minoristas = comparativa.datos?.opciones.filter((o) => o.mercado.nivelPrecio === "minorista") ?? [];
-  const mayoristas = comparativa.datos?.opciones.filter((o) => o.mercado.nivelPrecio === "mayorista") ?? [];
+  // En qué presentación ver los precios (kilo, libra, arroba, quintal...).
+  // Al cambiar de producto vuelve a la unidad base: un quintal de huevos no existe.
+  const [codigoPresentacion, setCodigoPresentacion] = useState<string | null>(null);
+  useEffect(() => setCodigoPresentacion(null), [producto]);
+  const presentacion = productoActual
+    ? (productoActual.presentaciones.find((p) => p.codigo === codigoPresentacion) ?? presentacionBase(productoActual))
+    : null;
+  const escalar = useMemo(
+    () => <T extends { precio: Parameters<typeof precioEnPresentacion>[0] }>(x: T): T =>
+      presentacion ? { ...x, precio: precioEnPresentacion(x.precio, presentacion) } : x,
+    [presentacion],
+  );
+
+  const marcadores = useMemo(
+    () => mapa.datos?.marcadores.map((m) => (m.precio ? escalar({ ...m, precio: m.precio }) : m)) ?? [],
+    [mapa.datos, escalar],
+  );
+  const marcadorSeleccionado = marcadores.find((m) => m.mercado.codigo === seleccionado) ?? null;
+
+  const opciones = comparativa.datos?.opciones.map(escalar) ?? [];
+  const minoristas = opciones.filter((o) => o.mercado.nivelPrecio === "minorista");
+  const mayoristas = opciones.filter((o) => o.mercado.nivelPrecio === "mayorista");
 
   return (
     <>
@@ -56,6 +75,23 @@ export function PaginaPrecios({ contenedor }: { contenedor: Contenedor }) {
           </button>
         ))}
       </nav>
+
+      {productoActual && productoActual.presentaciones.length > 1 && (
+        <div className="presentaciones" role="group" aria-label="Ver el precio por">
+          <span className="tenue">Ver precio por:</span>
+          {productoActual.presentaciones.map((p) => (
+            <button
+              key={p.codigo}
+              type="button"
+              aria-pressed={presentacion?.codigo === p.codigo}
+              className={`selector__opcion selector__opcion--chica${presentacion?.codigo === p.codigo ? " selector__opcion--activa" : ""}`}
+              onClick={() => setCodigoPresentacion(p.codigo)}
+            >
+              {p.nombre}
+            </button>
+          ))}
+        </div>
+      )}
 
       {mapa.datos && (
         <section className="honestidad" aria-label="De dónde salen estos precios">
@@ -95,7 +131,7 @@ export function PaginaPrecios({ contenedor }: { contenedor: Contenedor }) {
       {mapa.datos && (
         <div className="mapa-y-panel">
           <MapaPuntosVenta
-            marcadores={mapa.datos.marcadores}
+            marcadores={marcadores}
             seleccionado={seleccionado}
             onSeleccionar={setSeleccionado}
           />

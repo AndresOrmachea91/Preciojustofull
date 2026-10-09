@@ -140,3 +140,25 @@ class ReporteYaRevisado(ErrorDominio):
         self.id_reporte = id_reporte
         self.estado = estado
         super().__init__(f"El reporte {id_reporte} ya fue revisado ({estado})")
+
+
+# --- catálogo ---------------------------------------------------------------
+
+class PresentacionInvalida(ErrorDominio):
+    """Las presentaciones de venta no corresponden a la unidad del producto."""
+
+
+class CodigoYaExiste(ErrorDominio):
+    def __init__(self, que: str, codigo: str):
+        self.codigo = codigo
+        super().__init__(f"Ya existe un {que} con el código {codigo}")
+
+
+class DatoInvalido(ErrorDominio):
+    """Un dato del catálogo no cumple su regla (coordenadas, nombre vacío...)."""
+
+
+class PuntoVentaConDependientes(ErrorDominio):
+    def __init__(self, codigo: str, motivo: str):
+        self.codigo = codigo
+        super().__init__(f"No se puede eliminar {codigo}: {motivo}")
