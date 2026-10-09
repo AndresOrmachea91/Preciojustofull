@@ -7,6 +7,9 @@
  */
 import type {
   CostoCanasta,
+  ListaCompras,
+  ItemLista,
+  PrecioPublicado,
   TipoPuntoVenta,
   UnidadBase,
   EstadoReporte,
@@ -102,4 +105,24 @@ export interface CatalogoAdminRepositorio {
   crearProducto(datos: DatosProducto): Promise<Producto>;
   actualizarProducto(codigo: string, datos: DatosProducto): Promise<Producto>;
   eliminarProducto(codigo: string): Promise<void>;
+}
+
+/** Lo que el USUARIO hace con su cuenta: sus reportes y sus listas. */
+export interface MisReportesRepositorio {
+  misReportes(): Promise<ReporteEnRevision[]>;
+}
+
+export interface ListasRepositorio {
+  listas(): Promise<ListaCompras[]>;
+  crearLista(nombre: string, items: readonly ItemLista[]): Promise<ListaCompras>;
+  actualizarLista(id: number, nombre: string, items: readonly ItemLista[]): Promise<ListaCompras>;
+  eliminarLista(id: number): Promise<void>;
+  /** Cuánto cuesta la lista completa en cada punto de venta, de más conveniente a menos. */
+  cotizarLista(id: number, zona?: string): Promise<CostoCanasta[]>;
+}
+
+/** Lo que el VENDEDOR hace con su puesto. */
+export interface PreciosVendedorRepositorio {
+  misPrecios(): Promise<PrecioPublicado[]>;
+  publicarPrecio(entrada: { codigoProducto: string; monto: number; presentacion: string }): Promise<void>;
 }

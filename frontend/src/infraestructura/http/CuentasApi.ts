@@ -22,7 +22,7 @@ interface UsuarioDto {
   codigo_punto_venta?: string | null;
 }
 
-interface ReporteDto {
+export interface ReporteDto {
   id: number;
   codigo_producto: string;
   codigo_mercado: string;
@@ -47,7 +47,7 @@ function aUsuario(d: UsuarioDto): Usuario {
   };
 }
 
-function aReporte(d: ReporteDto): ReporteEnRevision {
+export function aReporte(d: ReporteDto): ReporteEnRevision {
   return {
     id: d.id,
     codigoProducto: d.codigo_producto,

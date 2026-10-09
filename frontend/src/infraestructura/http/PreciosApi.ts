@@ -9,6 +9,7 @@ import type {
   CostoCanasta,
   ItemCanasta,
   Mercado,
+  NivelPrecio,
   Precio,
   PrecioEnMercado,
   Presentacion,
@@ -81,7 +82,23 @@ export function aProducto(d: ProductoDto): Producto {
   };
 }
 
-export type { ProductoDto, MercadoDto };
+/** Traducción de una cotización (canasta o lista de compras) al dominio. */
+export function aCostoCanasta(d: CanastaDto): CostoCanasta {
+  return {
+    codigoMercado: d.codigo_mercado,
+    nombreMercado: d.nombre_mercado,
+    zona: d.zona,
+    costoTotal: d.costo_total,
+    productosCubiertos: d.productos_cubiertos,
+    productosPedidos: d.productos_pedidos,
+    cobertura: d.cobertura,
+    faltantes: d.faltantes ?? [],
+    productosEstimados: d.productos_estimados ?? 0,
+    nivelPrecio: d.nivel_precio ?? "minorista",
+  };
+}
+
+export type { CanastaDto, ProductoDto, MercadoDto };
 
 interface CanastaDto {
   codigo_mercado: string;
@@ -92,6 +109,8 @@ interface CanastaDto {
   productos_pedidos: number;
   cobertura: number;
   faltantes: string[];
+  productos_estimados?: number;
+  nivel_precio?: NivelPrecio;
 }
 
 function aPrecio(d: PrecioDto): Precio {
@@ -159,16 +178,7 @@ export class PreciosApi
       items: items.map((i) => ({ codigo_producto: i.codigoProducto, cantidad: i.cantidad })),
       zona: zona ?? null,
     });
-    return datos.map((d) => ({
-      codigoMercado: d.codigo_mercado,
-      nombreMercado: d.nombre_mercado,
-      zona: d.zona,
-      costoTotal: d.costo_total,
-      productosCubiertos: d.productos_cubiertos,
-      productosPedidos: d.productos_pedidos,
-      cobertura: d.cobertura,
-      faltantes: d.faltantes ?? [],
-    }));
+    return datos.map(aCostoCanasta);
   }
 
   async productos(): Promise<Producto[]> {

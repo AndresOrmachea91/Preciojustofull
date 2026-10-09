@@ -4,7 +4,7 @@
  */
 import { useCallback, useEffect, useState } from "react";
 
-import type { ResultadoMapa } from "@/aplicacion/casosUso/verMapa";
+import type { ResultadoMapa } from "@/aplicacion/casosUso/publico/verMapa";
 import type { Contenedor } from "@/infraestructura/contenedor";
 
 export function useMapa(contenedor: Contenedor, codigoProducto: string) {

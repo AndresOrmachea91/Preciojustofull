@@ -7,8 +7,8 @@
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { Administrar } from "@/aplicacion/casosUso/administrar";
-import { GestionarSesion } from "@/aplicacion/casosUso/gestionarSesion";
+import { Administrar } from "@/aplicacion/casosUso/administracion/administrarCuentas";
+import { GestionarSesion } from "@/aplicacion/casosUso/cuentas/gestionarSesion";
 import { AlmacenSesionMemoria } from "@/infraestructura/almacen/almacenSesion";
 import { ClienteHttp } from "@/infraestructura/http/clienteHttp";
 import { CuentasApi } from "@/infraestructura/http/CuentasApi";

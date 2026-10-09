@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import type { DatosPuntoVenta } from "@/aplicacion/puertos";
 import { TIPOS_PUNTO_VENTA, etiquetaTipo, type Mercado, type TipoPuntoVenta } from "@/dominio/modelo";
 import type { Contenedor } from "@/infraestructura/contenedor";
+import { MensajeAviso, MensajeError, textoDeError } from "@/ui/componentes/Mensajes";
 import { MapaSelectorUbicacion } from "@/ui/componentes/MapaSelectorUbicacion";
 
 const VACIO: DatosPuntoVenta = {
@@ -15,10 +16,6 @@ const VACIO: DatosPuntoVenta = {
   codigoPadre: null,
 };
 
-function mensaje(e: unknown): string {
-  return e instanceof Error ? e.message : "No se pudo completar la operación";
-}
-
 /** Mercados, supermercados, tiendas y mayoristas: alta, edición (con su lugar en el mapa) y baja lógica. */
 export function CatalogoPuntosVenta({ contenedor }: { contenedor: Contenedor }) {
   const [lista, setLista] = useState<Mercado[] | null>(null);
@@ -29,7 +26,7 @@ export function CatalogoPuntosVenta({ contenedor }: { contenedor: Contenedor }) 
   const [aviso, setAviso] = useState<string | null>(null);
 
   const cargar = useCallback(() => {
-    contenedor.administrarCatalogo.puntosVenta().then(setLista, (e) => setError(mensaje(e)));
+    contenedor.administrarCatalogo.puntosVenta().then(setLista, (e) => setError(textoDeError(e)));
   }, [contenedor]);
   useEffect(cargar, [cargar]);
 
@@ -41,7 +38,7 @@ export function CatalogoPuntosVenta({ contenedor }: { contenedor: Contenedor }) 
       setAEliminar(null);
       cargar();
     } catch (e) {
-      setError(mensaje(e));
+      setError(textoDeError(e));
     }
   }
 
@@ -81,16 +78,8 @@ export function CatalogoPuntosVenta({ contenedor }: { contenedor: Contenedor }) 
         </div>
       )}
 
-      {error && (
-        <p className="estado estado--error" role="alert">
-          {error}
-        </p>
-      )}
-      {aviso && !error && (
-        <p className="aviso" role="status">
-          {aviso}
-        </p>
-      )}
+      <MensajeError texto={error} />
+      {!error && <MensajeAviso texto={aviso} />}
       {!lista && !error && <p className="estado">Cargando puntos de venta…</p>}
 
       {lista && (
@@ -193,7 +182,7 @@ function FormularioPunto({
     try {
       alTerminar(await contenedor.administrarCatalogo.guardarPuntoVenta(codigo, datos));
     } catch (e) {
-      setError(mensaje(e));
+      setError(textoDeError(e));
     }
   }
 
@@ -282,11 +271,7 @@ function FormularioPunto({
         </label>
       </div>
 
-      {error && (
-        <p className="estado estado--error" role="alert">
-          {error}
-        </p>
-      )}
+      <MensajeError texto={error} />
       <div className="formulario__botones">
         <button type="submit" className="boton">
           {codigo ? "Guardar cambios" : "Crear punto de venta"}

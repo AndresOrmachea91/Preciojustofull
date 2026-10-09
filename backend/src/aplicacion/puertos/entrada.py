@@ -38,6 +38,10 @@ class CostoCanastaEnMercado:
     productos_cubiertos: int
     productos_pedidos: int
     faltantes: list[str] = field(default_factory=list)
+    # Cuántos de los cubiertos son ESTIMADOS (nadie los midió en ese lugar).
+    productos_estimados: int = 0
+    # mayorista o minorista: un total mayorista no compite con uno minorista.
+    nivel_precio: str = "minorista"
 
     @property
     def cobertura(self) -> float:

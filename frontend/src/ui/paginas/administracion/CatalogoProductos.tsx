@@ -9,6 +9,7 @@ import {
   type UnidadBase,
 } from "@/dominio/modelo";
 import type { Contenedor } from "@/infraestructura/contenedor";
+import { MensajeAviso, MensajeError, textoDeError } from "@/ui/componentes/Mensajes";
 
 const VACIO: DatosProducto = {
   nombre: "",
@@ -17,10 +18,6 @@ const VACIO: DatosProducto = {
   presentaciones: PRESENTACIONES_POR_UNIDAD.kg.map((p) => p.codigo),
   diasConservacion: 30,
 };
-
-function mensaje(e: unknown): string {
-  return e instanceof Error ? e.message : "No se pudo completar la operación";
-}
 
 function nombreCategoria(codigo: string): string {
   return CATEGORIAS.find((c) => c.codigo === codigo)?.nombre ?? codigo;
@@ -35,7 +32,7 @@ export function CatalogoProductos({ contenedor }: { contenedor: Contenedor }) {
   const [aviso, setAviso] = useState<string | null>(null);
 
   const cargar = useCallback(() => {
-    contenedor.administrarCatalogo.productos().then(setLista, (e) => setError(mensaje(e)));
+    contenedor.administrarCatalogo.productos().then(setLista, (e) => setError(textoDeError(e)));
   }, [contenedor]);
   useEffect(cargar, [cargar]);
 
@@ -47,7 +44,7 @@ export function CatalogoProductos({ contenedor }: { contenedor: Contenedor }) {
       setAEliminar(null);
       cargar();
     } catch (e) {
-      setError(mensaje(e));
+      setError(textoDeError(e));
     }
   }
 
@@ -72,16 +69,8 @@ export function CatalogoProductos({ contenedor }: { contenedor: Contenedor }) {
         </button>
       )}
 
-      {error && (
-        <p className="estado estado--error" role="alert">
-          {error}
-        </p>
-      )}
-      {aviso && !error && (
-        <p className="aviso" role="status">
-          {aviso}
-        </p>
-      )}
+      <MensajeError texto={error} />
+      {!error && <MensajeAviso texto={aviso} />}
       {!lista && !error && <p className="estado">Cargando productos…</p>}
 
       {lista && (
@@ -184,7 +173,7 @@ function FormularioProducto({
     try {
       alTerminar(await contenedor.administrarCatalogo.guardarProducto(codigo, datos));
     } catch (e) {
-      setError(mensaje(e));
+      setError(textoDeError(e));
     }
   }
 
@@ -259,11 +248,7 @@ function FormularioProducto({
         ))}
       </fieldset>
 
-      {error && (
-        <p className="estado estado--error" role="alert">
-          {error}
-        </p>
-      )}
+      <MensajeError texto={error} />
       <div className="formulario__botones">
         <button type="submit" className="boton">
           {codigo ? "Guardar cambios" : "Crear producto"}

@@ -8,7 +8,9 @@
 import type {
   AdministracionRepositorio,
   AlmacenSesion,
+  MisReportesRepositorio,
   NuevaCuenta,
+  ReporteRepositorio,
   SesionRepositorio,
 } from "@/aplicacion/puertos";
 import type { EstadoReporte, Permiso, ReporteEnRevision, Rol, Usuario } from "@/dominio/modelo";
@@ -55,7 +57,15 @@ function crear(
   };
 }
 
-export class CuentasMemoria implements SesionRepositorio, AdministracionRepositorio {
+/** El id de la cuenta de la sesión en memoria (el token es "memoria:<id>"), o null. */
+export function idDeSesion(almacen: AlmacenSesion): number | null {
+  const id = Number(almacen.leer()?.replace("memoria:", ""));
+  return Number.isInteger(id) && id > 0 ? id : null;
+}
+
+export class CuentasMemoria
+  implements SesionRepositorio, AdministracionRepositorio, ReporteRepositorio, MisReportesRepositorio
+{
   private readonly cuentas = new Map<number, Cuenta>();
   private readonly listaReportes = new Map<number, ReporteEnRevision>();
   private siguiente = 1;
@@ -91,8 +101,7 @@ export class CuentasMemoria implements SesionRepositorio, AdministracionReposito
   }
 
   private actual(): Usuario {
-    const id = Number(this.almacen.leer()?.replace("memoria:", ""));
-    const usuario = this.cuentas.get(id)?.usuario;
+    const usuario = this.cuentas.get(idDeSesion(this.almacen) ?? 0)?.usuario;
     if (!usuario?.activo) throw new Error("Sesión inválida o vencida. Vuelva a ingresar.");
     return usuario;
   }
@@ -169,6 +178,27 @@ export class CuentasMemoria implements SesionRepositorio, AdministracionReposito
     if (!cuenta) throw new Error(`No existe el usuario ${id}`);
     cuenta.contrasena = contrasena;
     return cuenta.usuario;
+  }
+
+  async reportar(entrada: { codigoProducto: string; codigoMercado: string; monto: number; unidad: string }): Promise<void> {
+    this.exigir("reportar_precio");
+    const id = Math.max(0, ...this.listaReportes.keys()) + 1;
+    this.listaReportes.set(id, {
+      id,
+      codigoProducto: entrada.codigoProducto,
+      codigoMercado: entrada.codigoMercado,
+      monto: entrada.monto,
+      unidad: entrada.unidad,
+      idAutor: this.actual().id,
+      creadoEn: new Date().toISOString(),
+      estado: "pendiente",
+      motivoRechazo: null,
+    });
+  }
+
+  async misReportes(): Promise<ReporteEnRevision[]> {
+    const yo = this.actual().id;
+    return [...this.listaReportes.values()].filter((r) => r.idAutor === yo).sort((a, b) => b.id - a.id);
   }
 
   async reportes(estado: EstadoReporte | "todos"): Promise<ReporteEnRevision[]> {

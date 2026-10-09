@@ -4,7 +4,7 @@
  */
 import { useCallback, useEffect, useState } from "react";
 
-import type { ResultadoComparativa } from "@/aplicacion/casosUso/compararMercados";
+import type { ResultadoComparativa } from "@/aplicacion/casosUso/publico/compararMercados";
 import type { Contenedor } from "@/infraestructura/contenedor";
 
 export function useComparativa(contenedor: Contenedor, codigoProducto: string) {

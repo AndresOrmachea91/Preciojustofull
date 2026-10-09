@@ -175,3 +175,36 @@ body {
 .casilla { display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem; }
 .presentaciones { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: -8px 0 16px; }
 .selector__opcion--chica { padding: 4px 12px; font-size: 0.82rem; }
+
+/* --- navegación por rol --------------------------------------------------- */
+.navegacion { display: flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--superficie); border: 1px solid var(--borde); }
+.navegacion__enlace { border: 0; background: none; color: var(--tenue); font: inherit; font-size: 0.88rem; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+.navegacion__enlace:hover { color: var(--tinta); }
+.navegacion__enlace--activo { background: var(--jade-claro); color: var(--tinta); font-weight: 600; }
+.navegacion__enlace:focus-visible { outline: 2px solid var(--jade); outline-offset: 1px; }
+@media (max-width: 700px) {
+  .app__cabecera { align-items: flex-start; }
+  .navegacion { width: 100%; overflow-x: auto; }
+}
+
+/* --- secciones de usuario y vendedor -------------------------------------- */
+.subseccion { font-size: 1rem; color: var(--tinta); margin: 24px 0 8px; }
+.formulario__fila--tres { grid-template-columns: 2fr 1fr 1fr; }
+@media (max-width: 560px) { .formulario__fila--tres { grid-template-columns: 1fr; } }
+
+.renglones { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 0.92rem; }
+.renglones > li::before { content: "·"; color: var(--jade); margin-right: 8px; font-weight: 700; }
+.renglones--editables > li::before { content: none; }
+.renglon { display: grid; grid-template-columns: minmax(0, 1fr) 90px 130px auto; gap: 8px; align-items: center; }
+.renglon input, .renglon select { padding: 6px 8px; border-radius: 8px; border: 1px solid var(--borde); background: var(--superficie); color: var(--texto); font: inherit; }
+@media (max-width: 560px) { .renglon { grid-template-columns: 1fr 1fr; } .renglon__producto { grid-column: 1 / -1; font-weight: 600; } }
+
+.cotizacion { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--borde); }
+.ranking { list-style: none; margin: 0 0 8px; padding: 0; counter-reset: puesto; }
+.ranking__fila { counter-increment: puesto; display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px dashed var(--borde); font-size: 0.92rem; }
+.ranking__fila::before { content: counter(puesto); color: var(--tenue); width: 1.4em; flex: none; }
+.ranking__fila > span:first-of-type { flex: 1; }
+.ranking__fila:first-child .ranking__total { color: var(--jade); }
+.ranking__total { font-weight: 600; white-space: nowrap; }
+.ranking__faltan { color: var(--ambar); font-size: 0.82rem; }
+.ranking__estimados { color: var(--ambar); font-size: 0.82rem; }

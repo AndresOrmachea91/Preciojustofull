@@ -101,12 +101,44 @@ por eso desactivar una cuenta corta su sesión al instante.
 Ojo: `cli/sembrar.py` vuelve a cargar los CSV del catálogo. Si se corre después de
 editar algo desde el panel, pisa esos cambios. Se usa solo para la carga inicial.
 
+## Vendedor y usuario
+
+| Qué                                                   | Dónde |
+|-------------------------------------------------------|-------|
+| El vendedor publica el precio de SU puesto            | `aplicacion/casos_uso/vendedor/publicar_precio.py` → `PublicarPrecioPropio` |
+| Sin puesto asignado no publica                        | `publicar_precio.py` → `_puesto_del` (error `SinPuntoVenta`) |
+| Lo último que publicó de cada producto                | `publicar_precio.py` → `MisPrecios` |
+| La fuente VENDEDOR y su confianza (media)             | `dominio/modelo/observacion.py` → `Fuente.VENDEDOR` |
+| Mis reportes (solo los propios)                       | `aplicacion/casos_uso/usuario/mis_reportes.py` |
+| La lista de compras y sus reglas                      | `dominio/modelo/lista_compras.py` → `ListaCompras`, `ItemLista` |
+| Crear, editar, borrar y cotizar listas                | `aplicacion/casos_uso/usuario/listas_compras.py` → `GestionarListas` |
+| La lista de otro responde como inexistente            | `listas_compras.py` → `GestionarListas._propia` |
+| Cotizar: lo medido o, si no, estimado desde la ciudad | `aplicacion/casos_uso/precios/calcular_canasta.py` (usa `precio_del_local` del comparador) |
+| Cuántos productos de la cotización son estimados      | `CostoCanastaEnMercado.productos_estimados` (`aplicacion/puertos/entrada.py`) |
+| `/bd/listas` (consultas SQL)                          | `infraestructura/adaptadores/salida/persistencia/listas.py` → `ListasPostgres` |
+| Rutas                                                 | `api/rutas/vendedor/precios.py`, `api/rutas/usuario/listas.py`, `api/rutas/usuario/reportes.py` |
+
+En el frontend:
+
+| Qué                                   | Dónde |
+|---------------------------------------|-------|
+| Casos de uso por rol                  | `src/aplicacion/casosUso/{publico, cuentas, usuario, vendedor, administracion}/` |
+| Mayorista aparte en la cotización     | `src/aplicacion/casosUso/usuario/listasCompras.ts` → `cotizar` |
+| Ahorro solo entre canastas completas  | `src/aplicacion/casosUso/publico/calcularCanasta.ts` → `resumirCanasta` |
+| Pantallas del usuario                 | `src/ui/paginas/usuario/` (`MisListas`, `ReportarPrecio`, `MisReportes`) |
+| Pantalla del vendedor                 | `src/ui/paginas/vendedor/PaginaVendedor.tsx` |
+| Cabecera con las secciones de cada rol | `src/ui/componentes/Cabecera.tsx` |
+| Piezas compartidas                    | `src/ui/componentes/Pestanas.tsx`, `Mensajes.tsx`; `src/ui/hooks/useCatalogo.ts` |
+
 ## Rutas de la API
 
 | Ruta                                  | Quién            | Archivo |
 |---------------------------------------|------------------|---------|
 | `POST /auth/registro`, `/auth/ingresar`, `GET /auth/yo` | cualquiera / con sesión | `api/rutas/cuentas.py` |
 | `POST /reportes`                      | usuario (con sesión) | `api/rutas/usuario/reportes.py` |
+| `GET /reportes/mios`                  | usuario (con sesión) | `api/rutas/usuario/reportes.py` |
+| `GET/POST /listas`, `PUT/DELETE /listas/{id}`, `GET /listas/{id}/cotizar` | usuario (con sesión) | `api/rutas/usuario/listas.py` |
+| `GET/POST /vendedor/precios`          | vendedor con puesto | `api/rutas/vendedor/precios.py` |
 | `GET/POST /admin/usuarios`, `PATCH /admin/usuarios/{id}` (rol, activo, puesto), `PUT /admin/usuarios/{id}/contrasena` | administrador | `api/rutas/administracion/usuarios.py` |
 | `GET /admin/reportes`, `POST /admin/reportes/{id}/aprobar` y `/rechazar` | administrador | `api/rutas/administracion/reportes.py` |
 | `POST/PUT/DELETE /admin/mercados[/{codigo}]` y `/admin/productos[/{codigo}]` | administrador | `api/rutas/administracion/catalogo.py` |
@@ -136,9 +168,9 @@ sin ella, memoria". Ningún caso de uso sabe cuál le tocó.
 |---------------------------------|---------|
 | Tipos y reglas (Usuario, Rol)   | `dominio/modelo.ts` |
 | Puertos (interfaces)            | `aplicacion/puertos.ts` |
-| Ingresar / salir / registrarse  | `aplicacion/casosUso/gestionarSesion.ts` |
-| Acciones del administrador      | `aplicacion/casosUso/administrar.ts` |
+| Ingresar / salir / registrarse  | `aplicacion/casosUso/cuentas/gestionarSesion.ts` |
+| Acciones del administrador      | `aplicacion/casosUso/administracion/administrarCuentas.ts`, `administrarCatalogo.ts` |
 | Las llamadas a la API           | `infraestructura/http/CuentasApi.ts` (y `clienteHttp.ts`, el único con `fetch`) |
 | Dónde se guarda el token        | `infraestructura/almacen/almacenSesion.ts` |
 | Qué adaptador se usa            | `infraestructura/contenedor.ts` |
-| Pantallas                       | `ui/paginas/cuentas/PaginaIngreso.tsx`, `administracion/PaginaAdmin.tsx`, `publico/PaginaPrecios.tsx` |
+| Pantallas                       | `ui/paginas/{publico, cuentas, usuario, vendedor, administracion}/` |

@@ -7,8 +7,8 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { CalcularCanasta } from "@/aplicacion/casosUso/calcularCanasta";
-import { CompararMercados } from "@/aplicacion/casosUso/compararMercados";
+import { CalcularCanasta } from "@/aplicacion/casosUso/publico/calcularCanasta";
+import { CompararMercados } from "@/aplicacion/casosUso/publico/compararMercados";
 import { PreciosMemoria } from "@/infraestructura/memoria/PreciosMemoria";
 import { crearContenedor } from "@/infraestructura/contenedor";
 

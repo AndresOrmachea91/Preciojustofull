@@ -11,14 +11,12 @@ import {
   type Usuario,
 } from "@/dominio/modelo";
 import type { Contenedor } from "@/infraestructura/contenedor";
+import { MensajeAviso, MensajeError, textoDeError } from "@/ui/componentes/Mensajes";
+import { Pestanas } from "@/ui/componentes/Pestanas";
 import { CatalogoProductos } from "@/ui/paginas/administracion/CatalogoProductos";
 import { CatalogoPuntosVenta } from "@/ui/paginas/administracion/CatalogoPuntosVenta";
 
 type Pestana = "usuarios" | "reportes" | "puntos" | "productos";
-
-function mensaje(e: unknown): string {
-  return e instanceof Error ? e.message : "No se pudo completar la operación";
-}
 
 export function PaginaAdmin({ contenedor, usuario }: { contenedor: Contenedor; usuario: Usuario }) {
   const verUsuarios = puede(usuario, "gestionar_usuarios");
@@ -38,22 +36,7 @@ export function PaginaAdmin({ contenedor, usuario }: { contenedor: Contenedor; u
       <h2 id="titulo-admin" className="seccion">
         Administración
       </h2>
-      <div className="pestanas" role="tablist">
-        {pestanas
-          .filter((p) => p.visible)
-          .map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              role="tab"
-              aria-selected={pestana === p.id}
-              className={`selector__opcion${pestana === p.id ? " selector__opcion--activa" : ""}`}
-              onClick={() => setPestana(p.id)}
-            >
-              {p.texto}
-            </button>
-          ))}
-      </div>
+      <Pestanas pestanas={pestanas} activa={pestana} onCambiar={setPestana} />
       {pestana === "usuarios" && verUsuarios && <Usuarios contenedor={contenedor} yo={usuario} />}
       {pestana === "puntos" && verCatalogo && <CatalogoPuntosVenta contenedor={contenedor} />}
       {pestana === "productos" && verCatalogo && <CatalogoProductos contenedor={contenedor} />}
@@ -76,7 +59,7 @@ function Usuarios({ contenedor, yo }: { contenedor: Contenedor; yo: Usuario }) {
   }, [contenedor]);
 
   const cargar = useCallback(() => {
-    contenedor.administrar.usuarios().then(setLista, (e) => setError(mensaje(e)));
+    contenedor.administrar.usuarios().then(setLista, (e) => setError(textoDeError(e)));
   }, [contenedor]);
 
   useEffect(cargar, [cargar]);
@@ -89,7 +72,7 @@ function Usuarios({ contenedor, yo }: { contenedor: Contenedor; yo: Usuario }) {
       setLista((l) => l?.map((u) => (u.id === actualizado.id ? actualizado : u)) ?? null);
       setAviso(texto);
     } catch (e) {
-      setError(mensaje(e));
+      setError(textoDeError(e));
     }
   }
 
@@ -108,16 +91,8 @@ function Usuarios({ contenedor, yo }: { contenedor: Contenedor; yo: Usuario }) {
         }}
       />
 
-      {error && (
-        <p className="estado estado--error" role="alert">
-          {error}
-        </p>
-      )}
-      {aviso && !error && (
-        <p className="aviso" role="status">
-          {aviso}
-        </p>
-      )}
+      <MensajeError texto={error} />
+      {!error && <MensajeAviso texto={aviso} />}
 
       {!lista && !error && <p className="estado">Cargando cuentas…</p>}
       {lista && (
@@ -230,7 +205,7 @@ function NuevoUsuario({ contenedor, alCrear }: { contenedor: Contenedor; alCrear
       setContrasena("");
       setAbierto(false);
     } catch (e) {
-      setError(mensaje(e));
+      setError(textoDeError(e));
     }
   }
 
@@ -277,11 +252,7 @@ function NuevoUsuario({ contenedor, alCrear }: { contenedor: Contenedor; alCrear
           </select>
         </label>
       </div>
-      {error && (
-        <p className="estado estado--error" role="alert">
-          {error}
-        </p>
-      )}
+      <MensajeError texto={error} />
       <div className="formulario__botones">
         <button type="submit" className="boton">
           Crear cuenta
@@ -321,7 +292,7 @@ function Reportes({ contenedor }: { contenedor: Contenedor }) {
   useEffect(() => {
     setLista(null);
     setError(null);
-    contenedor.administrar.reportes(filtro).then(setLista, (e) => setError(mensaje(e)));
+    contenedor.administrar.reportes(filtro).then(setLista, (e) => setError(textoDeError(e)));
   }, [contenedor, filtro]);
 
   async function revisar(accion: Promise<ReporteEnRevision>) {
@@ -335,7 +306,7 @@ function Reportes({ contenedor }: { contenedor: Contenedor }) {
             .filter((r) => filtro === "todos" || r.estado === filtro) ?? null,
       );
     } catch (e) {
-      setError(mensaje(e));
+      setError(textoDeError(e));
     }
   }
 
@@ -364,11 +335,7 @@ function Reportes({ contenedor }: { contenedor: Contenedor }) {
         ))}
       </div>
 
-      {error && (
-        <p className="estado estado--error" role="alert">
-          {error}
-        </p>
-      )}
+      <MensajeError texto={error} />
       {!lista && !error && <p className="estado">Cargando reportes…</p>}
       {lista && lista.length === 0 && <p className="estado">No hay reportes en esta lista.</p>}
 

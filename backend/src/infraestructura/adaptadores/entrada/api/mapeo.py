@@ -60,7 +60,7 @@ def canasta_a_salida(c: CostoCanastaEnMercado) -> e.CanastaSalida:
         codigo_mercado=c.codigo_mercado, nombre_mercado=c.nombre_mercado, zona=c.zona,
         costo_total=c.costo_total, productos_cubiertos=c.productos_cubiertos,
         productos_pedidos=c.productos_pedidos, cobertura=round(c.cobertura, 2),
-        faltantes=c.faltantes,
+        faltantes=c.faltantes, productos_estimados=c.productos_estimados, nivel_precio=c.nivel_precio,
     )
 
 

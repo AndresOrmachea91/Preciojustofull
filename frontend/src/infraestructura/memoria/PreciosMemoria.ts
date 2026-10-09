@@ -139,6 +139,7 @@ export class PreciosMemoria implements PrecioRepositorio, CatalogoRepositorio, C
     for (const mercado of mercados) {
       let total = 0;
       let cubiertos = 0;
+      let estimados = 0;
       const faltantes: string[] = [];
 
       for (const item of items) {
@@ -151,6 +152,7 @@ export class PreciosMemoria implements PrecioRepositorio, CatalogoRepositorio, C
         }
         total += fila.centro * item.cantidad;
         cubiertos += 1;
+        if (fila.procedencia === "estimado") estimados += 1;
       }
       if (cubiertos === 0) continue;
 
@@ -163,6 +165,8 @@ export class PreciosMemoria implements PrecioRepositorio, CatalogoRepositorio, C
         productosPedidos: items.length,
         cobertura: cubiertos / items.length,
         faltantes,
+        productosEstimados: estimados,
+        nivelPrecio: mercado.nivelPrecio,
       });
     }
 

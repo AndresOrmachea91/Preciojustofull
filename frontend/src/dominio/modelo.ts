@@ -90,6 +90,10 @@ export interface CostoCanasta {
   readonly productosPedidos: number;
   readonly cobertura: number;
   readonly faltantes: readonly string[];
+  /** Cuántos de los productos cubiertos son estimados (nadie los midió en ese lugar). */
+  readonly productosEstimados: number;
+  /** Un total mayorista no compite con uno de consumidor final. */
+  readonly nivelPrecio: NivelPrecio;
 }
 
 /**
@@ -280,4 +284,54 @@ export function ubicacionValida(latitud: number | null, longitud: number | null)
   if (latitud === null && longitud === null) return true;
   if (latitud === null || longitud === null) return false;
   return latitud >= -16.7 && latitud <= -16.3 && longitud >= -68.35 && longitud <= -67.95;
+}
+
+// --- usuario: listas de compras ---------------------------------------------
+
+/** Un renglón: "2 arrobas de papa". La cantidad va en la presentación que piensa la persona. */
+export interface ItemLista {
+  readonly codigoProducto: string;
+  readonly cantidad: number;
+  /** Código de presentación: kilo, arroba, quintal, maple... */
+  readonly presentacion: string;
+}
+
+export interface ListaCompras {
+  readonly id: number;
+  readonly nombre: string;
+  readonly items: readonly ItemLista[];
+}
+
+/** Cuánto suma un renglón en la unidad base del producto (2 arrobas = 23 kg). */
+export function enUnidadBase(item: ItemLista, producto: Producto): number {
+  const presentacion = producto.presentaciones.find((p) => p.codigo === item.presentacion);
+  return item.cantidad * (presentacion?.factor ?? 1);
+}
+
+/** Plural de una presentación: arroba → arrobas, quintal → quintales, maple (30) → maples (30). */
+export function enPlural(nombre: string): string {
+  const [palabra, ...resto] = nombre.split(" ");
+  const plural = /[aeiou]$/i.test(palabra) ? `${palabra}s` : `${palabra}es`;
+  return [plural, ...resto].join(" ");
+}
+
+/** Texto legible de un renglón: "2 arrobas de Papa holandesa". */
+export function describirItem(item: ItemLista, producto: Producto | undefined): string {
+  const presentacion = producto?.presentaciones.find((p) => p.codigo === item.presentacion);
+  const nombre = (presentacion?.nombre ?? item.presentacion).toLowerCase();
+  return `${item.cantidad} ${item.cantidad === 1 ? nombre : enPlural(nombre)} de ${producto?.nombre ?? item.codigoProducto}`;
+}
+
+// --- vendedor ----------------------------------------------------------------
+
+/** Lo último que el vendedor publicó de un producto en su puesto. */
+export interface PrecioPublicado {
+  readonly codigoProducto: string;
+  readonly nombreProducto: string;
+  readonly monto: number;
+  readonly presentacion: string;
+  /** El mismo precio por kilo (o litro, o unidad): con eso se compara. */
+  readonly precioPorUnidadBase: number;
+  readonly unidadBase: UnidadBase;
+  readonly publicadoEn: string;
 }

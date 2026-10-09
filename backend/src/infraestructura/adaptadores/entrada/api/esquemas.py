@@ -94,6 +94,8 @@ class CanastaSalida(BaseModel):
     productos_pedidos: int
     cobertura: float
     faltantes: list[str] = Field(default_factory=list)
+    productos_estimados: int = 0
+    nivel_precio: Literal["mayorista", "minorista"] = "minorista"
 
 
 class ReporteEntrada(BaseModel):

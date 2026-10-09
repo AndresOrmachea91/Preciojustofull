@@ -8,7 +8,7 @@ import { PRESENTACIONES_POR_UNIDAD } from "@/dominio/modelo";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { VerMapa } from "@/aplicacion/casosUso/verMapa";
+import { VerMapa } from "@/aplicacion/casosUso/publico/verMapa";
 import { PreciosMemoria } from "@/infraestructura/memoria/PreciosMemoria";
 import { MapaPuntosVenta } from "@/ui/componentes/MapaPuntosVenta";
 import { PanelPunto } from "@/ui/componentes/PanelPunto";
