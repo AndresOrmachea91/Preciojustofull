@@ -77,7 +77,7 @@ _COLUMNAS_AGREGADAS = {
 # creación se corrige abajo con la fecha real que cada tabla ya tenía.
 _TABLAS_AUDITADAS = (
     "producto", "mercado", "observacion_precio", "corrida_fuente", "intento_fuente",
-    "usuario", "reporte_precio",
+    "usuario", "reporte_precio", "lista_compras", "item_lista_compras",
 )
 
 

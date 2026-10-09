@@ -19,6 +19,10 @@ class Fuente(str, Enum):
     MEDIOS = "medios"                 # reportes audiovisuales propios
     CIUDADANO = "ciudadano"           # reporte desde el celular
     CAMPO = "campo"                   # levantamiento verificado
+    # Lo declara el vendedor sobre SU puesto. Sabe su precio mejor que nadie,
+    # pero también le conviene mostrarlo bajo: vale más que un reporte suelto
+    # y menos que una medición de campo.
+    VENDEDOR = "vendedor"
 
     @property
     def confianza_base(self) -> NivelConfianza:
@@ -29,6 +33,7 @@ class Fuente(str, Enum):
             Fuente.PRENSA: NivelConfianza.MEDIO,
             Fuente.MEDIOS: NivelConfianza.MEDIO,
             Fuente.CIUDADANO: NivelConfianza.BAJO,
+            Fuente.VENDEDOR: NivelConfianza.MEDIO,
         }[self]
 
     @property

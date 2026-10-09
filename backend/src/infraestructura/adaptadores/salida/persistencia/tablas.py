@@ -221,3 +221,30 @@ class ReporteTabla(Base, Auditable):
     motivo_rechazo = Column(String(512), nullable=True)
 
     __table_args__ = (Index("ix_reporte_estado", "estado", "creado_en"),)
+
+
+
+class ListaComprasTabla(Base, Auditable):
+    """Listas de compras de cada usuario."""
+
+    __tablename__ = "lista_compras"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    id_usuario = Column(Integer, ForeignKey("usuario.id"), nullable=False)
+    nombre = Column(String(120), nullable=False)
+
+    __table_args__ = (Index("ix_lista_usuario", "id_usuario"),)
+
+
+class ItemListaTabla(Base, Auditable):
+    """Un renglón de una lista: producto, cantidad y presentación (2 arrobas de papa)."""
+
+    __tablename__ = "item_lista_compras"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    id_lista = Column(Integer, ForeignKey("lista_compras.id"), nullable=False)
+    codigo_producto = Column(String(64), nullable=False)
+    cantidad = Column(Float, nullable=False)
+    presentacion = Column(String(16), nullable=False)
+
+    __table_args__ = (Index("ix_item_lista", "id_lista"),)

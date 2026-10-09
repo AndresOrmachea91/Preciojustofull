@@ -162,3 +162,18 @@ class PuntoVentaConDependientes(ErrorDominio):
     def __init__(self, codigo: str, motivo: str):
         self.codigo = codigo
         super().__init__(f"No se puede eliminar {codigo}: {motivo}")
+
+
+# --- vendedor y listas de compras -------------------------------------------
+
+class SinPuntoVenta(ErrorDominio):
+    """El vendedor todavía no tiene puesto asignado: no hay dónde publicar."""
+
+    def __init__(self):
+        super().__init__("Todavía no tiene un puesto asignado. Pídale al administrador que se lo asigne.")
+
+
+class ListaNoEncontrada(ErrorDominio):
+    def __init__(self, id_lista: int):
+        self.id_lista = id_lista
+        super().__init__(f"No existe la lista {id_lista}")

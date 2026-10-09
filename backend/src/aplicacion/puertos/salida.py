@@ -12,7 +12,9 @@ eso perder una fuente no obliga a tocar nada más.
 from __future__ import annotations
 from typing import Protocol, runtime_checkable
 
-from src.dominio.modelo import EstadoReporte, Mercado, Observacion, Producto, Reporte, Usuario
+from src.dominio.modelo import (
+    EstadoReporte, Fuente, ListaCompras, Mercado, Observacion, Producto, Reporte, Usuario,
+)
 from src.dominio.valor import Periodo
 
 
@@ -135,4 +137,30 @@ class EmisorTokens(Protocol):
     def emitir(self, usuario: Usuario) -> str: ...
     def leer(self, token: str) -> int | None:
         """Id del usuario del token, o None si es inválido o venció."""
+        ...
+
+
+# --- usuario y vendedor -------------------------------------------------------
+
+@runtime_checkable
+class LectorReportesDeAutor(Protocol):
+    def listar_de_autor(self, id_autor: int) -> list[Reporte]:
+        """Los reportes de una persona, del más nuevo al más viejo."""
+        ...
+
+
+@runtime_checkable
+class LectorPublicacionesPuntoVenta(Protocol):
+    def publicadas_en(self, codigo_mercado: str, fuente: Fuente) -> list[Observacion]:
+        """Lo que una fuente publicó sobre un punto de venta, del más nuevo al más viejo."""
+        ...
+
+
+@runtime_checkable
+class RepositorioListas(Protocol):
+    def obtener(self, id_lista: int) -> ListaCompras | None: ...
+    def listar_de(self, id_usuario: int) -> list[ListaCompras]: ...
+    def guardar(self, lista: ListaCompras) -> ListaCompras: ...
+    def eliminar(self, id_lista: int) -> None:
+        """Borrado LÓGICO, como todo lo auditado."""
         ...

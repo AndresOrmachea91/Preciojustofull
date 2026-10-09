@@ -6,11 +6,12 @@ from src.dominio.modelo.bloqueo import Bloqueo, Ruta
 from src.dominio.modelo.usuario import PERMISOS_POR_ROL, Permiso, Rol, Usuario
 from src.dominio.modelo.reporte import EstadoReporte, Reporte
 from src.dominio.modelo.presentacion import Presentacion
+from src.dominio.modelo.lista_compras import ItemLista, ListaCompras
 
 __all__ = [
     "Producto", "Categoria", "Mercado", "TipoPuntoVenta",
     "Observacion", "Fuente", "NivelPrecio",
     "PrecioConsolidado", "RangoPrecio", "Bloqueo", "Ruta",
-    "PERMISOS_POR_ROL", "Permiso", "Rol", "Usuario", "EstadoReporte", "Reporte", "Presentacion",
+    "PERMISOS_POR_ROL", "Permiso", "Rol", "Usuario", "EstadoReporte", "Reporte", "Presentacion", "ItemLista", "ListaCompras",
 ]
 

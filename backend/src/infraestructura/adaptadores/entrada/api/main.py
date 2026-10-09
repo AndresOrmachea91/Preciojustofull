@@ -18,7 +18,8 @@ from src.infraestructura.adaptadores.entrada.api.rutas.administracion import (
     catalogo as admin_catalogo, reportes as admin_reportes, usuarios as admin_usuarios,
 )
 from src.infraestructura.adaptadores.entrada.api.rutas.publico import canasta, catalogo, precios
-from src.infraestructura.adaptadores.entrada.api.rutas.usuario import reportes
+from src.infraestructura.adaptadores.entrada.api.rutas.usuario import listas, reportes
+from src.infraestructura.adaptadores.entrada.api.rutas.vendedor import precios as vendedor_precios
 from src.infraestructura.adaptadores.entrada.api.seguridad import ActorPorPeticion, manejar_error_dominio
 from src.configuracion import config
 from src.dominio.excepciones import ErrorDominio
@@ -77,6 +78,9 @@ app.include_router(canasta.router, prefix="/api/v1")
 app.include_router(cuentas.router, prefix="/api/v1")
 # Usuario.
 app.include_router(reportes.router, prefix="/api/v1")
+app.include_router(listas.router, prefix="/api/v1")
+# Vendedor: todo bajo /api/v1/vendedor.
+app.include_router(vendedor_precios.router, prefix="/api/v1")
 # Administrador: todo bajo /api/v1/admin.
 app.include_router(admin_usuarios.router, prefix="/api/v1")
 app.include_router(admin_reportes.router, prefix="/api/v1")

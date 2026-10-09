@@ -226,6 +226,19 @@ class ObservacionesPostgres(_Base):
                     consulta = consulta.where(ObservacionTabla.dia == periodo.dia)
             return [_a_observacion(f) for f in s.scalars(consulta).all()]
 
+    def publicadas_en(self, codigo_mercado: str, fuente: Fuente) -> list[Observacion]:
+        with sesion_de(self._fabrica) as s:
+            consulta = (
+                select(ObservacionTabla)
+                .where(
+                    ObservacionTabla.codigo_mercado == codigo_mercado,
+                    ObservacionTabla.fuente == fuente.value,
+                    ObservacionTabla.eliminado.is_(False),
+                )
+                .order_by(ObservacionTabla.capturada_en.desc(), ObservacionTabla.id.desc())
+            )
+            return [_a_observacion(f) for f in s.scalars(consulta).all()]
+
     def guardar_varias(self, observaciones: list[Observacion]) -> int:
         """
         Upsert por clave natural. Devuelve cuántos hechos NUEVOS entraron.

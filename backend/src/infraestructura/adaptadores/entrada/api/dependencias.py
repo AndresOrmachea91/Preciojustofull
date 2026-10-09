@@ -13,10 +13,12 @@ import logging
 from src.infraestructura.adaptadores.salida.memoria.cuentas import (
     ReportesEnMemoria, UsuariosEnMemoria,
 )
+from src.infraestructura.adaptadores.salida.memoria.listas import ListasEnMemoria
 from src.infraestructura.adaptadores.salida.memoria.repositorios import datos_de_ejemplo
 from src.infraestructura.adaptadores.salida.persistencia.cuentas import (
     ReportesPostgres, UsuariosPostgres,
 )
+from src.infraestructura.adaptadores.salida.persistencia.listas import ListasPostgres
 from src.infraestructura.adaptadores.salida.persistencia.repositorios import (
     MercadosPostgres, ObservacionesPostgres, ProductosPostgres,
 )
@@ -35,7 +37,10 @@ from src.aplicacion.casos_uso.administracion.gestionar_catalogo import (
     GestionarProductos, GestionarPuntosVenta,
 )
 from src.aplicacion.casos_uso.administracion.validar_reportes import ValidarReportes
+from src.aplicacion.casos_uso.usuario.listas_compras import GestionarListas
+from src.aplicacion.casos_uso.usuario.mis_reportes import MisReportes
 from src.aplicacion.casos_uso.usuario.reportar_precio import RegistrarReporteCiudadano
+from src.aplicacion.casos_uso.vendedor.publicar_precio import MisPrecios, PublicarPrecioPropio
 from src.configuracion import config
 from src.dominio.modelo import Rol
 from src.dominio.servicio.motor_fusion import MotorFusion
@@ -80,6 +85,12 @@ def _cuentas():
     if fabrica is None:
         return UsuariosEnMemoria(), ReportesEnMemoria()
     return UsuariosPostgres(fabrica), ReportesPostgres(fabrica)
+
+
+@lru_cache
+def _listas():
+    fabrica = _fabrica()
+    return ListasEnMemoria() if fabrica is None else ListasPostgres(fabrica)
 
 
 @lru_cache
@@ -156,6 +167,28 @@ def caso_gestionar_puntos_venta() -> GestionarPuntosVenta:
 
 def caso_gestionar_productos() -> GestionarProductos:
     return GestionarProductos(_repositorios()[0])
+
+
+# --- usuario -------------------------------------------------------------------
+
+def caso_mis_reportes() -> MisReportes:
+    return MisReportes(_cuentas()[1])
+
+
+def caso_gestionar_listas() -> GestionarListas:
+    return GestionarListas(_listas(), _repositorios()[0], caso_calcular_canasta())
+
+
+# --- vendedor ------------------------------------------------------------------
+
+def caso_publicar_precio() -> PublicarPrecioPropio:
+    p, m, o = _repositorios()
+    return PublicarPrecioPropio(p, m, o)
+
+
+def caso_mis_precios() -> MisPrecios:
+    p, m, o = _repositorios()
+    return MisPrecios(p, m, o)
 
 
 def asegurar_admin_inicial() -> None:

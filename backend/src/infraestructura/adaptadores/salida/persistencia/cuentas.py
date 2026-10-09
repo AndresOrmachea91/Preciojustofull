@@ -114,6 +114,15 @@ class ReportesPostgres(_Base):
         with sesion_de(self._fabrica) as s:
             return [_a_reporte(f) for f in s.scalars(consulta)]
 
+    def listar_de_autor(self, id_autor: int) -> list[Reporte]:
+        consulta = (
+            select(ReporteTabla)
+            .where(ReporteTabla.id_autor == id_autor, ReporteTabla.eliminado.is_(False))
+            .order_by(ReporteTabla.creado_en.desc(), ReporteTabla.id.desc())
+        )
+        with sesion_de(self._fabrica) as s:
+            return [_a_reporte(f) for f in s.scalars(consulta)]
+
     def guardar(self, reporte: Reporte) -> Reporte:
         with sesion_de(self._fabrica) as s:
             fila = s.get(ReporteTabla, reporte.id) if reporte.id is not None else None

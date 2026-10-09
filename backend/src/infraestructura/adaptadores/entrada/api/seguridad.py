@@ -69,6 +69,8 @@ _ESTADO_POR_ERROR: list[tuple[type[ex.ErrorDominio], int]] = [
     (ex.ReporteNoEncontrado, status.HTTP_404_NOT_FOUND),
     (ex.ProductoNoEncontrado, status.HTTP_404_NOT_FOUND),
     (ex.MercadoNoEncontrado, status.HTTP_404_NOT_FOUND),
+    (ex.ListaNoEncontrada, status.HTTP_404_NOT_FOUND),
+    (ex.SinPuntoVenta, status.HTTP_409_CONFLICT),
     (ex.CorreoYaRegistrado, status.HTTP_409_CONFLICT),
     (ex.ReporteYaRevisado, status.HTTP_409_CONFLICT),
     (ex.SinAdministradores, status.HTTP_409_CONFLICT),

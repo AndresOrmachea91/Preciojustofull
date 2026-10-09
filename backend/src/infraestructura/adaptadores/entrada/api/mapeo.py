@@ -3,7 +3,10 @@ from __future__ import annotations
 
 from src.infraestructura.adaptadores.entrada.api import esquemas as e
 from src.aplicacion.puertos.entrada import CostoCanastaEnMercado, PrecioEnMercado
-from src.dominio.modelo import Mercado, PERMISOS_POR_ROL, PrecioConsolidado, Producto, Reporte, Usuario
+from src.aplicacion.casos_uso.vendedor.publicar_precio import PrecioPublicado
+from src.dominio.modelo import (
+    ListaCompras, Mercado, PERMISOS_POR_ROL, PrecioConsolidado, Producto, Reporte, Usuario,
+)
 
 
 def precio_a_salida(p: PrecioConsolidado) -> e.PrecioSalida:
@@ -90,4 +93,23 @@ def reporte_a_salida(r: Reporte) -> e.ReporteRevisionSalida:
         id_revisor=r.id_revisor,
         revisado_en=r.revisado_en,
         motivo_rechazo=r.motivo_rechazo,
+    )
+
+
+
+def lista_a_salida(l: ListaCompras) -> e.ListaSalida:
+    return e.ListaSalida(
+        id=l.id, nombre=l.nombre, creado_en=l.creado_en,
+        items=[
+            e.ItemListaSalida(codigo_producto=i.codigo_producto, cantidad=i.cantidad, presentacion=i.presentacion.value)
+            for i in l.items
+        ],
+    )
+
+
+def precio_publicado_a_salida(p: PrecioPublicado) -> e.PrecioPublicadoSalida:
+    return e.PrecioPublicadoSalida(
+        codigo_producto=p.producto.codigo, nombre_producto=p.producto.nombre, monto=p.monto,
+        presentacion=p.presentacion, precio_por_unidad_base=round(p.precio_por_unidad_base, 4),
+        unidad_base=p.producto.unidad_base.value, publicado_en=p.publicado_en,
     )

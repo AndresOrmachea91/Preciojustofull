@@ -46,6 +46,10 @@ class ReportesEnMemoria:
         todos = sorted(self._datos.values(), key=lambda r: r.creado_en)
         return todos if estado is None else [r for r in todos if r.estado is estado]
 
+    def listar_de_autor(self, id_autor: int) -> list[Reporte]:
+        propios = [r for r in self._datos.values() if r.id_autor == id_autor]
+        return sorted(propios, key=lambda r: (r.creado_en, r.id), reverse=True)
+
     def guardar(self, reporte: Reporte) -> Reporte:
         if reporte.id is None:
             reporte = replace(reporte, id=self._siguiente)

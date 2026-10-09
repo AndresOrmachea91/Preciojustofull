@@ -72,6 +72,10 @@ class ObservacionesEnMemoria:
             salida = [o for o in salida if o.periodo == periodo]
         return salida
 
+    def publicadas_en(self, codigo_mercado: str, fuente: Fuente) -> list[Observacion]:
+        propias = [o for o in self._datos if o.codigo_mercado == codigo_mercado and o.fuente is fuente]
+        return sorted(propias, key=lambda o: o.capturada_en, reverse=True)
+
     def guardar_varias(self, observaciones: list[Observacion]) -> int:
         """Misma regla que el adaptador persistente: un hecho, una fila; otro valor, una revisión."""
         conocidas = {(o.clave_natural, o.precio.monto) for o in self._datos}

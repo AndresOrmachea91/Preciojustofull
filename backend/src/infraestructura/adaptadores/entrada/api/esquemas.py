@@ -212,3 +212,48 @@ class ProductoEntrada(BaseModel):
 
 class NuevoProductoEntrada(ProductoEntrada):
     codigo: str | None = Field(default=None, pattern=r"^[a-z0-9_]{2,64}$")
+
+
+# --- vendedor -------------------------------------------------------------------
+
+class PublicarPrecioEntrada(BaseModel):
+    codigo_producto: str
+    monto: float = Field(gt=0, le=100000)
+    presentacion: PresentacionTexto
+
+
+class PrecioPublicadoSalida(BaseModel):
+    codigo_producto: str
+    nombre_producto: str
+    monto: float
+    presentacion: str
+    # El mismo precio por kilo (o litro, o unidad): con eso se compara.
+    precio_por_unidad_base: float
+    unidad_base: str
+    publicado_en: datetime
+
+
+# --- usuario: listas de compras -------------------------------------------------
+
+class ItemListaEntrada(BaseModel):
+    codigo_producto: str
+    cantidad: float = Field(gt=0, le=10000)
+    presentacion: PresentacionTexto
+
+
+class ListaEntrada(BaseModel):
+    nombre: str = Field(min_length=1, max_length=120)
+    items: list[ItemListaEntrada] = Field(default_factory=list, max_length=60)
+
+
+class ItemListaSalida(BaseModel):
+    codigo_producto: str
+    cantidad: float
+    presentacion: str
+
+
+class ListaSalida(BaseModel):
+    id: int
+    nombre: str
+    items: list[ItemListaSalida]
+    creado_en: datetime | None = None
