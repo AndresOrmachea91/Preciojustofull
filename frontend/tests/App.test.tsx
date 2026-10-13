@@ -9,10 +9,11 @@
  * componente -> caso de uso -> puerto -> adaptador sigue entregando datos.
  * Si la actualización hubiera roto el render, esta prueba lo detecta.
  */
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import App from "@/ui/App";
+import { elegirProducto } from "./ayudas";
 
 afterEach(cleanup);
 
@@ -42,7 +43,7 @@ describe("App sobre React 19", () => {
 
     await waitFor(() => expect(screen.getByText("Mercado Villa Fátima")).toBeDefined());
 
-    fireEvent.click(screen.getByRole("button", { name: "Arroz de primera" }));
+    await elegirProducto("Arroz de primera");
 
     await waitFor(() => {
       const tarjetas = document.querySelectorAll(".tarjeta");

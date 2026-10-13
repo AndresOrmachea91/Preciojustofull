@@ -1,18 +1,24 @@
 import { useState, type FormEvent } from "react";
 
 import type { Usuario } from "@/dominio/modelo";
+import { Icono } from "@/ui/componentes/Iconos";
+import { MensajeError, textoDeError } from "@/ui/componentes/Mensajes";
 import type { EstadoSesion } from "@/ui/hooks/useSesion";
 
-type Modo = "ingresar" | "registrarse";
+export type Modo = "ingresar" | "registrarse";
 
+/** Ingresar o crear una cuenta. El modo lo da la ruta (#/ingresar, #/registrarse). */
 export function PaginaIngreso({
   sesion,
+  modo,
+  cambiarModo,
   alIngresar,
 }: {
   sesion: EstadoSesion;
+  modo: Modo;
+  cambiarModo: (modo: Modo) => void;
   alIngresar: (usuario: Usuario) => void;
 }) {
-  const [modo, setModo] = useState<Modo>("ingresar");
   const [correo, setCorreo] = useState("");
   const [nombre, setNombre] = useState("");
   const [contrasena, setContrasena] = useState("");
@@ -30,7 +36,7 @@ export function PaginaIngreso({
           : await sesion.registrarse({ correo, nombre, contrasena });
       alIngresar(usuario);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo completar la operación");
+      setError(textoDeError(e));
     } finally {
       setEnviando(false);
     }
@@ -38,9 +44,19 @@ export function PaginaIngreso({
 
   return (
     <section className="formulario-cuenta" aria-labelledby="titulo-cuenta">
-      <h2 id="titulo-cuenta" className="seccion">
-        {modo === "ingresar" ? "Ingresar" : "Crear una cuenta"}
-      </h2>
+      <div className="formulario-cuenta__cabeza">
+        <span className="formulario-cuenta__icono" aria-hidden="true">
+          <Icono nombre={modo} tamano={22} />
+        </span>
+        <div>
+          <h2 id="titulo-cuenta">{modo === "ingresar" ? "Ingresar" : "Crear una cuenta"}</h2>
+          <p className="tenue">
+            {modo === "ingresar"
+              ? "Para sus listas, sus reportes y su puesto."
+              : "Gratis. Arme listas de compras y reporte precios."}
+          </p>
+        </div>
+      </div>
       <form className="formulario" onSubmit={(e) => void enviar(e)}>
         {modo === "registrarse" && (
           <label className="campo">
@@ -71,11 +87,7 @@ export function PaginaIngreso({
           {modo === "registrarse" && <small className="tenue">Al menos 8 caracteres, con letras y números.</small>}
         </label>
 
-        {error && (
-          <p className="estado estado--error" role="alert">
-            {error}
-          </p>
-        )}
+        <MensajeError texto={error} />
 
         <button type="submit" className="boton" disabled={enviando}>
           {enviando ? "Enviando…" : modo === "ingresar" ? "Ingresar" : "Crear cuenta"}
@@ -88,7 +100,7 @@ export function PaginaIngreso({
           type="button"
           className="enlace"
           onClick={() => {
-            setModo(modo === "ingresar" ? "registrarse" : "ingresar");
+            cambiarModo(modo === "ingresar" ? "registrarse" : "ingresar");
             setError(null);
           }}
         >

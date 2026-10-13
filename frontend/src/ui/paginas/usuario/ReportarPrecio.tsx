@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { presentacionBase } from "@/dominio/modelo";
 import type { Contenedor } from "@/infraestructura/contenedor";
 import { MensajeError, textoDeError } from "@/ui/componentes/Mensajes";
+import { SelectorProducto } from "@/ui/componentes/SelectorProducto";
 import { useCatalogo } from "@/ui/hooks/useCatalogo";
 
 /** Reportar un precio que se vio. Queda pendiente hasta que un administrador lo revisa. */
@@ -19,6 +20,10 @@ export function ReportarPrecio({ contenedor, alEnviar }: { contenedor: Contenedo
   async function enviar(evento: FormEvent) {
     evento.preventDefault();
     setError(null);
+    if (!codigoProducto) {
+      setError("Elija un producto de la lista");
+      return;
+    }
     try {
       await contenedor.reportarPrecio.reportar({
         codigoProducto,
@@ -39,24 +44,15 @@ export function ReportarPrecio({ contenedor, alEnviar }: { contenedor: Contenedo
         observación más.
       </p>
       <div className="formulario__fila">
-        <label className="campo">
-          <span>Producto</span>
-          <select
-            required
-            value={codigoProducto}
-            onChange={(e) => {
-              setCodigoProducto(e.target.value);
-              setPresentacion("");
-            }}
-          >
-            <option value="">Elegir…</option>
-            {productos.map((p) => (
-              <option key={p.codigo} value={p.codigo}>
-                {p.nombre}
-              </option>
-            ))}
-          </select>
-        </label>
+        <SelectorProducto
+          productos={productos}
+          valor={codigoProducto}
+          etiqueta="Producto"
+          onElegir={(codigo) => {
+            setCodigoProducto(codigo);
+            setPresentacion("");
+          }}
+        />
         <label className="campo">
           <span>Dónde lo vio</span>
           <select required value={codigoMercado} onChange={(e) => setCodigoMercado(e.target.value)}>

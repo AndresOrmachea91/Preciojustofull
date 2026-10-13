@@ -22,7 +22,7 @@ export function Pestanas<T extends string>({ pestanas, activa, onCambiar }: Prop
             type="button"
             role="tab"
             aria-selected={activa === p.id}
-            className={`selector__opcion${activa === p.id ? " selector__opcion--activa" : ""}`}
+            className="pestanas__pestana"
             onClick={() => onCambiar(p.id)}
           >
             {p.texto}

@@ -20,19 +20,8 @@ body {
   line-height: 1.55;
 }
 
-.app { max-width: 720px; margin: 0 auto; padding: 24px 16px 64px; }
 
-.app__cabecera h1 { margin: 0; font-size: 1.9rem; color: var(--tinta); letter-spacing: -0.02em; }
-.app__cabecera p { margin: 4px 0 20px; color: var(--tenue); }
 
-.selector { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
-.selector__opcion {
-  padding: 8px 16px; border-radius: 999px; border: 1px solid var(--borde);
-  background: var(--superficie); color: var(--texto); font-size: 0.92rem;
-  cursor: pointer;
-}
-.selector__opcion--activa { background: var(--tinta); border-color: var(--tinta); color: #fff; }
-.selector__opcion:focus-visible { outline: 2px solid var(--jade); outline-offset: 2px; }
 
 .ahorro {
   background: var(--jade-claro); border-radius: 10px;
@@ -79,7 +68,6 @@ body {
 
 
 /* --- mapa y panel ------------------------------------------------------- */
-.app { max-width: 960px; }
 .mapa-y-panel { display: grid; grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr); gap: 12px; margin: 16px 0 24px; }
 @media (max-width: 700px) { .mapa-y-panel { grid-template-columns: 1fr; } }
 .mapa { height: 460px; border-radius: 12px; border: 1px solid var(--borde); overflow: hidden; background: #dfe7e3; }
@@ -116,14 +104,10 @@ body {
 }
 
 /* --- cuenta, formularios y administración ------------------------------- */
-.app__cabecera { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
-.app__marca { color: inherit; text-decoration: none; }
 .app__lema { margin: 0 0 20px; color: var(--tenue); }
-.cuenta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.cuenta__nombre { font-size: 0.9rem; }
-.cuenta__rol { color: var(--tenue); }
 
 .boton {
+  display: inline-block; text-decoration: none; text-align: center;
   padding: 8px 16px; border-radius: 8px; border: 1px solid var(--tinta);
   background: var(--tinta); color: #fff; font: inherit; font-size: 0.92rem; cursor: pointer;
 }
@@ -132,7 +116,6 @@ body {
 .boton:focus-visible, .enlace:focus-visible { outline: 2px solid var(--jade); outline-offset: 2px; }
 .enlace { background: none; border: 0; padding: 0; color: var(--jade); font: inherit; text-decoration: underline; cursor: pointer; }
 
-.formulario-cuenta { max-width: 400px; }
 .formulario { display: flex; flex-direction: column; gap: 14px; margin-bottom: 16px; }
 .formulario--recuadro { background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; padding: 16px 18px; }
 .formulario__fila { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -146,7 +129,6 @@ body {
 .estado.estado--error { margin: 0; }
 .aviso { background: var(--jade-claro); color: var(--jade); border-radius: 10px; padding: 10px 14px; margin: 12px 0; font-size: 0.92rem; }
 
-.pestanas { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
 .tabla-envoltura { overflow-x: auto; margin-top: 16px; background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; }
 .tabla { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 .tabla th, .tabla td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--borde); vertical-align: middle; }
@@ -173,19 +155,7 @@ body {
 .campo--grupo { border: 1px solid var(--borde); border-radius: 8px; padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 6px 16px; }
 .campo--grupo legend { padding: 0 4px; font-size: 0.9rem; }
 .casilla { display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem; }
-.presentaciones { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: -8px 0 16px; }
-.selector__opcion--chica { padding: 4px 12px; font-size: 0.82rem; }
 
-/* --- navegación por rol --------------------------------------------------- */
-.navegacion { display: flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--superficie); border: 1px solid var(--borde); }
-.navegacion__enlace { border: 0; background: none; color: var(--tenue); font: inherit; font-size: 0.88rem; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
-.navegacion__enlace:hover { color: var(--tinta); }
-.navegacion__enlace--activo { background: var(--jade-claro); color: var(--tinta); font-weight: 600; }
-.navegacion__enlace:focus-visible { outline: 2px solid var(--jade); outline-offset: 1px; }
-@media (max-width: 700px) {
-  .app__cabecera { align-items: flex-start; }
-  .navegacion { width: 100%; overflow-x: auto; }
-}
 
 /* --- secciones de usuario y vendedor -------------------------------------- */
 .subseccion { font-size: 1rem; color: var(--tinta); margin: 24px 0 8px; }
@@ -208,3 +178,97 @@ body {
 .ranking__total { font-weight: 600; white-space: nowrap; }
 .ranking__faltan { color: var(--ambar); font-size: 0.82rem; }
 .ranking__estimados { color: var(--ambar); font-size: 0.82rem; }
+
+/* --- estructura: barra lateral a la izquierda ------------------------------- */
+.app { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100vh; }
+.app__contenido { width: 100%; max-width: 1040px; padding: 28px 32px 64px; }
+.icono { flex: none; }
+
+.lateral {
+  position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column;
+  background: var(--superficie); border-right: 1px solid var(--borde); padding: 18px 12px;
+}
+.lateral__marca { display: flex; align-items: center; justify-content: space-between; padding: 2px 8px 20px; }
+.lateral__titulo { margin: 0; font-size: inherit; }
+.lateral__logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.15rem; color: var(--tinta); text-decoration: none; letter-spacing: -0.01em; }
+.lateral__sello { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 9px; background: var(--tinta); color: #fff; }
+.lateral__menu { display: none; border: 1px solid var(--borde); background: var(--superficie); color: var(--tinta); border-radius: 8px; padding: 6px; cursor: pointer; }
+.lateral__cuerpo { display: flex; flex-direction: column; flex: 1; gap: 16px; }
+.lateral__grupo { display: flex; flex-direction: column; gap: 2px; }
+.lateral__enlace {
+  display: flex; align-items: center; gap: 12px; width: 100%; padding: 9px 12px; border: 0; border-radius: 8px;
+  background: none; color: var(--tenue); font: inherit; font-size: 0.93rem; text-align: left; text-decoration: none; cursor: pointer;
+}
+.lateral__enlace:hover { background: var(--crema); color: var(--tinta); }
+.lateral__enlace--activo { background: var(--jade-claro); color: var(--tinta); font-weight: 600; }
+.lateral__enlace--activo .icono { color: var(--jade); }
+.lateral__enlace:focus-visible, .lateral__logo:focus-visible, .lateral__menu:focus-visible { outline: 2px solid var(--jade); outline-offset: 1px; }
+.lateral__cuenta { margin-top: auto; border-top: 1px solid var(--borde); padding-top: 12px; display: flex; flex-direction: column; gap: 4px; }
+.lateral__usuario { display: flex; align-items: center; gap: 10px; padding: 4px 12px 8px; }
+.lateral__usuario strong { display: block; font-size: 0.9rem; color: var(--texto); }
+.lateral__usuario small { display: block; color: var(--tenue); font-size: 0.78rem; }
+.lateral__avatar { display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: 9px; background: var(--jade-claro); color: var(--jade); font-weight: 700; }
+
+/* En el celular la barra va arriba y el menú se despliega con el botón. */
+@media (max-width: 800px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .app__contenido { padding: 20px 16px 64px; }
+  .lateral { position: sticky; z-index: 1200; height: auto; padding: 10px 16px; border-right: 0; border-bottom: 1px solid var(--borde); }
+  .lateral__marca { padding: 0; }
+  .lateral__menu { display: grid; place-items: center; }
+  .lateral__cuerpo { display: none; padding-top: 12px; }
+  .lateral--abierta .lateral__cuerpo { display: flex; }
+}
+
+/* --- elegir producto: caja de búsqueda con lista -------------------------- */
+.consulta { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 16px 24px; margin-bottom: 20px; }
+.consulta .buscador { flex: 1 1 300px; max-width: 440px; }
+.consulta__presentacion { display: flex; flex-direction: column; gap: 4px; }
+.buscador { display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; }
+.buscador__etiqueta { font-size: 0.9rem; }
+.buscador__campo { position: relative; }
+.buscador__caja {
+  display: flex; align-items: center; gap: 8px; padding: 0 10px;
+  border: 1px solid var(--borde); border-radius: 8px; background: var(--superficie); color: var(--tenue);
+}
+.buscador__caja:focus-within { border-color: var(--jade); box-shadow: 0 0 0 3px var(--jade-claro); }
+.buscador__caja input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; padding: 7px 0; font: inherit; color: var(--texto); }
+.buscador__lista {
+  position: absolute; z-index: 1100; top: calc(100% + 4px); left: 0; right: 0; margin: 0; padding: 4px; list-style: none;
+  max-height: 320px; overflow-y: auto; background: var(--superficie); border: 1px solid var(--borde);
+  border-radius: 10px; box-shadow: 0 12px 32px rgba(14, 59, 50, 0.14);
+}
+.buscador__grupo { padding: 10px 10px 4px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--tenue); }
+.buscador__opcion { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 6px; color: var(--texto); cursor: pointer; }
+.buscador__opcion--activa { background: var(--crema); }
+.buscador__opcion[aria-selected="true"] { color: var(--jade); font-weight: 600; }
+.buscador__vacio { padding: 10px; color: var(--tenue); }
+
+/* --- grupos de botones (una opción a la vez) y pestañas --------------------- */
+.segmentado { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--borde); border-radius: 8px; overflow: hidden; background: var(--superficie); }
+.segmentado--margen { margin-bottom: 16px; }
+.segmentado__opcion {
+  border: 0; border-right: 1px solid var(--borde); background: none; padding: 8px 14px;
+  font: inherit; font-size: 0.88rem; color: var(--texto); cursor: pointer;
+}
+.segmentado__opcion:last-child { border-right: 0; }
+.segmentado__opcion:hover { background: var(--crema); }
+.segmentado__opcion[aria-pressed="true"] { background: var(--tinta); color: #fff; }
+.segmentado__opcion:focus-visible { outline: 2px solid var(--jade); outline-offset: -2px; }
+
+.pestanas { display: flex; gap: 4px; margin-bottom: 18px; border-bottom: 1px solid var(--borde); overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+.pestanas__pestana {
+  margin-bottom: -1px; padding: 10px 14px; border: 0; border-bottom: 2px solid transparent; background: none;
+  font: inherit; font-size: 0.92rem; color: var(--tenue); white-space: nowrap; cursor: pointer;
+}
+.pestanas__pestana:hover { color: var(--tinta); }
+.pestanas__pestana[aria-selected="true"] { color: var(--tinta); border-bottom-color: var(--jade); font-weight: 600; }
+.pestanas__pestana:focus-visible { outline: 2px solid var(--jade); outline-offset: -2px; }
+
+/* --- ingresar y crear cuenta -------------------------------------------------- */
+.formulario-cuenta { max-width: 420px; margin-top: 8px; padding: 24px; background: var(--superficie); border: 1px solid var(--borde); border-radius: 14px; }
+.formulario-cuenta__cabeza { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+.formulario-cuenta__cabeza h2 { margin: 0; font-size: 1.3rem; color: var(--tinta); }
+.formulario-cuenta__cabeza p { margin: 2px 0 0; }
+.formulario-cuenta__icono { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 12px; background: var(--jade-claro); color: var(--jade); }
+.formulario-cuenta .boton[type="submit"] { width: 100%; padding: 10px; }

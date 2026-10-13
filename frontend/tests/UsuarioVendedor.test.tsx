@@ -4,10 +4,11 @@
  * Lo que hacen el usuario (listas, reportes) y el vendedor (precios de su
  * puesto) sobre la interfaz, con los adaptadores en memoria.
  */
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import App from "@/ui/App";
+import { elegirProducto } from "./ayudas";
 
 beforeEach(() => {
   window.location.hash = "";
@@ -16,7 +17,7 @@ afterEach(cleanup);
 
 async function ingresar(correo: string, contrasena: string) {
   render(<App />);
-  fireEvent.click(await screen.findByRole("button", { name: "Ingresar" }));
+  fireEvent.click(await screen.findByRole("link", { name: "Ingresar" }));
   fireEvent.change(screen.getByLabelText("Correo"), { target: { value: correo } });
   fireEvent.change(screen.getByLabelText("Contraseña"), { target: { value: contrasena } });
   fireEvent.submit(screen.getByRole("button", { name: "Ingresar" }).closest("form")!);
@@ -26,12 +27,12 @@ async function ingresar(correo: string, contrasena: string) {
 describe("usuario", () => {
   it("arma una lista en arrobas y ve dónde le conviene comprarla", async () => {
     await ingresar("vecino@correo.bo", "vecino1234");
-    fireEvent.click(screen.getByRole("button", { name: "Mis listas y reportes" }));
+    fireEvent.click(screen.getByRole("link", { name: "Mis listas y reportes" }));
     fireEvent.click(await screen.findByRole("button", { name: "Nueva lista" }));
 
     const form = screen.getByRole("form", { name: "Nueva lista" });
     fireEvent.change(within(form).getByLabelText("Nombre de la lista"), { target: { value: "Compra del mes" } });
-    fireEvent.change(await within(form).findByLabelText("Agregar un producto"), { target: { value: "papa" } });
+    await elegirProducto("Papa holandesa", "Agregar un producto", form);
     fireEvent.change(within(form).getByLabelText("Cantidad de Papa holandesa"), { target: { value: "2" } });
     fireEvent.change(within(form).getByLabelText("Presentación de Papa holandesa"), { target: { value: "arroba" } });
     fireEvent.submit(form);
@@ -50,12 +51,11 @@ describe("usuario", () => {
 
   it("reporta un precio y lo ve pendiente en sus reportes", async () => {
     await ingresar("vecino@correo.bo", "vecino1234");
-    fireEvent.click(screen.getByRole("button", { name: "Mis listas y reportes" }));
+    fireEvent.click(screen.getByRole("link", { name: "Mis listas y reportes" }));
     fireEvent.click(screen.getByRole("tab", { name: "Reportar un precio" }));
 
     const form = screen.getByRole("form", { name: "Reportar un precio" });
-    await waitFor(() => expect(within(form).getAllByRole("option", { name: "Tomate" }).length).toBe(1));
-    fireEvent.change(within(form).getByLabelText("Producto"), { target: { value: "tomate" } });
+    await elegirProducto("Tomate", "Producto", form);
     fireEvent.change(within(form).getByLabelText("Dónde lo vio"), { target: { value: "lanza" } });
     fireEvent.change(within(form).getByLabelText("Precio (Bs)"), { target: { value: "7.5" } });
     fireEvent.change(within(form).getByLabelText("Por"), { target: { value: "libra" } });
@@ -69,7 +69,7 @@ describe("usuario", () => {
 
   it("un usuario común no ve «Mi puesto»", async () => {
     await ingresar("vecino@correo.bo", "vecino1234");
-    expect(screen.queryByRole("button", { name: "Mi puesto" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Mi puesto" })).toBeNull();
   });
 });
 
@@ -79,8 +79,7 @@ describe("vendedor", () => {
     expect(await screen.findByRole("heading", { name: /Mi puesto/ })).toBeDefined();
 
     const form = screen.getByRole("form", { name: "Publicar un precio" });
-    await waitFor(() => expect(within(form).getAllByRole("option", { name: "Papa holandesa" }).length).toBe(1));
-    fireEvent.change(within(form).getByLabelText("Producto"), { target: { value: "papa" } });
+    await elegirProducto("Papa holandesa", "Producto", form);
     fireEvent.change(within(form).getByLabelText("Por"), { target: { value: "arroba" } });
     fireEvent.change(within(form).getByLabelText("Precio (Bs)"), { target: { value: "80" } });
     fireEvent.submit(form);

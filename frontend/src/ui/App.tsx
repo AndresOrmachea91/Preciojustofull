@@ -2,7 +2,7 @@ import { useMemo, type ReactNode } from "react";
 
 import { puede, type Usuario } from "@/dominio/modelo";
 import { crearContenedor } from "@/infraestructura/contenedor";
-import { Cabecera, esAdministrador } from "@/ui/componentes/Cabecera";
+import { BarraLateral, esAdministrador } from "@/ui/componentes/BarraLateral";
 import { useRuta, type Ruta } from "@/ui/hooks/useRuta";
 import { useSesion } from "@/ui/hooks/useSesion";
 // Pantallas agrupadas por quién las usa: publico/, cuentas/, usuario/, vendedor/, administracion/.
@@ -24,6 +24,8 @@ export default function App() {
   const sesion = useSesion(contenedor);
   const [ruta, ir] = useRuta();
   const { usuario, verificando } = sesion;
+  // #/ingresar y #/registrarse son la misma pantalla en dos modos.
+  const cuenta = ruta === "ingresar" || ruta === "registrarse" ? ruta : null;
 
   /** Una página que exige sesión y un permiso; si no, explica por qué no se ve. */
   function protegida(permitido: boolean, quien: string, pagina: (u: Usuario) => ReactNode) {
@@ -37,9 +39,16 @@ export default function App() {
             : `Ingrese con una cuenta de ${quien} para ver esta página.`}
         </p>
         {!usuario && (
-          <button type="button" className="boton" onClick={() => ir("ingresar")}>
+          <a
+            href="#/ingresar"
+            className="boton"
+            onClick={(e) => {
+              e.preventDefault();
+              ir("ingresar");
+            }}
+          >
             Ingresar
-          </button>
+          </a>
         )}
       </div>
     );
@@ -47,22 +56,28 @@ export default function App() {
 
   return (
     <div className="app">
-      <Cabecera usuario={usuario} verificando={verificando} ruta={ruta} ir={ir} salir={sesion.salir} />
+      <BarraLateral usuario={usuario} verificando={verificando} ruta={ruta} ir={ir} salir={sesion.salir} />
 
-      {ruta === "ingresar" && !usuario && <PaginaIngreso sesion={sesion} alIngresar={(u) => ir(inicioDe(u))} />}
+      <main className="app__contenido">
+        {cuenta && !usuario && (
+          <PaginaIngreso sesion={sesion} modo={cuenta} cambiarModo={ir} alIngresar={(u) => ir(inicioDe(u))} />
+        )}
 
-      {ruta === "mi-cuenta" &&
-        protegida(puede(usuario, "gestionar_listas"), "usuario", () => <PaginaUsuario contenedor={contenedor} />)}
+        {ruta === "mi-cuenta" &&
+          protegida(puede(usuario, "gestionar_listas"), "usuario", () => <PaginaUsuario contenedor={contenedor} />)}
 
-      {ruta === "mi-puesto" &&
-        protegida(puede(usuario, "publicar_precio_propio"), "vendedor", (u) => (
-          <PaginaVendedor contenedor={contenedor} vendedor={u} />
-        ))}
+        {ruta === "mi-puesto" &&
+          protegida(puede(usuario, "publicar_precio_propio"), "vendedor", (u) => (
+            <PaginaVendedor contenedor={contenedor} vendedor={u} />
+          ))}
 
-      {ruta === "admin" &&
-        protegida(esAdministrador(usuario), "administrador", (u) => <PaginaAdmin contenedor={contenedor} usuario={u} />)}
+        {ruta === "admin" &&
+          protegida(esAdministrador(usuario), "administrador", (u) => (
+            <PaginaAdmin contenedor={contenedor} usuario={u} />
+          ))}
 
-      {(ruta === "precios" || (ruta === "ingresar" && usuario)) && <PaginaPrecios contenedor={contenedor} />}
+        {(ruta === "precios" || (cuenta && usuario)) && <PaginaPrecios contenedor={contenedor} />}
+      </main>
     </div>
   );
 }

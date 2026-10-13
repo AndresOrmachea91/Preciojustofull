@@ -9,6 +9,7 @@ import {
 } from "@/dominio/modelo";
 import type { Contenedor } from "@/infraestructura/contenedor";
 import { MensajeAviso, MensajeError, textoDeError } from "@/ui/componentes/Mensajes";
+import { SelectorProducto } from "@/ui/componentes/SelectorProducto";
 import { useCatalogo } from "@/ui/hooks/useCatalogo";
 
 /** El vendedor publica los precios de su puesto y ve lo último que publicó. */
@@ -115,6 +116,10 @@ function FormularioPrecio({
   async function enviar(evento: FormEvent) {
     evento.preventDefault();
     setError(null);
+    if (!codigoProducto) {
+      setError("Elija un producto de la lista");
+      return;
+    }
     try {
       await contenedor.miPuesto.publicar({ codigoProducto, monto: Number(monto), presentacion: presentacionElegida });
       alPublicar(`Publicado: ${producto?.nombre} a Bs ${Number(monto).toFixed(2)} por ${presentacionElegida}.`);
@@ -127,24 +132,15 @@ function FormularioPrecio({
   return (
     <form className="formulario formulario--recuadro" onSubmit={(e) => void enviar(e)} aria-label="Publicar un precio">
       <div className="formulario__fila formulario__fila--tres">
-        <label className="campo">
-          <span>Producto</span>
-          <select
-            required
-            value={codigoProducto}
-            onChange={(e) => {
-              setCodigoProducto(e.target.value);
-              setPresentacion("");
-            }}
-          >
-            <option value="">Elegir…</option>
-            {productos.map((p) => (
-              <option key={p.codigo} value={p.codigo}>
-                {p.nombre}
-              </option>
-            ))}
-          </select>
-        </label>
+        <SelectorProducto
+          productos={productos}
+          valor={codigoProducto}
+          etiqueta="Producto"
+          onElegir={(codigo) => {
+            setCodigoProducto(codigo);
+            setPresentacion("");
+          }}
+        />
         <label className="campo">
           <span>Por</span>
           <select value={presentacionElegida} disabled={!producto} onChange={(e) => setPresentacion(e.target.value)}>

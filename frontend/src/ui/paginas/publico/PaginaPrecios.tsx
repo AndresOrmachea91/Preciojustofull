@@ -6,6 +6,7 @@ import { ahorroPosible } from "@/dominio/servicio/ordenarPorConveniencia";
 import type { Contenedor } from "@/infraestructura/contenedor";
 import { MapaPuntosVenta } from "@/ui/componentes/MapaPuntosVenta";
 import { PanelPunto } from "@/ui/componentes/PanelPunto";
+import { SelectorProducto } from "@/ui/componentes/SelectorProducto";
 import { TarjetaMercado } from "@/ui/componentes/TarjetaMercado";
 import { useComparativa } from "@/ui/hooks/useComparativa";
 import { useMapa } from "@/ui/hooks/useMapa";
@@ -62,36 +63,36 @@ export function PaginaPrecios({ contenedor }: { contenedor: Contenedor }) {
     <>
       <p className="app__lema">¿Dónde conviene comprar hoy en La Paz?</p>
 
-      <nav className="selector" aria-label="Elegir producto">
-        {productos.map((p) => (
-          <button
-            key={p.codigo}
-            type="button"
-            className={`selector__opcion${producto === p.codigo ? " selector__opcion--activa" : ""}`}
-            aria-pressed={producto === p.codigo}
-            onClick={() => setProducto(p.codigo)}
-          >
-            {p.nombre}
-          </button>
-        ))}
-      </nav>
+      <div className="consulta">
+        <SelectorProducto
+          productos={productos}
+          valor={producto}
+          onElegir={setProducto}
+          etiqueta="Producto"
+          ayuda={`${productos.length} productos. Escriba para buscar o elija de la lista.`}
+        />
 
-      {productoActual && productoActual.presentaciones.length > 1 && (
-        <div className="presentaciones" role="group" aria-label="Ver el precio por">
-          <span className="tenue">Ver precio por:</span>
-          {productoActual.presentaciones.map((p) => (
-            <button
-              key={p.codigo}
-              type="button"
-              aria-pressed={presentacion?.codigo === p.codigo}
-              className={`selector__opcion selector__opcion--chica${presentacion?.codigo === p.codigo ? " selector__opcion--activa" : ""}`}
-              onClick={() => setCodigoPresentacion(p.codigo)}
-            >
-              {p.nombre}
-            </button>
-          ))}
-        </div>
-      )}
+        {productoActual && productoActual.presentaciones.length > 1 && (
+          <div className="consulta__presentacion">
+            <span className="buscador__etiqueta" id="ver-precio-por">
+              Ver el precio por
+            </span>
+            <div className="segmentado" role="group" aria-labelledby="ver-precio-por">
+              {productoActual.presentaciones.map((p) => (
+                <button
+                  key={p.codigo}
+                  type="button"
+                  aria-pressed={presentacion?.codigo === p.codigo}
+                  className="segmentado__opcion"
+                  onClick={() => setCodigoPresentacion(p.codigo)}
+                >
+                  {p.nombre}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {mapa.datos && (
         <section className="honestidad" aria-label="De dónde salen estos precios">

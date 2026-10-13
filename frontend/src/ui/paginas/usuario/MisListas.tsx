@@ -11,6 +11,7 @@ import {
 } from "@/dominio/modelo";
 import type { Contenedor } from "@/infraestructura/contenedor";
 import { MensajeAviso, MensajeError, textoDeError } from "@/ui/componentes/Mensajes";
+import { SelectorProducto } from "@/ui/componentes/SelectorProducto";
 import { useCatalogo } from "@/ui/hooks/useCatalogo";
 
 /** Las listas de compras: armarlas y ver en qué mercado sale más barata cada una. */
@@ -270,17 +271,14 @@ function FormularioLista({
         </ul>
       )}
 
-      <label className="campo">
-        <span>Agregar un producto</span>
-        <select value="" onChange={(e) => agregar(e.target.value)}>
-          <option value="">Elegir…</option>
-          {disponibles.map((p) => (
-            <option key={p.codigo} value={p.codigo}>
-              {p.nombre}
-            </option>
-          ))}
-        </select>
-      </label>
+      <SelectorProducto
+        productos={disponibles}
+        valor={null}
+        etiqueta="Agregar un producto"
+        ayuda="Busque y elija: se suma a la lista con cantidad 1."
+        limpiarAlElegir
+        onElegir={agregar}
+      />
 
       <MensajeError texto={error} />
       <div className="formulario__botones">

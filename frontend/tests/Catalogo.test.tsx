@@ -25,7 +25,7 @@ afterEach(() => {
 
 async function ingresarComoAdmin() {
   render(<App />);
-  fireEvent.click(await screen.findByRole("button", { name: "Ingresar" }));
+  fireEvent.click(await screen.findByRole("link", { name: "Ingresar" }));
   fireEvent.change(screen.getByLabelText("Correo"), { target: { value: ADMIN_DEMO.correo } });
   fireEvent.change(screen.getByLabelText("Contraseña"), { target: { value: ADMIN_DEMO.contrasena } });
   fireEvent.submit(screen.getByRole("button", { name: "Ingresar" }).closest("form")!);

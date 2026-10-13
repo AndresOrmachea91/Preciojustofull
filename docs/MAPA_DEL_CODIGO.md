@@ -160,7 +160,10 @@ En el frontend:
 | Ahorro solo entre canastas completas  | `src/aplicacion/casosUso/publico/calcularCanasta.ts` → `resumirCanasta` |
 | Pantallas del usuario                 | `src/ui/paginas/usuario/` (`MisListas`, `ReportarPrecio`, `MisReportes`) |
 | Pantalla del vendedor                 | `src/ui/paginas/vendedor/PaginaVendedor.tsx` |
-| Cabecera con las secciones de cada rol | `src/ui/componentes/Cabecera.tsx` |
+| Barra lateral: secciones de cada rol, ingresar / crear cuenta / salir, con iconos | `src/ui/componentes/BarraLateral.tsx` |
+| Los iconos (SVG propios, sin dependencias) | `src/ui/componentes/Iconos.tsx` |
+| Elegir un producto buscando (lista filtrada por categoría, con teclado) | `src/ui/componentes/SelectorProducto.tsx` |
+| Rutas `#/ingresar` y `#/registrarse` (la misma pantalla en dos modos) | `src/ui/hooks/useRuta.ts`, `src/ui/paginas/cuentas/PaginaIngreso.tsx` |
 | Piezas compartidas                    | `src/ui/componentes/Pestanas.tsx`, `Mensajes.tsx`; `src/ui/hooks/useCatalogo.ts` |
 
 ## Rutas de la API

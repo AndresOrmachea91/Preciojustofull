@@ -321,13 +321,13 @@ function Reportes({ contenedor }: { contenedor: Contenedor }) {
         Un reporte no se publica directo: recién aprobado entra al motor de fusión como una observación más,
         con la reputación del rol de quien lo envió.
       </p>
-      <div className="selector" aria-label="Filtrar reportes">
+      <div className="segmentado segmentado--margen" role="group" aria-label="Filtrar reportes">
         {FILTROS.map((f) => (
           <button
             key={f.valor}
             type="button"
             aria-pressed={filtro === f.valor}
-            className={`selector__opcion${filtro === f.valor ? " selector__opcion--activa" : ""}`}
+            className="segmentado__opcion"
             onClick={() => setFiltro(f.valor)}
           >
             {f.texto}
