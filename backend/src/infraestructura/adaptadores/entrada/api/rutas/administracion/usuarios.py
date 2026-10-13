@@ -1,20 +1,28 @@
 """Administración de cuentas: /api/v1/admin/usuarios. Cada caso de uso exige gestionar_usuarios."""
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response, status
 
 from src.infraestructura.adaptadores.entrada.api import esquemas as e
 from src.infraestructura.adaptadores.entrada.api.dependencias import (
     caso_administrar_usuarios, caso_registrar_usuario,
 )
-from src.infraestructura.adaptadores.entrada.api.mapeo import usuario_a_salida
+from src.infraestructura.adaptadores.entrada.api.mapeo import usuario_a_salida, usuario_auditado_a_salida
 from src.infraestructura.adaptadores.entrada.api.seguridad import usuario_actual
 from src.dominio.modelo import Rol
 
 router = APIRouter(prefix="/admin/usuarios", tags=["administración"])
 
 
-@router.get("", response_model=list[e.UsuarioSalida])
-def listar(actor=Depends(usuario_actual), caso=Depends(caso_administrar_usuarios)):
-    return [usuario_a_salida(u) for u in caso.listar(actor)]
+@router.get("", response_model=list[e.UsuarioAuditadoSalida])
+def listar(incluir_eliminados: bool = False, actor=Depends(usuario_actual),
+           caso=Depends(caso_administrar_usuarios)):
+    """Solo los vigentes; con ?incluir_eliminados=true también los eliminados lógicamente."""
+    return [usuario_auditado_a_salida(u) for u in caso.listar(actor, incluir_eliminados)]
+
+
+@router.delete("/{id_usuario}", status_code=status.HTTP_204_NO_CONTENT)
+def eliminar(id_usuario: int, actor=Depends(usuario_actual), caso=Depends(caso_administrar_usuarios)):
+    caso.eliminar(actor, id_usuario)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post("", response_model=e.UsuarioSalida, status_code=201)

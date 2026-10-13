@@ -32,7 +32,13 @@ Dentro de cada capa, lo de cada ROL está en su carpeta:
 | Que un actor no pase de una petición a otra      | `api/seguridad.py → ActorPorPeticion` |
 | Borrado lógico (no devolver `eliminado = true`)  | cada lectura de `persistencia/repositorios.py` y `persistencia/cuentas.py` |
 | Agregar la auditoría a bases que ya existían     | `persistencia/sesion.py → crear_esquema` |
-| Pruebas                                          | `backend/tests/test_auditoria.py` |
+| La auditoría vista desde el dominio (solo lectura) | `dominio/modelo/auditoria.py → Auditoria` |
+| Eliminar una cuenta (lógico: `DELETE`, la fila queda) | `casos_uso/administracion/gestionar_usuarios.py → eliminar`; `persistencia/cuentas.py → UsuariosPostgres.eliminar` |
+| Listar con o sin eliminados                      | `GET /admin/usuarios?incluir_eliminados=true` → `UsuariosPostgres.listar` |
+| DTO con y sin auditoría ("sobrecarga")           | `api/esquemas.py → UsuarioSalida` (propio, `/auth/yo`) y `UsuarioAuditadoSalida` (admin) |
+| El correo es único solo entre cuentas vigentes   | `persistencia/sesion.py → uq_usuario_correo_vigente` (índice parcial) |
+| Demostración en Postman (guardar, modificar, eliminar, listar) | `docs/postman/PrecioJusto_Auditoria.postman_collection.json` |
+| Pruebas                                          | `backend/tests/test_auditoria.py`, `test_contrato_cuentas.py`, `test_api_autenticacion.py` |
 
 ## La equivalencia con "/bd/..."
 

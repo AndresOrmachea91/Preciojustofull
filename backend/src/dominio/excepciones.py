@@ -129,6 +129,13 @@ class SinAdministradores(ErrorDominio):
         super().__init__("Debe quedar al menos un administrador activo")
 
 
+class AutoEliminacion(ErrorDominio):
+    """Un administrador no puede eliminar su propia cuenta."""
+
+    def __init__(self):
+        super().__init__("No puede eliminar su propia cuenta")
+
+
 class ReporteNoEncontrado(ErrorDominio):
     def __init__(self, id_reporte: int):
         self.id_reporte = id_reporte

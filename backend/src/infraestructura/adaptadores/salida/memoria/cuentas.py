@@ -5,13 +5,22 @@ SQLAlchemy, para levantar la API y correr las pruebas sin base de datos.
 from __future__ import annotations
 
 from dataclasses import replace
+from datetime import datetime, timezone
 
-from src.dominio.modelo import EstadoReporte, Reporte, Rol, Usuario
+from src.dominio.modelo import Auditoria, EstadoReporte, Reporte, Rol, Usuario
+from src.infraestructura.adaptadores.salida.persistencia.auditable import actor_actual
+
+
+def _modificada(auditoria: Auditoria, **cambios) -> Auditoria:
+    return replace(auditoria, modificado_en=datetime.now(timezone.utc),
+                   modificado_por=actor_actual.get(), **cambios)
 
 
 class UsuariosEnMemoria:
     def __init__(self):
         self._datos: dict[int, Usuario] = {}
+        # Lo eliminado se aparta, no se borra: igual que la columna eliminado.
+        self._eliminados: dict[int, Usuario] = {}
         self._siguiente = 1
 
     def obtener(self, id_usuario: int) -> Usuario | None:
@@ -20,13 +29,24 @@ class UsuariosEnMemoria:
     def obtener_por_correo(self, correo: str) -> Usuario | None:
         return next((u for u in self._datos.values() if u.correo == correo), None)
 
-    def listar(self) -> list[Usuario]:
-        return sorted(self._datos.values(), key=lambda u: u.id)
+    def listar(self, incluir_eliminados: bool = False) -> list[Usuario]:
+        todos = [*self._datos.values(), *(self._eliminados.values() if incluir_eliminados else [])]
+        return sorted(todos, key=lambda u: u.id)
+
+    def eliminar(self, id_usuario: int) -> None:
+        usuario = self._datos.pop(id_usuario, None)
+        if usuario is not None:
+            self._eliminados[id_usuario] = replace(usuario, auditoria=_modificada(usuario.auditoria, eliminado=True))
 
     def guardar(self, usuario: Usuario) -> Usuario:
-        if usuario.id is None:
-            usuario = replace(usuario, id=self._siguiente)
+        # La auditoría la pone el repositorio, igual que Auditable en la base.
+        anterior = self._datos.get(usuario.id) if usuario.id is not None else None
+        if anterior is None:
+            usuario = replace(usuario, id=self._siguiente,
+                              auditoria=Auditoria(usuario.creado_en, actor_actual.get()))
             self._siguiente += 1
+        else:
+            usuario = replace(usuario, auditoria=_modificada(anterior.auditoria))
         self._datos[usuario.id] = usuario
         return usuario
 

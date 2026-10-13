@@ -120,3 +120,33 @@ def test_reporte_de_producto_inexistente_es_404(cliente):
     r = cliente.post(f"{API}/reportes", headers=_token(cliente),
                      json={"codigo_producto": "caviar", "codigo_mercado": "rodriguez", "monto": 1, "unidad": "KILO"})
     assert r.status_code == 404
+
+
+def test_eliminar_cuenta_es_logico_y_se_lista_aparte(cliente):
+    admin = _token(cliente)
+    ana = _registrar(cliente)
+    _token(cliente, "ana@pj.bo")
+
+    assert cliente.delete(f"{API}/admin/usuarios/{ana['id']}", headers=admin).status_code == 204
+    # Ya no ingresa ni aparece en el listado normal...
+    r = cliente.post(f"{API}/auth/ingresar", json={"correo": "ana@pj.bo", "contrasena": "clave1234"})
+    assert r.status_code == 401
+    vigentes = cliente.get(f"{API}/admin/usuarios", headers=admin).json()
+    assert [u["correo"] for u in vigentes] == ["admin@pj.bo"]
+    assert vigentes[0]["auditoria"]["eliminado"] is False
+    # ...pero sigue, marcada, si se piden también los eliminados.
+    todos = cliente.get(f"{API}/admin/usuarios?incluir_eliminados=true", headers=admin).json()
+    assert [(u["correo"], u["auditoria"]["eliminado"]) for u in todos] == [
+        ("admin@pj.bo", False), ("ana@pj.bo", True),
+    ]
+    assert cliente.delete(f"{API}/admin/usuarios/{ana['id']}", headers=admin).status_code == 404
+
+
+def test_no_se_elimina_a_si_mismo_ni_otro_lo_hace_sin_permiso(cliente):
+    admin = _token(cliente)
+    yo = cliente.get(f"{API}/auth/yo", headers=admin).json()
+    assert "auditoria" not in yo  # el DTO propio no lleva auditoría
+    assert cliente.delete(f"{API}/admin/usuarios/{yo['id']}", headers=admin).status_code == 409
+    _registrar(cliente)
+    ana = _token(cliente, "ana@pj.bo")
+    assert cliente.delete(f"{API}/admin/usuarios/{yo['id']}", headers=ana).status_code == 403

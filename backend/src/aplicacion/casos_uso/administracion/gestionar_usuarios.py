@@ -1,9 +1,11 @@
-"""El administrador gestiona las cuentas: rol, estado, punto de venta del vendedor y contraseña."""
+"""El administrador gestiona las cuentas: rol, estado, punto de venta del vendedor, contraseña y eliminado lógico."""
 from __future__ import annotations
 
 from src.aplicacion.casos_uso.cuentas.permisos import exigir
 from src.aplicacion.puertos.salida import CifradorContrasenas, LectorMercados, RepositorioUsuarios
-from src.dominio.excepciones import MercadoNoEncontrado, SinAdministradores, UsuarioNoEncontrado
+from src.dominio.excepciones import (
+    AutoEliminacion, MercadoNoEncontrado, SinAdministradores, UsuarioNoEncontrado,
+)
 from src.dominio.modelo import Permiso, Rol, Usuario
 from src.dominio.modelo.usuario import validar_contrasena
 
@@ -19,9 +21,19 @@ class AdministrarUsuarios:
         self._cifrador = cifrador
         self._mercados = mercados
 
-    def listar(self, actor: Usuario) -> list[Usuario]:
+    def listar(self, actor: Usuario, incluir_eliminados: bool = False) -> list[Usuario]:
         exigir(actor, Permiso.GESTIONAR_USUARIOS)
-        return sorted(self._usuarios.listar(), key=lambda u: u.id or 0)
+        return sorted(self._usuarios.listar(incluir_eliminados), key=lambda u: u.id or 0)
+
+    def eliminar(self, actor: Usuario, id_usuario: int) -> None:
+        """Eliminado lógico: la cuenta deja de existir para el sistema, pero su fila y su auditoría quedan."""
+        exigir(actor, Permiso.GESTIONAR_USUARIOS)
+        usuario = self._obtener(id_usuario)
+        if usuario.id == actor.id:
+            raise AutoEliminacion()
+        if usuario.es_administrador and self._usuarios.contar_administradores_activos() <= 1:
+            raise SinAdministradores()
+        self._usuarios.eliminar(id_usuario)
 
     def actualizar(self, actor: Usuario, id_usuario: int, rol: Rol | None = None,
                    activo: bool | None = None, punto_venta=_SIN_CAMBIO) -> Usuario:

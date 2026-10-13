@@ -1,0 +1,101 @@
+{
+  "info": {
+    "name": "PrecioJusto - Auditoría (guardado y listado)",
+    "description": "Demostración de la auditoría: cada tabla hereda creado_en, creado_por, modificado_en, modificado_por y eliminado (Auditable). Orden: 1 → 6. Antes, en Variables, complete correo_admin y contrasena_admin con los de docker/.env (no se guardan en el repositorio).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base", "value": "http://localhost:8088/api/v1" },
+    { "key": "correo_admin", "value": "" },
+    { "key": "contrasena_admin", "value": "" },
+    { "key": "token", "value": "" },
+    { "key": "id_usuario", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "1. Ingresar como administrador",
+      "event": [{
+        "listen": "test",
+        "script": { "exec": [
+          "pm.test('200', () => pm.response.to.have.status(200));",
+          "pm.collectionVariables.set('token', pm.response.json().token);"
+        ] }
+      }],
+      "request": {
+        "auth": { "type": "noauth" },
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base}}/auth/ingresar",
+        "body": { "mode": "raw", "raw": "{\n  \"correo\": \"{{correo_admin}}\",\n  \"contrasena\": \"{{contrasena_admin}}\"\n}" }
+      }
+    },
+    {
+      "name": "2. Guardar un usuario (POST) - creado_por = el admin",
+      "event": [{
+        "listen": "test",
+        "script": { "exec": [
+          "pm.test('201', () => pm.response.to.have.status(201));",
+          "pm.collectionVariables.set('id_usuario', pm.response.json().id);"
+        ] }
+      }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base}}/admin/usuarios",
+        "body": { "mode": "raw", "raw": "{\n  \"correo\": \"demo{{$timestamp}}@preciojusto.bo\",\n  \"nombre\": \"Usuario de demostración\",\n  \"contrasena\": \"Demo2026x\",\n  \"rol\": \"usuario\"\n}" }
+      }
+    },
+    {
+      "name": "3. Modificarlo (PATCH) - llena modificado_por y modificado_en",
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base}}/admin/usuarios/{{id_usuario}}",
+        "body": { "mode": "raw", "raw": "{\n  \"rol\": \"vendedor\"\n}" }
+      }
+    },
+    {
+      "name": "4. Eliminarlo (DELETE) - eliminado lógico, la fila queda",
+      "event": [{
+        "listen": "test",
+        "script": { "exec": ["pm.test('204', () => pm.response.to.have.status(204));"] }
+      }],
+      "request": { "method": "DELETE", "url": "{{base}}/admin/usuarios/{{id_usuario}}" }
+    },
+    {
+      "name": "5. Listar usuarios (solo los NO eliminados)",
+      "event": [{
+        "listen": "test",
+        "script": { "exec": [
+          "const id = Number(pm.collectionVariables.get('id_usuario'));",
+          "pm.test('el eliminado no aparece', () => pm.expect(pm.response.json().map(u => u.id)).to.not.include(id));"
+        ] }
+      }],
+      "request": { "method": "GET", "url": "{{base}}/admin/usuarios" }
+    },
+    {
+      "name": "6. Listar usuarios incluyendo eliminados",
+      "event": [{
+        "listen": "test",
+        "script": { "exec": [
+          "const id = Number(pm.collectionVariables.get('id_usuario'));",
+          "const u = pm.response.json().find(x => x.id === id);",
+          "pm.test('aparece marcado eliminado', () => pm.expect(u.auditoria.eliminado).to.eql(true));"
+        ] }
+      }],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base}}/admin/usuarios?incluir_eliminados=true",
+          "host": ["{{base}}"],
+          "path": ["admin", "usuarios"],
+          "query": [{ "key": "incluir_eliminados", "value": "true" }]
+        }
+      }
+    }
+  ]
+}

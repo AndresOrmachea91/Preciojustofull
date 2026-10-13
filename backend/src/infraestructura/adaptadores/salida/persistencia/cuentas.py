@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from src.infraestructura.adaptadores.salida.persistencia.sesion import sesion_de
 from src.infraestructura.adaptadores.salida.persistencia.tablas import ReporteTabla, UsuarioTabla
-from src.dominio.modelo import EstadoReporte, Reporte, Rol, Usuario
+from src.dominio.modelo import Auditoria, EstadoReporte, Reporte, Rol, Usuario
 
 
 def _con_zona(momento: datetime | None) -> datetime | None:
@@ -35,6 +35,13 @@ def _a_usuario(f: UsuarioTabla) -> Usuario:
         activo=bool(f.activo),
         creado_en=_con_zona(f.creado_en),
         codigo_punto_venta=f.codigo_punto_venta,
+        auditoria=Auditoria(
+            creado_en=_con_zona(f.creado_en),
+            creado_por=f.creado_por,
+            modificado_en=_con_zona(f.modificado_en),
+            modificado_por=f.modificado_por,
+            eliminado=bool(f.eliminado),
+        ),
     )
 
 
@@ -71,14 +78,25 @@ class UsuariosPostgres(_Base):
                 UsuarioTabla.correo == correo, UsuarioTabla.eliminado.is_(False))).first()
             return _a_usuario(fila) if fila else None
 
-    def listar(self) -> list[Usuario]:
+    def listar(self, incluir_eliminados: bool = False) -> list[Usuario]:
+        consulta = select(UsuarioTabla).order_by(UsuarioTabla.id)
+        if not incluir_eliminados:
+            consulta = consulta.where(UsuarioTabla.eliminado.is_(False))
         with sesion_de(self._fabrica) as s:
-            return [_a_usuario(f) for f in s.scalars(
-                select(UsuarioTabla).where(UsuarioTabla.eliminado.is_(False)).order_by(UsuarioTabla.id))]
+            return [_a_usuario(f) for f in s.scalars(consulta)]
+
+    def eliminar(self, id_usuario: int) -> None:
+        # Nunca un DELETE: se marca, y modificado_por/en dicen quién y cuándo.
+        with sesion_de(self._fabrica) as s:
+            fila = s.get(UsuarioTabla, id_usuario)
+            if fila is not None:
+                fila.eliminado = True
 
     def guardar(self, usuario: Usuario) -> Usuario:
         with sesion_de(self._fabrica) as s:
             fila = s.get(UsuarioTabla, usuario.id) if usuario.id is not None else None
+            if fila is not None and fila.eliminado:
+                fila = None
             if fila is None:
                 fila = UsuarioTabla(creado_en=usuario.creado_en)
                 s.add(fila)

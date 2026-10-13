@@ -65,6 +65,17 @@ def canasta_a_salida(c: CostoCanastaEnMercado) -> e.CanastaSalida:
 
 
 
+def usuario_auditado_a_salida(u: Usuario) -> e.UsuarioAuditadoSalida:
+    a = u.auditoria
+    return e.UsuarioAuditadoSalida(
+        **usuario_a_salida(u).model_dump(),
+        auditoria=None if a is None else e.AuditoriaSalida(
+            creado_en=a.creado_en, creado_por=a.creado_por, modificado_en=a.modificado_en,
+            modificado_por=a.modificado_por, eliminado=a.eliminado,
+        ),
+    )
+
+
 def usuario_a_salida(u: Usuario) -> e.UsuarioSalida:
     return e.UsuarioSalida(
         id=u.id,

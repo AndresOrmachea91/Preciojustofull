@@ -9,11 +9,12 @@ guarda pero no interpreta.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from enum import Enum
 
 from src.dominio.excepciones import ContrasenaDebil, CorreoInvalido
+from src.dominio.modelo.auditoria import Auditoria
 
 _CORREO = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 LARGO_MINIMO_CONTRASENA = 8
@@ -84,6 +85,9 @@ class Usuario:
     codigo_punto_venta: str | None = None
     # None hasta que el repositorio lo guarda por primera vez.
     id: int | None = None
+    # Quién y cuándo lo creó, modificó o eliminó. Lo llena el repositorio
+    # al leer; no cuenta para comparar dos usuarios.
+    auditoria: Auditoria | None = field(default=None, compare=False)
 
     def puede(self, permiso: Permiso) -> bool:
         # Una cuenta desactivada no puede nada, sea cual sea su rol.

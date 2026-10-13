@@ -147,6 +147,24 @@ class UsuarioSalida(BaseModel):
     codigo_punto_venta: str | None = None
 
 
+class AuditoriaSalida(BaseModel):
+    """Los 5 campos de auditoría tal como los guarda la base."""
+    creado_en: datetime
+    creado_por: str
+    modificado_en: datetime | None = None
+    modificado_por: str | None = None
+    eliminado: bool
+
+
+class UsuarioAuditadoSalida(UsuarioSalida):
+    """
+    El mismo usuario, con su auditoría: el DTO "sobrecargado" que ve solo
+    el administrador. Quien consulta su propia cuenta (/auth/yo) recibe
+    UsuarioSalida, sin estos campos.
+    """
+    auditoria: AuditoriaSalida | None = None
+
+
 class RegistroEntrada(BaseModel):
     correo: str = Field(max_length=255)
     nombre: str = Field(default="", max_length=255)

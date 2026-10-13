@@ -85,3 +85,37 @@ def test_reportes_se_guardan_filtran_y_revisan(repos):
     assert leido.motivo_rechazo == "Muy alto"
     assert leido.revisado_en == AHORA + timedelta(hours=2)
     assert reportes.obtener(9999) is None
+
+
+def test_eliminar_es_logico_y_libera_el_correo(repos):
+    usuarios, _ = repos
+    ana = usuarios.guardar(_usuario())
+    usuarios.eliminar(ana.id)
+
+    # Para el sistema ya no existe...
+    assert usuarios.obtener(ana.id) is None
+    assert usuarios.obtener_por_correo("ana@pj.bo") is None
+    assert usuarios.listar() == []
+    # ...pero la fila sigue, marcada, y se ve si se pide.
+    [eliminada] = usuarios.listar(incluir_eliminados=True)
+    assert eliminada.id == ana.id and eliminada.auditoria.eliminado is True
+
+    # El correo de una cuenta eliminada se puede volver a registrar.
+    nueva = usuarios.guardar(_usuario())
+    assert nueva.id != ana.id
+    assert [u.id for u in usuarios.listar()] == [nueva.id]
+    assert len(usuarios.listar(incluir_eliminados=True)) == 2
+
+
+def test_sqlalchemy_llena_la_auditoria_con_el_actor():
+    from src.infraestructura.adaptadores.salida.persistencia.auditable import como_actor
+
+    usuarios, _ = _sqlalchemy()
+    with como_actor("admin@pj.bo"):
+        ana = usuarios.guardar(_usuario())
+    assert ana.auditoria.creado_por == "admin@pj.bo" and ana.auditoria.eliminado is False
+    with como_actor("otro@pj.bo"):
+        usuarios.guardar(ana.con_activo(False))
+    [leida] = usuarios.listar()
+    assert leida.auditoria.creado_por == "admin@pj.bo"
+    assert leida.auditoria.modificado_por == "otro@pj.bo" and leida.auditoria.modificado_en is not None

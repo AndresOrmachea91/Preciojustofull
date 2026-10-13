@@ -102,6 +102,11 @@ _FECHA_REAL_DE_CREACION = {
     "intento_fuente": "ocurrido_en",
 }
 
+# Índice parcial: una cuenta eliminada lógicamente libera su correo.
+_CORREO_UNICO_VIGENTE = (
+    "CREATE UNIQUE INDEX IF NOT EXISTS uq_usuario_correo_vigente ON usuario (correo) WHERE NOT eliminado"
+)
+
 # Cambios que SQLite no sabe hacer con ALTER (soltar un NOT NULL). En
 # SQLite las tablas nuevas ya nacen bien desde create_all; en PostgreSQL
 # hace falta decirlo. Se ejecuta antes de los rellenos.
@@ -116,7 +121,11 @@ _AJUSTES_POR_DIALECTO = {
         "AND data_type = 'timestamp without time zone') THEN "
         "ALTER TABLE observacion_precio ALTER COLUMN ultima_captura_en TYPE timestamp with time zone "
         "USING ultima_captura_en AT TIME ZONE 'UTC'; END IF; END $$",
+        # El correo era único en toda la tabla; ahora solo entre los vigentes.
+        "ALTER TABLE usuario DROP CONSTRAINT IF EXISTS usuario_correo_key",
+        _CORREO_UNICO_VIGENTE,
     ],
+    "sqlite": [_CORREO_UNICO_VIGENTE],
 }
 
 # Rellenos que se pueden hacer con honestidad sobre filas históricas. El

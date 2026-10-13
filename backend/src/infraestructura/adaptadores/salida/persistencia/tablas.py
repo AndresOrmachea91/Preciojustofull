@@ -189,9 +189,10 @@ class UsuarioTabla(Base, Auditable):
     __tablename__ = "usuario"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    # Se guarda ya normalizado (minúsculas, sin espacios): la unicidad
-    # simple alcanza y no hace falta un índice por expresión.
-    correo = Column(String(255), nullable=False, unique=True)
+    # Se guarda ya normalizado (minúsculas, sin espacios). Es único solo
+    # entre las cuentas vigentes (índice parcial uq_usuario_correo_vigente, en sesion.py): una cuenta
+    # eliminada lógicamente no le impide a esa persona registrarse de nuevo.
+    correo = Column(String(255), nullable=False)
     nombre = Column(String(255), nullable=False)
     rol = Column(String(16), nullable=False, default="usuario")
     hash_contrasena = Column(String(255), nullable=False)
