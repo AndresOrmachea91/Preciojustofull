@@ -7,11 +7,22 @@ from src.aplicacion.puertos.salida import (
     LectorProductos,
 )
 from src.dominio.excepciones import ProductoNoEncontrado, SinObservaciones
-from src.dominio.modelo import Mercado, Observacion, PrecioConsolidado
+from src.dominio.modelo import Mercado, Observacion, PrecioConsolidado, Producto
 from src.dominio.servicio.motor_fusion import MotorFusion
 from src.dominio.valor import NivelPrecio
 
 CIUDAD_POR_DEFECTO = "la_paz"
+
+
+def en_unidad_del_producto(observaciones: list[Observacion], producto: Producto) -> list[Observacion]:
+    """
+    Solo lo publicado en la unidad en que se vende el producto. El SIIP
+    publica algunas frutas en dos series a la vez (por kilo y por unidad):
+    mezclarlas daría "la más reciente" en cualquiera de las dos, y un precio
+    por unidad multiplicado por kilos (en una lista) o por 11,5 (una arroba)
+    es una cifra inventada.
+    """
+    return [o for o in observaciones if o.unidad_canonica is producto.unidad_base]
 
 
 def precio_del_local(
@@ -63,12 +74,13 @@ class CompararMercadosCasoUso:
         self._ciudad = ciudad
 
     def ejecutar(self, codigo_producto: str, zona: str | None = None) -> list[PrecioEnMercado]:
-        if self._productos.obtener(codigo_producto) is None:
+        producto = self._productos.obtener(codigo_producto)
+        if producto is None:
             raise ProductoNoEncontrado(codigo_producto)
 
         # UNA consulta por producto, no una por mercado: contra una base remota
         # 88 viajes de medio segundo son casi un minuto. Se agrupa en memoria.
-        todas = self._observaciones.buscar(codigo_producto)
+        todas = en_unidad_del_producto(self._observaciones.buscar(codigo_producto), producto)
         referencia = [o for o in todas if o.es_referencia_de_ciudad and o.ciudad == self._ciudad]
         locales_por_mercado: dict[str, list[Observacion]] = {}
         for o in todas:

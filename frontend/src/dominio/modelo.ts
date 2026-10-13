@@ -256,8 +256,22 @@ export function presentacionBase(producto: Producto): Presentacion {
  * por el factor y la unidad pasa a ser la presentación. La procedencia, la
  * confianza y las observaciones no cambian: es el mismo dato, otra escala.
  */
+/** En qué se mide una presentación: la arroba en kg, la docena en unidades. */
+export function unidadDePresentacion(codigo: string): UnidadBase | null {
+  for (const [unidad, lista] of Object.entries(PRESENTACIONES_POR_UNIDAD) as [UnidadBase, readonly Presentacion[]][]) {
+    if (lista.some((p) => p.codigo === codigo)) return unidad;
+  }
+  return null;
+}
+
+/**
+ * El precio llevado a otra presentación. Solo dentro de la misma magnitud:
+ * un precio por unidad (un limón) no se pasa a arroba, porque habría que
+ * inventar cuánto pesa un limón. En ese caso se devuelve tal cual.
+ */
 export function precioEnPresentacion(precio: Precio, presentacion: Presentacion): Precio {
   if (presentacion.factor === 1) return precio;
+  if (unidadDePresentacion(presentacion.codigo) !== precio.unidad) return precio;
   const f = presentacion.factor;
   return {
     ...precio,

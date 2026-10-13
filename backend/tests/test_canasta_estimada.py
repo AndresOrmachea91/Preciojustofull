@@ -69,3 +69,34 @@ def test_la_cotizacion_dice_cuantos_productos_son_estimados(canasta):
 def test_lo_medido_en_el_puesto_gana_sobre_la_estimacion(canasta):
     lanza = next(c for c in canasta.ejecutar([ItemCanasta("papa", 1)]) if c.codigo_mercado == "lanza")
     assert lanza.costo_total == pytest.approx(5.0, abs=0.5)   # lo medido, no la referencia de 6
+
+
+def _por_unidad(producto: str, monto: float, mes: int) -> Observacion:
+    return Observacion(
+        fuente=Fuente.SIIP_IPC, nivel=NivelPrecio.MINORISTA, codigo_producto=producto,
+        codigo_mercado=None, ciudad="la_paz", ambito=Ambito.CIUDAD, periodo=Periodo(2026, mes),
+        precio=Dinero(monto, Unidad("UNIDAD(es)")), capturada_en=AHORA,
+    )
+
+
+def test_con_dos_series_se_usa_la_de_la_unidad_del_producto():
+    """
+    El SIIP publica la papaya por kilo y por unidad. Si la serie por unidad
+    es más nueva, igual no sirve para un producto que se vende por kilo:
+    18 Bs la papaya por 2 kilos no son 36 Bs.
+    """
+    from src.aplicacion.casos_uso.precios.comparar_mercados import CompararMercadosCasoUso
+    from src.dominio.modelo import Categoria
+    from src.infraestructura.adaptadores.salida.memoria.repositorios import ProductosEnMemoria
+
+    productos = ProductosEnMemoria([Producto("papaya", "Papaya", categoria=Categoria.FRUTA)])
+    mercados = MercadosEnMemoria([Mercado("lanza", "Mercado Lanza", TipoPuntoVenta.MERCADO, "Centro")])
+    observaciones = ObservacionesEnMemoria([_referencia("papaya", 13.0), _por_unidad("papaya", 18.0, mes=9)])
+
+    canasta = CalcularCanastaCasoUso(mercados, observaciones, MotorFusion(), productos=productos)
+    [lanza] = canasta.ejecutar([ItemCanasta("papaya", 2)])
+    assert lanza.costo_total == 26.0
+
+    comparador = CompararMercadosCasoUso(productos, mercados, observaciones, MotorFusion())
+    [precio] = comparador.ejecutar("papaya")
+    assert precio.precio.unidad.value == "kg" and precio.precio.rango.centro == 13.0

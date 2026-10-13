@@ -45,6 +45,18 @@ describe("presentaciones", () => {
     expect(porQuintal.procedencia).toBe("observado");
   });
 
+  it("un precio por unidad no se convierte a arroba: habría que inventar el peso", () => {
+    const porUnidad = {
+      codigoProducto: "limon", codigoMercado: "x", periodo: "2026-09",
+      rango: { minimo: 0.7, maximo: 0.7, centro: 0.7 }, unidad: "u", confianza: "alto" as const,
+      procedencia: "estimado" as const, observacionesUsadas: 1, fechaObservacionMasReciente: null, conflictos: [],
+    };
+    const arroba = { codigo: "arroba", nombre: "Arroba", factor: 11.5 };
+    expect(precioEnPresentacion(porUnidad, arroba)).toBe(porUnidad);
+    const docena = precioEnPresentacion(porUnidad, { codigo: "docena", nombre: "Docena", factor: 12 });
+    expect(docena.rango.centro).toBeCloseTo(8.4);
+  });
+
   it("el usuario puede ver los precios por arroba", async () => {
     render(<App />);
     const grupo = await screen.findByRole("group", { name: "Ver el precio por" });

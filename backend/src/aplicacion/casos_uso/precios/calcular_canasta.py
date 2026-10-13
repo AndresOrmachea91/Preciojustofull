@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from src.aplicacion.casos_uso.precios.comparar_mercados import CIUDAD_POR_DEFECTO, precio_del_local
+from src.aplicacion.casos_uso.precios.comparar_mercados import (
+    CIUDAD_POR_DEFECTO, en_unidad_del_producto, precio_del_local,
+)
 from src.aplicacion.puertos.entrada import CostoCanastaEnMercado, ItemCanasta
 from src.aplicacion.puertos.salida import (
     LectorMercados,
     LectorObservaciones,
+    LectorProductos,
 )
 from src.dominio.modelo import Observacion
 from src.dominio.servicio.motor_fusion import MotorFusion
@@ -32,11 +35,16 @@ class CalcularCanastaCasoUso:
         observaciones: LectorObservaciones,
         motor: MotorFusion,
         ciudad: str = CIUDAD_POR_DEFECTO,
+        productos: LectorProductos | None = None,
     ):
         self._mercados = mercados
         self._observaciones = observaciones
         self._motor = motor
         self._ciudad = ciudad
+        # Con el catálogo, cada producto se cotiza en SU unidad: la cantidad
+        # pedida viene en esa unidad (kilos, unidades) y el precio tiene que
+        # estar en la misma para poder multiplicarlos.
+        self._productos = productos
 
     def ejecutar(
         self, items: list[ItemCanasta], zona: str | None = None
@@ -85,6 +93,9 @@ class CalcularCanastaCasoUso:
     def _separar(self, codigo_producto: str) -> tuple[dict[str, list[Observacion]], list[Observacion]]:
         """Las observaciones de un producto: por punto de venta, y la referencia de la ciudad."""
         todas = self._observaciones.buscar(codigo_producto)
+        producto = self._productos.obtener(codigo_producto) if self._productos else None
+        if producto is not None:
+            todas = en_unidad_del_producto(todas, producto)
         referencia = [o for o in todas if o.es_referencia_de_ciudad and o.ciudad == self._ciudad]
         locales: dict[str, list[Observacion]] = {}
         for o in todas:

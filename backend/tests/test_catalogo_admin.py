@@ -45,6 +45,27 @@ def test_un_producto_por_kilo_se_vende_en_libra_kilo_arroba_y_quintal():
     assert Producto("arroz", "Arroz").presentaciones == compatibles(UnidadCanonica.KILOGRAMO)
 
 
+def test_las_presentaciones_por_defecto_siguen_como_se_compra_cada_categoria():
+    from src.dominio.modelo.producto import Categoria
+
+    def de(categoria, unidad=UnidadCanonica.KILOGRAMO):
+        return Producto("x", "X", categoria=categoria, unidad_base=unidad).presentaciones
+
+    P = Presentacion
+    # Nadie compra carne por arroba: 60 Bs/kg x 11,5 = 690 Bs, una cifra que confunde.
+    assert de(Categoria.CARNE) == (P.LIBRA, P.KILO)
+    assert de(Categoria.PESCADO) == (P.LIBRA, P.KILO)
+    assert de(Categoria.FRUTA) == (P.LIBRA, P.KILO, P.ARROBA)
+    assert de(Categoria.TUBERCULO) == (P.LIBRA, P.KILO, P.ARROBA, P.QUINTAL)
+    # Por unidad: el maple (30) es del huevo; un limón se vende por unidad o docena.
+    assert de(Categoria.CARNE, UnidadCanonica.UNIDAD) == (P.UNIDAD, P.DOCENA, P.MAPLE)
+    assert de(Categoria.FRUTA, UnidadCanonica.UNIDAD) == (P.UNIDAD, P.DOCENA)
+    # Lo que elige el administrador manda sobre la regla.
+    assert Producto("x", "X", categoria=Categoria.CARNE, presentaciones=(P.KILO, P.ARROBA)).presentaciones == (
+        P.KILO, P.ARROBA,
+    )
+
+
 def test_el_precio_por_kilo_se_lleva_a_cada_presentacion():
     assert precio_en(10.0, Presentacion.QUINTAL) == pytest.approx(460.0)
     assert precio_en(10.0, Presentacion.ARROBA) == pytest.approx(115.0)
@@ -217,7 +238,8 @@ def test_api_catalogo_del_administrador(cliente):
 def test_api_catalogo_publico_trae_presentaciones(cliente):
     tomate = next(p for p in cliente.get("/api/v1/productos").json() if p["codigo"] == "tomate")
     assert tomate["unidad_base"] == "kg"
-    assert {p["codigo"] for p in tomate["presentaciones"]} == {"libra", "kilo", "arroba", "quintal"}
+    # Hortaliza: hasta arroba. El quintal queda para tubérculos y abarrotes.
+    assert {p["codigo"] for p in tomate["presentaciones"]} == {"libra", "kilo", "arroba"}
 
 
 def test_api_un_usuario_no_toca_el_catalogo(cliente):

@@ -37,7 +37,7 @@ vainita,Vainita blanca,hortaliza,kg,si,57,117013601,ok,
 zapallo,Zapallo,hortaliza,kg,no,59,117013301,ok,
 platano,Plátano,fruta,kg,si,69,116016901,colision_ipc,el IPC agrupa plátano/guineo/banano en un solo item; banana usa el mismo código
 banana,Banana Cavendish,fruta,kg,si,60,,colision_ipc,el IPC no separa banana de plátano; se deja sin mapeo para no duplicar la serie
-limon,Limón sutil,fruta,kg,si,61,116014101,confirmar_ipc,el IPC dice criollo y el diario sutil
+limon,Limón sutil,fruta,unidad,si,61,116014101,confirmar_ipc,el IPC dice criollo y el diario sutil; en La Paz ambos lo publican solo por unidad
 mandarina,Mandarina criolla,fruta,kg,si,62,116014501,ok,confirmado en mapeo_productos
 manzana,Manzana Red Delicious,fruta,kg,si,64,116014702,ok,el diario cotiza por 100 unid.; la caja de 21 kg está solo en el nombre del producto, no en la unidad
 naranja,Naranja criolla,fruta,kg,si,65,116015502,ok,confirmado en mapeo_productos

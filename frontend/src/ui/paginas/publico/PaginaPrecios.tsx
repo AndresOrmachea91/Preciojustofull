@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import type { Producto } from "@/dominio/modelo";
-import { precioEnPresentacion, presentacionBase } from "@/dominio/modelo";
+import { precioEnPresentacion, presentacionBase, unidadDePresentacion } from "@/dominio/modelo";
 import { ahorroPosible } from "@/dominio/servicio/ordenarPorConveniencia";
 import type { Contenedor } from "@/infraestructura/contenedor";
 import { MapaPuntosVenta } from "@/ui/componentes/MapaPuntosVenta";
@@ -55,6 +55,13 @@ export function PaginaPrecios({ contenedor }: { contenedor: Contenedor }) {
   );
   const marcadorSeleccionado = marcadores.find((m) => m.mercado.codigo === seleccionado) ?? null;
 
+  // Solo se ofrecen presentaciones de la magnitud en que llegó el precio: si
+  // la fuente publica por unidad, no hay "por arroba" que mostrar.
+  const unidadDelPrecio = mapa.datos?.marcadores.find((m) => m.precio)?.precio?.unidad;
+  const presentacionesUtiles =
+    productoActual?.presentaciones.filter((p) => !unidadDelPrecio || unidadDePresentacion(p.codigo) === unidadDelPrecio) ??
+    [];
+
   const opciones = comparativa.datos?.opciones.map(escalar) ?? [];
   const minoristas = opciones.filter((o) => o.mercado.nivelPrecio === "minorista");
   const mayoristas = opciones.filter((o) => o.mercado.nivelPrecio === "mayorista");
@@ -72,13 +79,13 @@ export function PaginaPrecios({ contenedor }: { contenedor: Contenedor }) {
           ayuda={`${productos.length} productos. Escriba para buscar o elija de la lista.`}
         />
 
-        {productoActual && productoActual.presentaciones.length > 1 && (
+        {presentacionesUtiles.length > 1 && (
           <div className="consulta__presentacion">
             <span className="buscador__etiqueta" id="ver-precio-por">
               Ver el precio por
             </span>
             <div className="segmentado" role="group" aria-labelledby="ver-precio-por">
-              {productoActual.presentaciones.map((p) => (
+              {presentacionesUtiles.map((p) => (
                 <button
                   key={p.codigo}
                   type="button"

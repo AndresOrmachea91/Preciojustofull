@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from src.aplicacion.casos_uso.precios.comparar_mercados import CIUDAD_POR_DEFECTO, precio_del_local
+from src.aplicacion.casos_uso.precios.comparar_mercados import (
+    CIUDAD_POR_DEFECTO, en_unidad_del_producto, precio_del_local,
+)
 from src.aplicacion.puertos.salida import (
     LectorMercados, LectorObservaciones, LectorProductos,
 )
@@ -31,16 +33,17 @@ class ConsultarPrecioProducto:
         self._ciudad = ciudad
 
     def ejecutar(self, codigo_producto: str, codigo_mercado: str) -> PrecioConsolidado:
-        if self._productos.obtener(codigo_producto) is None:
+        producto = self._productos.obtener(codigo_producto)
+        if producto is None:
             raise ProductoNoEncontrado(codigo_producto)
-        locales = self._observaciones.buscar(codigo_producto, codigo_mercado)
+        locales = en_unidad_del_producto(self._observaciones.buscar(codigo_producto, codigo_mercado), producto)
         mercado = self._mercados.obtener(codigo_mercado) if self._mercados else None
         if mercado is None:
             # Sin catálogo no hay factor ni nivel: solo lo medido en el local.
             # Grupos distintos (otra variedad, otro mes) no se fusionan: se
             # publica el más reciente.
             return self._motor.consolidar_grupos(locales)[0]
-        referencia = self._observaciones.buscar(codigo_producto, ciudad=self._ciudad)
+        referencia = en_unidad_del_producto(self._observaciones.buscar(codigo_producto, ciudad=self._ciudad), producto)
         precio = precio_del_local(self._motor, mercado, locales, referencia)
         if precio is None:
             raise SinObservaciones(f"Sin mediciones ni referencia para {codigo_producto} en {codigo_mercado}")

@@ -131,8 +131,8 @@ def caso_comparar_mercados() -> CompararMercadosCasoUso:
 
 
 def caso_calcular_canasta() -> CalcularCanastaCasoUso:
-    _, m, o = _repositorios()
-    return CalcularCanastaCasoUso(m, o, obtener_motor())
+    p, m, o = _repositorios()
+    return CalcularCanastaCasoUso(m, o, obtener_motor(), productos=p)
 
 
 def caso_registrar_reporte() -> RegistrarReporteCiudadano:
