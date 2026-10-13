@@ -27,11 +27,16 @@ respaldar() {
 echo "Respaldos: uno por día a las $HORA (hora de Bolivia), se guardan $DIAS días."
 [ "${RESPALDO_AL_INICIAR:-0}" = "1" ] && respaldar
 
-ultimo=""
+# No se espera el minuto exacto: si a la hora del respaldo el equipo estaba
+# suspendido o apagado, se respalda apenas despierta. "Ya se hizo hoy" se
+# mira en la carpeta, así que reiniciar el contenedor no lo repite.
+hora_numero=$(echo "$HORA" | tr -d ':' | sed 's/^0*//')
+hecho_hoy() { ls /respaldos/preciojusto_"$(date +%F)"_*.dump >/dev/null 2>&1; }
+
 while true; do
-  if [ "$(date +%H:%M)" = "$HORA" ] && [ "$ultimo" != "$(date +%F)" ]; then
+  ahora=$(date +%H%M | sed 's/^0*//')
+  if [ "${ahora:-0}" -ge "${hora_numero:-0}" ] && ! hecho_hoy; then
     respaldar
-    ultimo="$(date +%F)"
   fi
-  sleep 30
+  sleep 60
 done

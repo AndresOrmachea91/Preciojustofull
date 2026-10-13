@@ -11,7 +11,8 @@ from sqlalchemy.orm import Session, sessionmaker
 from src.infraestructura.adaptadores.salida.persistencia.tablas import (
     INDICE_CLAVE_NATURAL, NOMBRE_INDICE_CLAVE_NATURAL, metadata,
 )
-from src.infraestructura.adaptadores.salida.persistencia.auditable import COLUMNAS_AUDITORIA
+from src.infraestructura.adaptadores.salida.persistencia.auditable import COLUMNAS_AUDITORIA, como_actor
+from src.infraestructura.adaptadores.salida.persistencia.referencias import sincronizar_referencias
 
 log = logging.getLogger(__name__)
 
@@ -67,9 +68,6 @@ _COLUMNAS_AGREGADAS = {
         "revisa_a": "INTEGER NULL REFERENCES observacion_precio(id)",
         "ciudad": "VARCHAR(64) NULL",
     },
-    "usuario": {
-        "codigo_punto_venta": "VARCHAR(64) NULL REFERENCES mercado(codigo)",
-    },
 }
 
 # Las 5 columnas de Auditable, para las tablas que existían antes de la
@@ -78,6 +76,7 @@ _COLUMNAS_AGREGADAS = {
 _TABLAS_AUDITADAS = (
     "producto", "mercado", "observacion_precio", "corrida_fuente", "intento_fuente",
     "usuario", "reporte_precio", "lista_compras", "item_lista_compras",
+    "rol", "permiso", "rol_permiso", "fuente", "vendedor",
 )
 
 
@@ -157,6 +156,44 @@ _RELLENOS_HISTORICOS = {
 }
 
 
+# El puesto del vendedor estuvo primero en usuario.codigo_punto_venta; ahora
+# vive en la tabla vendedor. Se copia una vez y la columna vieja se quita.
+_PUESTO_A_VENDEDOR = (
+    "INSERT INTO vendedor (id_usuario, codigo_punto_venta, creado_en, creado_por, eliminado) "
+    "SELECT u.id, u.codigo_punto_venta, CURRENT_TIMESTAMP, 'migracion', u.eliminado FROM usuario u "
+    "WHERE (u.codigo_punto_venta IS NOT NULL OR u.rol = 'vendedor') "
+    "AND NOT EXISTS (SELECT 1 FROM vendedor v WHERE v.id_usuario = u.id)"
+)
+
+# Claves foráneas hacia los catálogos en una base que ya existía (create_all
+# solo las pone al crear la tabla). Van después de sincronizar los catálogos
+# y de renombrar el rol viejo, para que ninguna fila quede huérfana.
+_RELACIONES_POSTGRES = [
+    ("usuario", "fk_usuario_rol", "FOREIGN KEY (rol) REFERENCES rol(codigo)"),
+    ("observacion_precio", "fk_observacion_fuente", "FOREIGN KEY (fuente) REFERENCES fuente(codigo)"),
+]
+
+
+def _migrar_a_catalogos(motor: Engine) -> None:
+    """Va en su propia transacción, después de la migración de columnas y rellenos."""
+    with como_actor("sistema"), Session(motor) as s:
+        sincronizar_referencias(s)
+        s.commit()
+    columnas = {c["name"] for c in inspect(motor).get_columns("usuario")}
+    with motor.begin() as conexion:
+        if "codigo_punto_venta" in columnas:
+            conexion.execute(text(_PUESTO_A_VENDEDOR))
+            conexion.execute(text("ALTER TABLE usuario DROP COLUMN codigo_punto_venta"))
+            log.info("Puesto de los vendedores movido a la tabla vendedor")
+        if motor.dialect.name != "postgresql":
+            return
+        for tabla, nombre, definicion in _RELACIONES_POSTGRES:
+            conexion.execute(text(
+                f"DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = '{nombre}') "
+                f"THEN ALTER TABLE {tabla} ADD CONSTRAINT {nombre} {definicion}; END IF; END $$"
+            ))
+
+
 def crear_esquema(motor: Engine) -> None:
     """Crea las tablas y columnas que falten. Es idempotente."""
     metadata.create_all(motor)
@@ -188,6 +225,7 @@ def crear_esquema(motor: Engine) -> None:
             rellenadas = conexion.execute(text(sentencia)).rowcount
             if rellenadas:
                 log.info("Filas históricas completadas: %s", rellenadas)
+    _migrar_a_catalogos(motor)
     log.info("Esquema verificado")
 
 

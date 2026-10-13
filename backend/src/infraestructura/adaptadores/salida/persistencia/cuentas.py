@@ -13,7 +13,9 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from src.infraestructura.adaptadores.salida.persistencia.sesion import sesion_de
-from src.infraestructura.adaptadores.salida.persistencia.tablas import ReporteTabla, UsuarioTabla
+from src.infraestructura.adaptadores.salida.persistencia.tablas import (
+    ReporteTabla, UsuarioTabla, VendedorTabla,
+)
 from src.dominio.modelo import Auditoria, EstadoReporte, Reporte, Rol, Usuario
 
 
@@ -34,7 +36,7 @@ def _a_usuario(f: UsuarioTabla) -> Usuario:
         hash_contrasena=f.hash_contrasena,
         activo=bool(f.activo),
         creado_en=_con_zona(f.creado_en),
-        codigo_punto_venta=f.codigo_punto_venta,
+        codigo_punto_venta=f.vendedor.codigo_punto_venta if f.vendedor and not f.vendedor.eliminado else None,
         auditoria=Auditoria(
             creado_en=_con_zona(f.creado_en),
             creado_por=f.creado_por,
@@ -59,6 +61,20 @@ def _a_reporte(f: ReporteTabla) -> Reporte:
         revisado_en=_con_zona(f.revisado_en),
         motivo_rechazo=f.motivo_rechazo,
     )
+
+
+def _guardar_perfil_vendedor(s: Session, fila: UsuarioTabla, usuario: Usuario) -> None:
+    """Tiene fila en vendedor quien es vendedor o tiene puesto; si deja de serlo, se marca eliminada."""
+    corresponde = usuario.rol is Rol.VENDEDOR or usuario.codigo_punto_venta is not None
+    perfil = s.get(VendedorTabla, fila.id)
+    if perfil is None:
+        if corresponde:
+            s.add(VendedorTabla(id_usuario=fila.id, codigo_punto_venta=usuario.codigo_punto_venta))
+        return
+    if perfil.codigo_punto_venta != usuario.codigo_punto_venta:
+        perfil.codigo_punto_venta = usuario.codigo_punto_venta
+    if perfil.eliminado == corresponde:
+        perfil.eliminado = not corresponde
 
 
 class _Base:
@@ -91,6 +107,9 @@ class UsuariosPostgres(_Base):
             fila = s.get(UsuarioTabla, id_usuario)
             if fila is not None:
                 fila.eliminado = True
+                # La parte "vendedor" del mismo registro corre la misma suerte.
+                if fila.vendedor is not None:
+                    fila.vendedor.eliminado = True
 
     def guardar(self, usuario: Usuario) -> Usuario:
         with sesion_de(self._fabrica) as s:
@@ -105,8 +124,10 @@ class UsuariosPostgres(_Base):
             fila.rol = usuario.rol.value
             fila.hash_contrasena = usuario.hash_contrasena
             fila.activo = usuario.activo
-            fila.codigo_punto_venta = usuario.codigo_punto_venta
             s.flush()
+            _guardar_perfil_vendedor(s, fila, usuario)
+            s.flush()
+            s.refresh(fila)
             return _a_usuario(fila)
 
     def contar_administradores_activos(self) -> int:

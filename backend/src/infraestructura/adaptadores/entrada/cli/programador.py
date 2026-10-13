@@ -39,6 +39,7 @@ BOLIVIA = timezone(timedelta(hours=-4), "BOT")
 
 RECOLECTOR = [sys.executable, "-m", "src.infraestructura.adaptadores.entrada.cli.recolectar"]
 DISPONIBILIDAD = RECOLECTOR + ["--disponibilidad"]
+TRAMO_SEGUNDOS = 300
 
 SIGNIFICADO = {
     0: "entraron hechos nuevos",
@@ -94,10 +95,11 @@ def main() -> int:
     while True:
         siguiente = proxima_corrida(datetime.now(timezone.utc), a_las)
         log.info("Próxima recolección: %s", siguiente.strftime("%Y-%m-%d %H:%M %Z"))
-        # Se duerme en tramos de hasta una hora: si el reloj del equipo
-        # salta (suspensión, cambio de hora), se corrige en el tramo siguiente.
+        # Se duerme en tramos cortos y se vuelve a mirar el reloj: si el equipo
+        # estuvo suspendido a la hora de la corrida, se recolecta apenas
+        # despierta (a lo sumo TRAMO_SEGUNDOS después), no al día siguiente.
         while (falta := (siguiente - datetime.now(timezone.utc)).total_seconds()) > 0:
-            time.sleep(min(falta, 3600))
+            time.sleep(min(falta, TRAMO_SEGUNDOS))
         correr_el_dia(reintentos, espera)
 
 

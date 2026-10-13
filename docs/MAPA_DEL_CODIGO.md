@@ -40,11 +40,38 @@ Dentro de cada capa, lo de cada ROL está en su carpeta:
 | Demostración en Postman (guardar, modificar, eliminar, listar) | `docs/postman/PrecioJusto_Auditoria.postman_collection.json` |
 | Pruebas                                          | `backend/tests/test_auditoria.py`, `test_contrato_cuentas.py`, `test_api_autenticacion.py` |
 
+## Las 14 tablas y qué guarda cada una
+
+Todas heredan las 5 columnas de `Auditable`. Base: contenedor `preciojusto-db-1`, base `preciojusto`.
+
+| Tabla | Guarda | Se relaciona con |
+|-------|--------|------------------|
+| `usuario` | Toda cuenta: correo, nombre, hash de la contraseña, activo | `rol` (FK `usuario.rol → rol.codigo`) |
+| `vendedor` | Lo que un vendedor tiene además de su cuenta: su puesto | `usuario` (misma clave: herencia por tabla unida), `mercado` |
+| `rol` | administrador, vendedor, usuario | |
+| `permiso` | Las 7 acciones protegidas | |
+| `rol_permiso` | Qué permiso tiene cada rol (la matriz) | `rol`, `permiso` |
+| `fuente` | De dónde sale un precio: SIIP IPC, SIIP diario, vendedor, ciudadano, campo... | `fuente` (`deriva_de`, si copia a otra) |
+| `producto` | Los 45 productos, su unidad base y presentaciones | |
+| `mercado` | Mercados, tiendas, supermercados, mayoristas, con coordenadas | `mercado` (`codigo_padre`: el sector pertenece al mercado) |
+| `observacion_precio` | **Todos los precios**, de cualquier fuente; inmutables | `fuente` (FK), producto, mercado o ciudad |
+| `reporte_precio` | Precios que reportan los usuarios, pendientes o revisados | `usuario` (autor y revisor) |
+| `lista_compras`, `item_lista_compras` | Listas de compras de cada usuario | `usuario`, `producto` |
+| `corrida_fuente` | Qué trajo cada corrida del recolector, por producto | |
+| `intento_fuente` | Cada llamada al SIIP y si respondió (métrica de disponibilidad) | |
+
+Roles, permisos y fuentes **se deciden en el dominio** (`dominio/modelo/usuario.py`,
+`observacion.py`); las tablas los reflejan para consultarlos y para las claves
+foráneas. Se sincronizan solas al arrancar (`persistencia/referencias.py`):
+editarlas a mano no cambia lo que el sistema permite, y lo que el dominio quita
+se marca `eliminado`, no se borra.
+
 ## La equivalencia con "/bd/..."
 
 | Si buscas...                         | Está en                                                              |
 |--------------------------------------|----------------------------------------------------------------------|
-| `/bd/usuario` (consultas SQL)        | `infraestructura/adaptadores/salida/persistencia/cuentas.py` → `UsuariosPostgres` |
+| `/bd/usuario` (consultas SQL)        | `infraestructura/adaptadores/salida/persistencia/cuentas.py` → `UsuariosPostgres` (también escribe `vendedor`) |
+| `/bd/rol`, `/bd/permiso`, `/bd/fuente` | `infraestructura/adaptadores/salida/persistencia/referencias.py` → `sincronizar_referencias` |
 | `/bd/reporte` (consultas SQL)        | `infraestructura/adaptadores/salida/persistencia/cuentas.py` → `ReportesPostgres` |
 | `/bd/precios`, productos, mercados   | `infraestructura/adaptadores/salida/persistencia/repositorios.py`   |
 | Las tablas (columnas, índices)       | `infraestructura/adaptadores/salida/persistencia/tablas.py`         |

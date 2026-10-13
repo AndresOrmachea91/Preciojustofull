@@ -17,12 +17,58 @@ from __future__ import annotations
 from sqlalchemy import (
     Boolean, Column, Date, DateTime, Float, ForeignKey, Integer, String, Index, MetaData, Table,
 )
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base, relationship
 
 from src.infraestructura.adaptadores.salida.persistencia.auditable import Auditable
 
 metadata = MetaData()
 Base = declarative_base(metadata=metadata)
+
+
+# --- Catálogos de referencia ------------------------------------------------
+# Reflejan en la base los catálogos del dominio (Rol, Permiso, la matriz de
+# permisos y Fuente) para que se puedan consultar y para que las demás
+# tablas los referencien con claves foráneas. La regla sigue en el dominio:
+# referencias.py los sincroniza al arrancar, así que editarlos a mano no
+# cambia lo que el sistema permite.
+
+class RolTabla(Base, Auditable):
+    __tablename__ = "rol"
+
+    codigo = Column(String(16), primary_key=True)
+    nombre = Column(String(64), nullable=False)
+    descripcion = Column(String(255), nullable=False)
+
+
+class PermisoTabla(Base, Auditable):
+    __tablename__ = "permiso"
+
+    codigo = Column(String(32), primary_key=True)
+    descripcion = Column(String(255), nullable=False)
+
+
+class RolPermisoTabla(Base, Auditable):
+    """Qué puede hacer cada rol: la matriz PERMISOS_POR_ROL, una fila por par."""
+
+    __tablename__ = "rol_permiso"
+
+    codigo_rol = Column(String(16), ForeignKey("rol.codigo"), primary_key=True)
+    codigo_permiso = Column(String(32), ForeignKey("permiso.codigo"), primary_key=True)
+
+
+class FuenteTabla(Base, Auditable):
+    """De dónde sale un precio: SIIP IPC, SIIP diario, vendedor, ciudadano, campo..."""
+
+    __tablename__ = "fuente"
+
+    codigo = Column(String(32), primary_key=True)
+    nombre = Column(String(128), nullable=False)
+    descripcion = Column(String(512), nullable=False)
+    confianza_base = Column(String(16), nullable=False)
+    # Si copia a otra fuente (un diario que reproduce el boletín del SIIP).
+    deriva_de = Column(String(32), ForeignKey("fuente.codigo"), nullable=True)
+    automatica = Column(Boolean, nullable=False, default=False)
+    url = Column(String(255), nullable=True)
 
 
 class ProductoTabla(Base, Auditable):
@@ -67,7 +113,7 @@ class ObservacionTabla(Base, Auditable):
     __tablename__ = "observacion_precio"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    fuente = Column(String(32), nullable=False)
+    fuente = Column(String(32), ForeignKey("fuente.codigo"), nullable=False)
     nivel = Column(String(16), nullable=False)
     codigo_producto = Column(String(64), nullable=False)
     # Uno de los dos: punto de venta (ámbito punto_venta) o ciudad (ámbito
@@ -194,10 +240,25 @@ class UsuarioTabla(Base, Auditable):
     # eliminada lógicamente no le impide a esa persona registrarse de nuevo.
     correo = Column(String(255), nullable=False)
     nombre = Column(String(255), nullable=False)
-    rol = Column(String(16), nullable=False, default="usuario")
+    rol = Column(String(16), ForeignKey("rol.codigo"), nullable=False, default="usuario")
     hash_contrasena = Column(String(255), nullable=False)
     activo = Column(Boolean, nullable=False, default=True)
-    # Puesto o tienda del vendedor. creado_en, creado_por, etc. los hereda de Auditable.
+    # Los datos propios del vendedor van en su tabla (herencia: un vendedor
+    # ES un usuario con algo más). Se lee junto con el usuario.
+    vendedor = relationship("VendedorTabla", uselist=False, lazy="joined")
+
+
+class VendedorTabla(Base, Auditable):
+    """
+    Lo que un vendedor tiene además de su cuenta: el puesto o tienda donde
+    publica. Herencia por tabla unida (el JOINED de JPA): la clave primaria
+    es también la clave foránea al usuario. Tiene fila quien es vendedor o
+    tiene un puesto asignado.
+    """
+
+    __tablename__ = "vendedor"
+
+    id_usuario = Column(Integer, ForeignKey("usuario.id"), primary_key=True)
     codigo_punto_venta = Column(String(64), ForeignKey("mercado.codigo"), nullable=True)
 
 
