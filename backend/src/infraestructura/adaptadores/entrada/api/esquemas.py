@@ -156,6 +156,20 @@ class AuditoriaSalida(BaseModel):
     eliminado: bool
 
 
+class PuntoHistorialSalida(BaseModel):
+    periodo: str          # "2026-09"
+    nivel: Literal["minorista", "mayorista"]
+    precio: float
+    observaciones: int
+
+
+class HistorialSalida(BaseModel):
+    """El precio de referencia de la ciudad mes a mes, por unidad base del producto."""
+    codigo_producto: str
+    unidad: str
+    puntos: list[PuntoHistorialSalida]
+
+
 class RegistroAuditadoSalida(BaseModel):
     """Una fila de cualquier tabla, con sus 5 campos de auditoría."""
     tabla: str

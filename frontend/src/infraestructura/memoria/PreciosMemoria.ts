@@ -11,6 +11,7 @@
  */
 import type {
   CostoCanasta,
+  HistorialPrecio,
   ItemCanasta,
   Mercado,
   Precio,
@@ -23,6 +24,7 @@ import type {
   CatalogoRepositorio,
   DatosProducto,
   DatosPuntoVenta,
+  HistorialRepositorio,
   PrecioRepositorio,
 } from "@/aplicacion/puertos";
 
@@ -109,11 +111,34 @@ function codigoLibre(base: string, existe: (codigo: string) => boolean): string 
   return codigo;
 }
 
-export class PreciosMemoria implements PrecioRepositorio, CatalogoRepositorio, CatalogoAdminRepositorio {
+export class PreciosMemoria
+  implements PrecioRepositorio, CatalogoRepositorio, CatalogoAdminRepositorio, HistorialRepositorio
+{
   // Copias por instancia: lo que el administrador cambie en una sesión de
   // memoria no se filtra a otra (ni a otra prueba).
   private readonly listaMercados: Mercado[] = [...MERCADOS];
   private readonly listaProductos: Producto[] = [...PRODUCTOS];
+
+  /**
+   * Historia de demostración: 12 meses alrededor del precio medio de la
+   * tabla, con una oscilación fija. Sirve para ver el gráfico sin servidor;
+   * no son datos reales.
+   */
+  async historial(codigoProducto: string, meses = 12): Promise<HistorialPrecio> {
+    const filas = PRECIOS.filter((f) => f.producto === codigoProducto);
+    if (filas.length === 0) return { unidad: "kg", puntos: [] };
+    const base = filas.reduce((suma, f) => suma + f.centro, 0) / filas.length;
+    const n = Math.min(meses, 12);
+    const puntos: HistorialPrecio["puntos"][number][] = [];
+    for (let i = 0; i < n; i++) {
+      const fecha = new Date(Date.UTC(2026, 8 - (n - 1 - i), 1));
+      const periodo = `${fecha.getUTCFullYear()}-${String(fecha.getUTCMonth() + 1).padStart(2, "0")}`;
+      const ola = 1 + 0.06 * Math.sin(i / 1.7) + i * 0.006;
+      puntos.push({ periodo, nivel: "mayorista", precio: Math.round(base * 0.68 * ola * 100) / 100, observaciones: 20 });
+      puntos.push({ periodo, nivel: "minorista", precio: Math.round(base * ola * 100) / 100, observaciones: 1 });
+    }
+    return { unidad: "kg", puntos };
+  }
 
   async compararMercados(codigoProducto: string, zona?: string): Promise<PrecioEnMercado[]> {
     return PRECIOS.filter((f) => f.producto === codigoProducto)

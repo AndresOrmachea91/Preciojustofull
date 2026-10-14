@@ -4,11 +4,13 @@ import type { Producto } from "@/dominio/modelo";
 import { precioEnPresentacion, presentacionBase, unidadDePresentacion } from "@/dominio/modelo";
 import { ahorroPosible } from "@/dominio/servicio/ordenarPorConveniencia";
 import type { Contenedor } from "@/infraestructura/contenedor";
+import { GraficoHistorial } from "@/ui/componentes/GraficoHistorial";
 import { MapaPuntosVenta } from "@/ui/componentes/MapaPuntosVenta";
 import { PanelPunto } from "@/ui/componentes/PanelPunto";
 import { SelectorProducto } from "@/ui/componentes/SelectorProducto";
 import { TarjetaMercado } from "@/ui/componentes/TarjetaMercado";
 import { useComparativa } from "@/ui/hooks/useComparativa";
+import { useHistorial } from "@/ui/hooks/useHistorial";
 import { useMapa } from "@/ui/hooks/useMapa";
 
 // Con qué producto abre la pantalla: uno que tenga precio en los 88 puntos.
@@ -34,6 +36,7 @@ export function PaginaPrecios({ contenedor }: { contenedor: Contenedor }) {
   const codigo = producto ?? "";
   const mapa = useMapa(contenedor, codigo);
   const comparativa = useComparativa(contenedor, codigo);
+  const historial = useHistorial(contenedor, codigo);
   const productoActual = productos.find((p) => p.codigo === producto) ?? null;
 
   // En qué presentación ver los precios (kilo, libra, arroba, quintal...).
@@ -145,6 +148,35 @@ export function PaginaPrecios({ contenedor }: { contenedor: Contenedor }) {
           />
           <PanelPunto marcador={marcadorSeleccionado} producto={productoActual} />
         </div>
+      )}
+
+      {historial.datos && historial.datos.puntos.length > 0 && (
+        <section aria-labelledby="titulo-historial">
+          <h2 id="titulo-historial" className="seccion">
+            Cómo cambió el precio en La Paz
+          </h2>
+          <p className="tenue">
+            Precio de referencia de la ciudad (SIIP), mes a mes
+            {historial.datos.variacionMinorista !== null && (
+              <>
+                {" "}
+                · al consumidor final{" "}
+                <strong>
+                  {historial.datos.variacionMinorista > 0 ? "subió" : historial.datos.variacionMinorista < 0 ? "bajó" : "no cambió"}
+                  {historial.datos.variacionMinorista !== 0 && ` ${Math.abs(historial.datos.variacionMinorista)} %`}
+                </strong>{" "}
+                en el periodo
+              </>
+            )}
+            .
+          </p>
+          <GraficoHistorial
+            puntos={historial.datos.puntos}
+            {...(presentacion && unidadDePresentacion(presentacion.codigo) === historial.datos.unidad
+              ? { factor: presentacion.factor, unidad: presentacion.nombre.toLowerCase() }
+              : { factor: 1, unidad: historial.datos.unidad })}
+          />
+        </section>
       )}
 
       {comparativa.datos && !comparativa.cargando && (

@@ -7,6 +7,7 @@
  */
 import type {
   CostoCanasta,
+  HistorialPrecio,
   ItemCanasta,
   Mercado,
   NivelPrecio,
@@ -19,6 +20,7 @@ import type {
 import { PRESENTACIONES_POR_UNIDAD } from "@/dominio/modelo";
 import type {
   CatalogoRepositorio,
+  HistorialRepositorio,
   PrecioRepositorio,
   ReporteRepositorio,
 } from "@/aplicacion/puertos";
@@ -142,8 +144,13 @@ export function aMercado(d: MercadoDto): Mercado {
   };
 }
 
+interface HistorialDto {
+  unidad: UnidadBase;
+  puntos: { periodo: string; nivel: NivelPrecio; precio: number; observaciones: number }[];
+}
+
 export class PreciosApi
-  implements PrecioRepositorio, CatalogoRepositorio, ReporteRepositorio
+  implements PrecioRepositorio, CatalogoRepositorio, ReporteRepositorio, HistorialRepositorio
 {
   constructor(private readonly http: ClienteHttp) {}
 
@@ -164,6 +171,13 @@ export class PreciosApi
       },
       precio: aPrecio(d.precio),
     }));
+  }
+
+  async historial(codigoProducto: string, meses = 24): Promise<HistorialPrecio> {
+    const d = await this.http.get<HistorialDto>(`/precios/${encodeURIComponent(codigoProducto)}/historial`, {
+      meses: String(meses),
+    });
+    return { unidad: d.unidad, puntos: d.puntos };
   }
 
   async precioEnMercado(codigoProducto: string, codigoMercado: string): Promise<Precio> {

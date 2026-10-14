@@ -16,6 +16,7 @@ import { CalcularCanasta } from "@/aplicacion/casosUso/publico/calcularCanasta";
 import { CompararMercados } from "@/aplicacion/casosUso/publico/compararMercados";
 import { ConsultarCatalogo } from "@/aplicacion/casosUso/publico/consultarCatalogo";
 import { GestionarSesion } from "@/aplicacion/casosUso/cuentas/gestionarSesion";
+import { VerHistorial } from "@/aplicacion/casosUso/publico/verHistorial";
 import { VerMapa } from "@/aplicacion/casosUso/publico/verMapa";
 import type {
   AdministracionRepositorio,
@@ -23,6 +24,7 @@ import type {
   AuditoriaRepositorio,
   CatalogoAdminRepositorio,
   CatalogoRepositorio,
+  HistorialRepositorio,
   ListasRepositorio,
   MisReportesRepositorio,
   PrecioRepositorio,
@@ -46,6 +48,7 @@ export interface Contenedor {
   readonly calcularCanasta: CalcularCanasta;
   readonly catalogo: ConsultarCatalogo;
   readonly verMapa: VerMapa;
+  readonly verHistorial: VerHistorial;
   readonly sesion: GestionarSesion;
   readonly administrar: Administrar;
   readonly administrarCatalogo: AdministrarCatalogo;
@@ -58,7 +61,7 @@ export interface Contenedor {
 export function crearContenedor(origen?: string, almacen?: AlmacenSesion): Contenedor {
   const modo = origen ?? import.meta.env?.VITE_ORIGEN_DATOS ?? "memoria";
 
-  let precios: PrecioRepositorio;
+  let precios: PrecioRepositorio & HistorialRepositorio;
   let catalogo: CatalogoRepositorio;
   let cuentas: SesionRepositorio & AdministracionRepositorio & AuditoriaRepositorio;
   let catalogoAdmin: CatalogoAdminRepositorio;
@@ -105,6 +108,7 @@ export function crearContenedor(origen?: string, almacen?: AlmacenSesion): Conte
     calcularCanasta: new CalcularCanasta(precios),
     catalogo: new ConsultarCatalogo(catalogo),
     verMapa: new VerMapa(catalogo, precios),
+    verHistorial: new VerHistorial(precios),
     sesion: new GestionarSesion(cuentas, almacen),
     administrar: new Administrar(cuentas),
     administrarCatalogo: new AdministrarCatalogo(catalogo, catalogoAdmin),

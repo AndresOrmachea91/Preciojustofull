@@ -401,3 +401,26 @@ export interface PrecioPublicado {
   readonly unidadBase: UnidadBase;
   readonly publicadoEn: string;
 }
+
+// --- historial de precios ----------------------------------------------------
+
+/** El precio de referencia de la ciudad en un mes, en la unidad base del producto. */
+export interface PuntoHistorial {
+  /** "2026-09" */
+  readonly periodo: string;
+  readonly nivel: NivelPrecio;
+  readonly precio: number;
+  readonly observaciones: number;
+}
+
+export interface HistorialPrecio {
+  readonly unidad: UnidadBase;
+  readonly puntos: readonly PuntoHistorial[];
+}
+
+/** Cuánto cambió una serie entre su primer y su último mes, en porcentaje. Null si no hay dos meses. */
+export function variacionPorcentual(puntos: readonly PuntoHistorial[], nivel: NivelPrecio): number | null {
+  const serie = puntos.filter((p) => p.nivel === nivel);
+  if (serie.length < 2 || serie[0].precio === 0) return null;
+  return Math.round(((serie[serie.length - 1].precio - serie[0].precio) / serie[0].precio) * 1000) / 10;
+}

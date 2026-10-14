@@ -100,3 +100,32 @@ def test_con_dos_series_se_usa_la_de_la_unidad_del_producto():
     comparador = CompararMercadosCasoUso(productos, mercados, observaciones, MotorFusion())
     [precio] = comparador.ejecutar("papaya")
     assert precio.precio.unidad.value == "kg" and precio.precio.rango.centro == 13.0
+
+
+def test_el_historial_resume_cada_mes_por_nivel_con_la_mediana():
+    from src.aplicacion.casos_uso.precios.historial_precio import HistorialPrecio
+    from src.dominio.modelo import Categoria
+    from src.infraestructura.adaptadores.salida.memoria.repositorios import ProductosEnMemoria
+
+    def diario(monto, mes, dia):
+        return Observacion(
+            fuente=Fuente.SIIP_DIARIO, nivel=NivelPrecio.MAYORISTA, codigo_producto="papa",
+            codigo_mercado=None, ciudad="la_paz", ambito=Ambito.CIUDAD, periodo=Periodo(2026, mes, dia),
+            precio=Dinero(monto, Unidad("KILO")), capturada_en=AHORA,
+        )
+
+    productos = ProductosEnMemoria([Producto("papa", "Papa", categoria=Categoria.TUBERCULO)])
+    observaciones = ObservacionesEnMemoria([
+        _referencia("papa", 6.0),                                   # IPC agosto
+        diario(4.0, 8, 1), diario(4.2, 8, 2), diario(9.9, 8, 3),    # un día raro no mueve la mediana
+        diario(4.5, 9, 1),
+        _por_unidad("papa", 0.5, mes=9),                            # serie en otra unidad: fuera
+    ])
+    unidad, puntos = HistorialPrecio(productos, observaciones).ejecutar("papa")
+
+    assert unidad == "kg"
+    assert [(p.mes, p.nivel, p.precio, p.observaciones) for p in puntos] == [
+        (8, "mayorista", 4.2, 3), (8, "minorista", 6.0, 1), (9, "mayorista", 4.5, 1),
+    ]
+    # Con meses=1 queda solo el más reciente.
+    assert {p.mes for p in HistorialPrecio(productos, observaciones).ejecutar("papa", meses=1)[1]} == {9}

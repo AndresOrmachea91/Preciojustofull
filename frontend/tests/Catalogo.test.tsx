@@ -57,6 +57,22 @@ describe("presentaciones", () => {
     expect(docena.rango.centro).toBeCloseTo(8.4);
   });
 
+  it("muestra la evolución del precio con su tabla, y la lleva a la presentación elegida", async () => {
+    render(<App />);
+    expect(await screen.findByRole("heading", { name: "Cómo cambió el precio en La Paz" })).toBeDefined();
+    const tabla = screen.getByRole("table", { name: "Precio por mes" });
+    const filas = within(tabla).getAllByRole("row");
+    expect(filas).toHaveLength(13); // encabezado + 12 meses
+    const porKilo = Number(filas[1].textContent!.match(/Bs ([\d.]+)/)![1]);
+
+    fireEvent.click(within(screen.getByRole("group", { name: "Ver el precio por" })).getByRole("button", { name: "Arroba" }));
+    await waitFor(() => {
+      const ahora = within(screen.getByRole("table", { name: "Precio por mes" })).getAllByRole("row")[1];
+      expect(Number(ahora.textContent!.match(/Bs ([\d.]+)/)![1])).toBeCloseTo(porKilo * 11.5, 1);
+    });
+    expect(screen.getByRole("img", { name: "Precio por arroba, mes a mes" })).toBeDefined();
+  });
+
   it("el usuario puede ver los precios por arroba", async () => {
     render(<App />);
     const grupo = await screen.findByRole("group", { name: "Ver el precio por" });

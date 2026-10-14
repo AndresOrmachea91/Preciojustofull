@@ -6,6 +6,7 @@
  * no sabe cuál está usando.
  */
 import type {
+  HistorialPrecio,
   Referencias,
   RegistroAuditado,
   CostoCanasta,
@@ -29,6 +30,11 @@ export interface PrecioRepositorio {
   compararMercados(codigoProducto: string, zona?: string): Promise<PrecioEnMercado[]>;
   precioEnMercado(codigoProducto: string, codigoMercado: string): Promise<Precio>;
   calcularCanasta(items: readonly ItemCanasta[], zona?: string): Promise<CostoCanasta[]>;
+}
+
+/** El precio de la ciudad mes a mes. Puerto aparte: no todo el que compara precios necesita historia. */
+export interface HistorialRepositorio {
+  historial(codigoProducto: string, meses?: number): Promise<HistorialPrecio>;
 }
 
 export interface CatalogoRepositorio {

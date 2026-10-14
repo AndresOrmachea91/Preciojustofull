@@ -31,6 +31,7 @@ from src.infraestructura.adaptadores.salida.seguridad.tokens import EmisorJwt
 from src.aplicacion.casos_uso.precios.calcular_canasta import CalcularCanastaCasoUso
 from src.aplicacion.casos_uso.precios.comparar_mercados import CompararMercadosCasoUso
 from src.aplicacion.casos_uso.precios.consultar_precio import ConsultarPrecioProducto
+from src.aplicacion.casos_uso.precios.historial_precio import HistorialPrecio
 from src.aplicacion.casos_uso.administracion.gestionar_usuarios import AdministrarUsuarios
 from src.aplicacion.casos_uso.cuentas.iniciar_sesion import IniciarSesion, ResolverSesion
 from src.aplicacion.casos_uso.cuentas.registrar_usuario import RegistrarUsuario
@@ -130,6 +131,11 @@ def caso_consultar_precio() -> ConsultarPrecioProducto:
 def caso_comparar_mercados() -> CompararMercadosCasoUso:
     p, m, o = _repositorios()
     return CompararMercadosCasoUso(p, m, o, obtener_motor())
+
+
+def caso_historial_precio() -> HistorialPrecio:
+    p, _, o = _repositorios()
+    return HistorialPrecio(p, o)
 
 
 def caso_calcular_canasta() -> CalcularCanastaCasoUso:

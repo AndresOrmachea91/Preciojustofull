@@ -19,6 +19,9 @@
   --sobre-peligro: #ffffff;
   --mapa-fondo: #dfe7e3;
   --sombra: rgba(14, 59, 50, 0.14);
+  /* Series del historial: validadas para daltonismo y contraste (skill dataviz). */
+  --serie-minorista: #0f7a5c;
+  --serie-mayorista: #a8520e;
 }
 
 * { box-sizing: border-box; }
@@ -79,6 +82,7 @@ body {
     --ambar: #e3a35f; --ambar-claro: #2a2116;
     --peligro: #f0a08e; --peligro-claro: #2e1a15; --sobre-peligro: #2b0d06;
     --mapa-fondo: #1a2420; --sombra: rgba(0, 0, 0, 0.5);
+    --serie-minorista: #33a383; --serie-mayorista: #cc7f35;
   }
 }
 
@@ -347,3 +351,32 @@ button, a, [role="option"] { -webkit-tap-highlight-color: transparent; }
 .rol__descripcion { margin: 4px 0 10px; font-size: 0.85rem; }
 .rol__permisos { margin: 0; padding-left: 18px; font-size: 0.88rem; display: flex; flex-direction: column; gap: 4px; }
 .rol__permisos li::marker { color: var(--jade); }
+
+/* --- historial de precios (gráfico) ----------------------------------------------- */
+.grafico { margin: 8px 0 24px; padding: 16px 18px 12px; background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; }
+.grafico__leyenda { display: flex; gap: 18px; margin: 0 0 6px; padding: 0; list-style: none; font-size: 0.85rem; color: var(--tenue); }
+.grafico__leyenda li { display: inline-flex; align-items: center; gap: 8px; }
+.grafico__clave { display: inline-block; width: 16px; height: 2px; border-radius: 1px; vertical-align: middle; }
+.grafico__clave--minorista { background: var(--serie-minorista); }
+.grafico__clave--mayorista { background: var(--serie-mayorista); }
+.grafico__lienzo { position: relative; width: 100%; overflow: hidden; }
+.grafico__lienzo svg { display: block; }
+.grafico__rejilla { stroke: var(--borde); stroke-width: 1; }
+.grafico__eje { fill: var(--tenue); font-size: 11px; font-variant-numeric: tabular-nums; }
+.grafico__final { fill: var(--texto); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.grafico__linea { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.grafico__linea--minorista { stroke: var(--serie-minorista); }
+.grafico__linea--mayorista { stroke: var(--serie-mayorista); }
+.grafico__punto { stroke: var(--superficie); stroke-width: 2; }
+.grafico__punto--minorista { fill: var(--serie-minorista); }
+.grafico__punto--mayorista { fill: var(--serie-mayorista); }
+.grafico__guia { stroke: var(--tenue); stroke-width: 1; }
+.grafico__zona { fill: transparent; cursor: crosshair; }
+.grafico__detalle {
+  position: absolute; pointer-events: none; display: flex; flex-direction: column; gap: 3px; min-width: 168px;
+  padding: 8px 10px; background: var(--superficie); border: 1px solid var(--borde); border-radius: 8px;
+  box-shadow: 0 6px 18px var(--sombra); font-size: 0.82rem; font-variant-numeric: tabular-nums;
+}
+.grafico__detalle span { display: inline-flex; align-items: center; gap: 6px; }
+.grafico__tabla { margin-top: 8px; font-size: 0.88rem; }
+.grafico__tabla summary { cursor: pointer; color: var(--jade); }
