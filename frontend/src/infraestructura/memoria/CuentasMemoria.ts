@@ -8,12 +8,23 @@
 import type {
   AdministracionRepositorio,
   AlmacenSesion,
+  AuditoriaRepositorio,
   MisReportesRepositorio,
   NuevaCuenta,
   ReporteRepositorio,
   SesionRepositorio,
 } from "@/aplicacion/puertos";
-import type { EstadoReporte, Permiso, ReporteEnRevision, Rol, Usuario } from "@/dominio/modelo";
+import { NOMBRE_ROL } from "@/dominio/modelo";
+import type {
+  Auditoria,
+  EstadoReporte,
+  Permiso,
+  Referencias,
+  RegistroAuditado,
+  ReporteEnRevision,
+  Rol,
+  Usuario,
+} from "@/dominio/modelo";
 
 const PERMISOS: Record<Rol, Permiso[]> = {
   usuario: ["gestionar_listas", "reportar_precio"],
@@ -54,8 +65,17 @@ function crear(
     creadoEn: "2026-10-01T12:00:00Z",
     permisos: activo ? PERMISOS[rol] : [],
     codigoPuntoVenta,
+    auditoria: { creadoEn: "2026-10-01T12:00:00Z", creadoPor: "sistema", modificadoEn: null, modificadoPor: null, eliminado: false },
   };
 }
+
+/** Las fuentes de precios, tal como las describe el backend. */
+const FUENTES: Referencias["fuentes"] = [
+  { codigo: "siip_ipc", nombre: "SIIP - precios al consumidor (IPC)", descripcion: "Precio promedio mensual al consumidor final por ciudad.", confianzaBase: "alto", derivaDe: null, automatica: true, url: "https://siip.produccion.gob.bo" },
+  { codigo: "siip_diario", nombre: "SIIP - precios diarios mayoristas", descripcion: "Precio mayorista diario por ciudad.", confianzaBase: "alto", derivaDe: null, automatica: true, url: "https://siip.produccion.gob.bo" },
+  { codigo: "vendedor", nombre: "Declarado por el vendedor", descripcion: "Precio que el vendedor publica sobre su propio puesto.", confianzaBase: "medio", derivaDe: null, automatica: false, url: null },
+  { codigo: "ciudadano", nombre: "Reporte ciudadano", descripcion: "Entra al motor cuando el administrador lo aprueba.", confianzaBase: "bajo", derivaDe: null, automatica: false, url: null },
+];
 
 /** El id de la cuenta de la sesión en memoria (el token es "memoria:<id>"), o null. */
 export function idDeSesion(almacen: AlmacenSesion): number | null {
@@ -64,7 +84,7 @@ export function idDeSesion(almacen: AlmacenSesion): number | null {
 }
 
 export class CuentasMemoria
-  implements SesionRepositorio, AdministracionRepositorio, ReporteRepositorio, MisReportesRepositorio
+  implements SesionRepositorio, AdministracionRepositorio, AuditoriaRepositorio, ReporteRepositorio, MisReportesRepositorio
 {
   private readonly cuentas = new Map<number, Cuenta>();
   private readonly listaReportes = new Map<number, ReporteEnRevision>();
@@ -100,9 +120,19 @@ export class CuentasMemoria
     return conId;
   }
 
+  private vigentes(): Cuenta[] {
+    return [...this.cuentas.values()].filter((c) => !c.usuario.auditoria?.eliminado);
+  }
+
+  /** La auditoría después de un cambio: quién (la sesión) y cuándo. */
+  private cambiada(antes: Usuario, eliminado = false): Auditoria {
+    const base = antes.auditoria ?? { creadoEn: antes.creadoEn, creadoPor: "sistema", modificadoEn: null, modificadoPor: null, eliminado: false };
+    return { ...base, modificadoEn: new Date().toISOString(), modificadoPor: this.actual().correo, eliminado };
+  }
+
   private actual(): Usuario {
     const usuario = this.cuentas.get(idDeSesion(this.almacen) ?? 0)?.usuario;
-    if (!usuario?.activo) throw new Error("Sesión inválida o vencida. Vuelva a ingresar.");
+    if (!usuario?.activo || usuario.auditoria?.eliminado) throw new Error("Sesión inválida o vencida. Vuelva a ingresar.");
     return usuario;
   }
 
@@ -111,9 +141,7 @@ export class CuentasMemoria
   }
 
   async ingresar(correo: string, contrasena: string): Promise<{ token: string; usuario: Usuario }> {
-    const cuenta = [...this.cuentas.values()].find(
-      (c) => c.usuario.correo === correo.trim().toLowerCase(),
-    );
+    const cuenta = this.vigentes().find((c) => c.usuario.correo === correo.trim().toLowerCase());
     if (!cuenta || cuenta.contrasena !== contrasena || !cuenta.usuario.activo) {
       throw new Error("Correo o contraseña incorrectos");
     }
@@ -126,7 +154,7 @@ export class CuentasMemoria
 
   private alta(cuenta: NuevaCuenta, rol: Rol): Usuario {
     const correo = cuenta.correo.trim().toLowerCase();
-    if ([...this.cuentas.values()].some((c) => c.usuario.correo === correo)) {
+    if (this.vigentes().some((c) => c.usuario.correo === correo)) {
       throw new Error(`Ya existe una cuenta con el correo ${correo}`);
     }
     if (cuenta.contrasena.length < 8) throw new Error("La contraseña debe tener al menos 8 caracteres");
@@ -137,9 +165,57 @@ export class CuentasMemoria
     return this.actual();
   }
 
-  async usuarios(): Promise<Usuario[]> {
+  async usuarios(incluirEliminados = false): Promise<Usuario[]> {
     this.exigir("gestionar_usuarios");
-    return [...this.cuentas.values()].map((c) => c.usuario);
+    return (incluirEliminados ? [...this.cuentas.values()] : this.vigentes()).map((c) => c.usuario);
+  }
+
+  async eliminarUsuario(id: number): Promise<void> {
+    this.exigir("gestionar_usuarios");
+    const cuenta = this.vigentes().find((c) => c.usuario.id === id);
+    if (!cuenta) throw new Error(`No existe el usuario ${id}`);
+    if (id === this.actual().id) throw new Error("No puede eliminar su propia cuenta");
+    const u = cuenta.usuario;
+    const admins = this.vigentes().filter((c) => c.usuario.activo && c.usuario.rol === "administrador").length;
+    if (u.activo && u.rol === "administrador" && admins <= 1) throw new Error("Debe quedar al menos un administrador activo");
+    cuenta.usuario = { ...u, auditoria: this.cambiada(u, true) };
+  }
+
+  async tablasAuditadas(): Promise<string[]> {
+    this.exigir("ver_auditoria");
+    return ["usuario"];
+  }
+
+  async auditoria(tabla?: string, limite = 50): Promise<RegistroAuditado[]> {
+    this.exigir("ver_auditoria");
+    if (tabla && tabla !== "usuario") return [];
+    return [...this.cuentas.values()]
+      .map(({ usuario: u }): RegistroAuditado => {
+        const a = u.auditoria!;
+        return {
+          tabla: "usuario",
+          clave: u.correo,
+          descripcion: `${u.nombre} (${u.rol})`,
+          accion: a.eliminado ? "eliminado" : a.modificadoEn ? "modificado" : "creado",
+          ultimoCambio: a.modificadoEn ?? a.creadoEn,
+          auditoria: a,
+        };
+      })
+      .sort((x, y) => y.ultimoCambio.localeCompare(x.ultimoCambio))
+      .slice(0, limite);
+  }
+
+  async referencias(): Promise<Referencias> {
+    this.exigir("ver_auditoria");
+    return {
+      roles: (Object.keys(PERMISOS) as Rol[]).map((rol) => ({
+        codigo: rol,
+        nombre: NOMBRE_ROL[rol],
+        descripcion: "",
+        permisos: PERMISOS[rol].map((codigo) => ({ codigo, descripcion: codigo.replaceAll("_", " ") })),
+      })),
+      fuentes: FUENTES,
+    };
   }
 
   async crearUsuario(cuenta: NuevaCuenta & { rol: Rol }): Promise<Usuario> {
@@ -163,13 +239,14 @@ export class CuentasMemoria
       cambios.activo ?? antes.activo,
       cambios.codigoPuntoVenta === undefined ? antes.codigoPuntoVenta : cambios.codigoPuntoVenta,
     );
+    const conAuditoria = { ...despues, auditoria: this.cambiada(antes) };
     const esAdmin = (u: Usuario) => u.activo && u.rol === "administrador";
     const admins = [...this.cuentas.values()].filter((c) => esAdmin(c.usuario)).length;
     if (esAdmin(antes) && !esAdmin(despues) && admins <= 1) {
       throw new Error("Debe quedar al menos un administrador activo");
     }
-    cuenta.usuario = despues;
-    return despues;
+    cuenta.usuario = conAuditoria;
+    return conAuditoria;
   }
 
   async restablecerContrasena(id: number, contrasena: string): Promise<Usuario> {

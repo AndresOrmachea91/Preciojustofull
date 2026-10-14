@@ -156,6 +156,43 @@ class AuditoriaSalida(BaseModel):
     eliminado: bool
 
 
+class RegistroAuditadoSalida(BaseModel):
+    """Una fila de cualquier tabla, con sus 5 campos de auditoría."""
+    tabla: str
+    clave: str
+    descripcion: str
+    accion: Literal["creado", "modificado", "eliminado"]
+    ultimo_cambio: datetime
+    auditoria: AuditoriaSalida
+
+
+class PermisoSalida(BaseModel):
+    codigo: str
+    descripcion: str
+
+
+class RolSalida(BaseModel):
+    codigo: str
+    nombre: str
+    descripcion: str
+    permisos: list[PermisoSalida]
+
+
+class FuenteSalida(BaseModel):
+    codigo: str
+    nombre: str
+    descripcion: str
+    confianza_base: str
+    deriva_de: str | None
+    automatica: bool
+    url: str | None
+
+
+class ReferenciasSalida(BaseModel):
+    roles: list[RolSalida]
+    fuentes: list[FuenteSalida]
+
+
 class UsuarioAuditadoSalida(UsuarioSalida):
     """
     El mismo usuario, con su auditoría: el DTO "sobrecargado" que ve solo

@@ -71,6 +71,46 @@ describe("administración", () => {
     render(<App />);
     await ingresar("vecino@correo.bo", "vecino1234");
     expect(await screen.findByRole("button", { name: "Salir" })).toBeDefined();
-    expect(screen.queryByRole("button", { name: "Administración" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Administración" })).toBeNull();
+  });
+
+  it("elimina una cuenta (lógico): sale del listado y vuelve a verse marcada", async () => {
+    render(<App />);
+    await ingresar(ADMIN_DEMO.correo, ADMIN_DEMO.contrasena);
+    const tabla = await screen.findByRole("table");
+    const fila = within(tabla).getByText("vecino@correo.bo").closest("tr")!;
+    // La propia cuenta no ofrece eliminarse.
+    const propia = within(tabla).getByText(ADMIN_DEMO.correo).closest("tr")!;
+    expect(within(propia).queryByRole("button", { name: "Eliminar" })).toBeNull();
+
+    fireEvent.click(within(fila).getByRole("button", { name: "Eliminar" }));
+    fireEvent.click(within(fila).getByRole("button", { name: "Sí, eliminar" }));
+    await waitFor(() => expect(screen.queryByText("vecino@correo.bo")).toBeNull());
+    expect(screen.getByRole("status").textContent).toMatch(/eliminada/);
+
+    fireEvent.click(screen.getByLabelText("Mostrar también las cuentas eliminadas"));
+    const marcada = (await screen.findByText("vecino@correo.bo")).closest("tr")!;
+    expect(within(marcada).getByText("Eliminada")).toBeDefined();
+    expect(marcada.textContent).toMatch(/Eliminada por admin@preciojusto.bo/);
+  });
+
+  it("la auditoría muestra quién hizo cada cambio, y los roles con sus permisos", async () => {
+    render(<App />);
+    await ingresar(ADMIN_DEMO.correo, ADMIN_DEMO.contrasena);
+    const tabla = await screen.findByRole("table");
+    fireEvent.change(within(tabla).getByLabelText("Rol de vecino@correo.bo"), { target: { value: "vendedor" } });
+    await screen.findByRole("status");
+
+    fireEvent.click(screen.getByRole("tab", { name: "Auditoría" }));
+    const cambios = await screen.findByRole("table", { name: "Últimos cambios" });
+    const primera = within(cambios).getAllByRole("row")[1];
+    expect(primera.textContent).toMatch(/vecino@correo.bo/);
+    expect(within(primera).getByText("Modificado")).toBeDefined();
+    expect(primera.textContent).toMatch(/admin@preciojusto.bo/);
+
+    fireEvent.click(screen.getByRole("tab", { name: "Roles y fuentes" }));
+    const vendedor = await screen.findByRole("region", { name: "Vendedor" });
+    expect(within(vendedor).getAllByRole("listitem")).toHaveLength(3);
+    expect(screen.getByRole("table", { name: "Fuentes de precios" }).textContent).toMatch(/SIIP/);
   });
 });

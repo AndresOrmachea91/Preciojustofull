@@ -11,10 +11,11 @@ from functools import lru_cache
 import logging
 
 from src.infraestructura.adaptadores.salida.memoria.cuentas import (
-    ReportesEnMemoria, UsuariosEnMemoria,
+    AuditoriaEnMemoria, ReportesEnMemoria, UsuariosEnMemoria,
 )
 from src.infraestructura.adaptadores.salida.memoria.listas import ListasEnMemoria
 from src.infraestructura.adaptadores.salida.memoria.repositorios import datos_de_ejemplo
+from src.infraestructura.adaptadores.salida.persistencia.auditoria import AuditoriaPostgres
 from src.infraestructura.adaptadores.salida.persistencia.cuentas import (
     ReportesPostgres, UsuariosPostgres,
 )
@@ -37,6 +38,7 @@ from src.aplicacion.casos_uso.administracion.gestionar_catalogo import (
     GestionarProductos, GestionarPuntosVenta,
 )
 from src.aplicacion.casos_uso.administracion.validar_reportes import ValidarReportes
+from src.aplicacion.casos_uso.administracion.ver_auditoria import ConsultarReferencias, VerAuditoria
 from src.aplicacion.casos_uso.usuario.listas_compras import GestionarListas
 from src.aplicacion.casos_uso.usuario.mis_reportes import MisReportes
 from src.aplicacion.casos_uso.usuario.reportar_precio import RegistrarReporteCiudadano
@@ -155,6 +157,15 @@ def caso_iniciar_sesion() -> IniciarSesion:
 
 def caso_resolver_sesion() -> ResolverSesion:
     return ResolverSesion(_cuentas()[0], _tokens())
+
+
+def caso_ver_auditoria() -> VerAuditoria:
+    fabrica = _fabrica()
+    return VerAuditoria(AuditoriaEnMemoria(_cuentas()[0]) if fabrica is None else AuditoriaPostgres(fabrica))
+
+
+def caso_consultar_referencias() -> ConsultarReferencias:
+    return ConsultarReferencias()
 
 
 def caso_administrar_usuarios() -> AdministrarUsuarios:

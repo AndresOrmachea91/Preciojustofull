@@ -13,7 +13,7 @@ from __future__ import annotations
 from typing import Protocol, runtime_checkable
 
 from src.dominio.modelo import (
-    EstadoReporte, Fuente, ListaCompras, Mercado, Observacion, Producto, Reporte, Usuario,
+    EstadoReporte, Fuente, ListaCompras, Mercado, Observacion, Producto, RegistroAuditado, Reporte, Usuario,
 )
 from src.dominio.valor import Periodo
 
@@ -168,4 +168,15 @@ class RepositorioListas(Protocol):
     def guardar(self, lista: ListaCompras) -> ListaCompras: ...
     def eliminar(self, id_lista: int) -> None:
         """Borrado LÓGICO, como todo lo auditado."""
+        ...
+
+
+@runtime_checkable
+class LectorAuditoria(Protocol):
+    """Los 5 campos de auditoría de todas las tablas, para que el administrador los consulte."""
+
+    def tablas(self) -> list[str]: ...
+
+    def recientes(self, tabla: str | None, limite: int) -> list[RegistroAuditado]:
+        """Las filas con el cambio más reciente primero; de una tabla o de todas."""
         ...

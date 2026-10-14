@@ -7,7 +7,7 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import datetime, timezone
 
-from src.dominio.modelo import Auditoria, EstadoReporte, Reporte, Rol, Usuario
+from src.dominio.modelo import Auditoria, EstadoReporte, RegistroAuditado, Reporte, Rol, Usuario
 from src.infraestructura.adaptadores.salida.persistencia.auditable import actor_actual
 
 
@@ -76,3 +76,22 @@ class ReportesEnMemoria:
             self._siguiente += 1
         self._datos[reporte.id] = reporte
         return reporte
+
+
+class AuditoriaEnMemoria:
+    """Sin base de datos, la auditoría que hay es la de las cuentas en memoria."""
+
+    def __init__(self, usuarios: UsuariosEnMemoria):
+        self._usuarios = usuarios
+
+    def tablas(self) -> list[str]:
+        return ["usuario"]
+
+    def recientes(self, tabla: str | None, limite: int) -> list[RegistroAuditado]:
+        if tabla not in (None, "usuario"):
+            return []
+        return [
+            RegistroAuditado("usuario", u.correo, f"{u.nombre} ({u.rol.value})", u.auditoria)
+            for u in self._usuarios.listar(incluir_eliminados=True)
+            if u.auditoria is not None
+        ][:limite]

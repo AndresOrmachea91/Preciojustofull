@@ -187,6 +187,58 @@ export interface Usuario {
   readonly permisos: readonly Permiso[];
   /** Solo vendedores: el código del puesto o tienda que le asignó el administrador. */
   readonly codigoPuntoVenta: string | null;
+  /** Quién y cuándo la creó o la cambió. Solo llega en el listado del administrador. */
+  readonly auditoria?: Auditoria | null;
+}
+
+// --- auditoría y catálogos de referencia -------------------------------------
+
+/** Los 5 campos que tiene cada fila de cada tabla. Los escribe el sistema, nunca una persona. */
+export interface Auditoria {
+  readonly creadoEn: string;
+  readonly creadoPor: string;
+  readonly modificadoEn: string | null;
+  readonly modificadoPor: string | null;
+  readonly eliminado: boolean;
+}
+
+export type AccionAuditada = "creado" | "modificado" | "eliminado";
+
+/** Una fila de cualquier tabla vista por su auditoría. */
+export interface RegistroAuditado {
+  readonly tabla: string;
+  readonly clave: string;
+  readonly descripcion: string;
+  readonly accion: AccionAuditada;
+  readonly ultimoCambio: string;
+  readonly auditoria: Auditoria;
+}
+
+export interface RolDescrito {
+  readonly codigo: Rol;
+  readonly nombre: string;
+  readonly descripcion: string;
+  readonly permisos: readonly { readonly codigo: Permiso; readonly descripcion: string }[];
+}
+
+export interface FuenteDescrita {
+  readonly codigo: string;
+  readonly nombre: string;
+  readonly descripcion: string;
+  readonly confianzaBase: NivelConfianza;
+  readonly derivaDe: string | null;
+  readonly automatica: boolean;
+  readonly url: string | null;
+}
+
+export interface Referencias {
+  readonly roles: readonly RolDescrito[];
+  readonly fuentes: readonly FuenteDescrita[];
+}
+
+/** Quién hizo lo último sobre una fila: el que la modificó o, si nadie, el que la creó. */
+export function autorDelUltimoCambio(a: Auditoria): string {
+  return a.modificadoPor ?? a.creadoPor;
 }
 
 export function puede(usuario: Usuario | null, permiso: Permiso): boolean {

@@ -4,6 +4,7 @@ import {
   NOMBRE_ROL,
   ROLES,
   puede,
+  type Auditoria,
   type EstadoReporte,
   type Mercado,
   type ReporteEnRevision,
@@ -13,15 +14,19 @@ import {
 import type { Contenedor } from "@/infraestructura/contenedor";
 import { MensajeAviso, MensajeError, textoDeError } from "@/ui/componentes/Mensajes";
 import { Pestanas } from "@/ui/componentes/Pestanas";
+import { fechaCorta } from "@/ui/formato";
+import { Auditoria as VistaAuditoria } from "@/ui/paginas/administracion/Auditoria";
 import { CatalogoProductos } from "@/ui/paginas/administracion/CatalogoProductos";
 import { CatalogoPuntosVenta } from "@/ui/paginas/administracion/CatalogoPuntosVenta";
+import { Referencias } from "@/ui/paginas/administracion/Referencias";
 
-type Pestana = "usuarios" | "reportes" | "puntos" | "productos";
+type Pestana = "usuarios" | "reportes" | "puntos" | "productos" | "auditoria" | "referencias";
 
 export function PaginaAdmin({ contenedor, usuario }: { contenedor: Contenedor; usuario: Usuario }) {
   const verUsuarios = puede(usuario, "gestionar_usuarios");
   const verReportes = puede(usuario, "validar_reportes");
   const verCatalogo = puede(usuario, "gestionar_catalogo");
+  const verAuditoria = puede(usuario, "ver_auditoria");
   const [pestana, setPestana] = useState<Pestana>(verUsuarios ? "usuarios" : verReportes ? "reportes" : "puntos");
 
   const pestanas: { id: Pestana; texto: string; visible: boolean }[] = [
@@ -29,6 +34,8 @@ export function PaginaAdmin({ contenedor, usuario }: { contenedor: Contenedor; u
     { id: "puntos", texto: "Mercados y tiendas", visible: verCatalogo },
     { id: "productos", texto: "Productos", visible: verCatalogo },
     { id: "reportes", texto: "Reportes por revisar", visible: verReportes },
+    { id: "auditoria", texto: "Auditoría", visible: verAuditoria },
+    { id: "referencias", texto: "Roles y fuentes", visible: verAuditoria },
   ];
 
   return (
@@ -41,6 +48,8 @@ export function PaginaAdmin({ contenedor, usuario }: { contenedor: Contenedor; u
       {pestana === "puntos" && verCatalogo && <CatalogoPuntosVenta contenedor={contenedor} />}
       {pestana === "productos" && verCatalogo && <CatalogoProductos contenedor={contenedor} />}
       {pestana === "reportes" && verReportes && <Reportes contenedor={contenedor} />}
+      {pestana === "auditoria" && verAuditoria && <VistaAuditoria contenedor={contenedor} />}
+      {pestana === "referencias" && verAuditoria && <Referencias contenedor={contenedor} />}
     </section>
   );
 }
@@ -49,6 +58,8 @@ export function PaginaAdmin({ contenedor, usuario }: { contenedor: Contenedor; u
 
 function Usuarios({ contenedor, yo }: { contenedor: Contenedor; yo: Usuario }) {
   const [lista, setLista] = useState<Usuario[] | null>(null);
+  const [conEliminadas, setConEliminadas] = useState(false);
+  const [aEliminar, setAEliminar] = useState<number | null>(null);
   const [puntos, setPuntos] = useState<Mercado[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -59,8 +70,8 @@ function Usuarios({ contenedor, yo }: { contenedor: Contenedor; yo: Usuario }) {
   }, [contenedor]);
 
   const cargar = useCallback(() => {
-    contenedor.administrar.usuarios().then(setLista, (e) => setError(textoDeError(e)));
-  }, [contenedor]);
+    contenedor.administrar.usuarios(conEliminadas).then(setLista, (e) => setError(textoDeError(e)));
+  }, [contenedor, conEliminadas]);
 
   useEffect(cargar, [cargar]);
 
@@ -71,6 +82,19 @@ function Usuarios({ contenedor, yo }: { contenedor: Contenedor; yo: Usuario }) {
       const actualizado = await accion;
       setLista((l) => l?.map((u) => (u.id === actualizado.id ? actualizado : u)) ?? null);
       setAviso(texto);
+    } catch (e) {
+      setError(textoDeError(e));
+    }
+  }
+
+  async function eliminar(u: Usuario) {
+    setError(null);
+    setAviso(null);
+    setAEliminar(null);
+    try {
+      await contenedor.administrar.eliminarUsuario(u.id, yo);
+      setAviso(`${u.correo} eliminada. Su fila y su auditoría quedan guardadas.`);
+      cargar();
     } catch (e) {
       setError(textoDeError(e));
     }
@@ -94,6 +118,11 @@ function Usuarios({ contenedor, yo }: { contenedor: Contenedor; yo: Usuario }) {
       <MensajeError texto={error} />
       {!error && <MensajeAviso texto={aviso} />}
 
+      <label className="casilla casilla--barra">
+        <input type="checkbox" checked={conEliminadas} onChange={(e) => setConEliminadas(e.target.checked)} />
+        Mostrar también las cuentas eliminadas
+      </label>
+
       {!lista && !error && <p className="estado">Cargando cuentas…</p>}
       {lista && (
         <div className="tabla-envoltura">
@@ -105,85 +134,145 @@ function Usuarios({ contenedor, yo }: { contenedor: Contenedor; yo: Usuario }) {
                 <th>Rol</th>
                 <th>Puesto</th>
                 <th>Estado</th>
+                <th>Auditoría</th>
                 <th aria-label="Acciones" />
               </tr>
             </thead>
             <tbody>
-              {lista.map((u) => (
-                <tr key={u.id} className={u.activo ? undefined : "tabla__fila--inactiva"}>
-                  <td>
-                    {u.nombre}
-                    {u.id === yo.id && <span className="tenue"> (usted)</span>}
-                  </td>
-                  <td>{u.correo}</td>
-                  <td>
-                    <select
-                      aria-label={`Rol de ${u.correo}`}
-                      value={u.rol}
-                      onChange={(e) =>
-                        void aplicar(
-                          contenedor.administrar.cambiarRol(u.id, e.target.value as Rol),
-                          `${u.correo} ahora es ${NOMBRE_ROL[e.target.value as Rol].toLowerCase()}.`,
-                        )
-                      }
-                    >
-                      {ROLES.map((r) => (
-                        <option key={r} value={r}>
-                          {NOMBRE_ROL[r]}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td>
-                    {u.rol === "vendedor" ? (
+              {lista.map((u) =>
+                u.auditoria?.eliminado ? (
+                  <FilaEliminada key={u.id} usuario={u} />
+                ) : (
+                  <tr key={u.id} className={u.activo ? undefined : "tabla__fila--inactiva"}>
+                    <td>
+                      {u.nombre}
+                      {u.id === yo.id && <span className="tenue"> (usted)</span>}
+                    </td>
+                    <td>{u.correo}</td>
+                    <td>
                       <select
-                        aria-label={`Puesto de ${u.correo}`}
-                        value={u.codigoPuntoVenta ?? ""}
+                        aria-label={`Rol de ${u.correo}`}
+                        value={u.rol}
                         onChange={(e) =>
                           void aplicar(
-                            contenedor.administrar.asignarPuntoVenta(u.id, e.target.value || null),
-                            e.target.value
-                              ? `${u.correo} vende en ${puntos.find((p) => p.codigo === e.target.value)?.nombre ?? e.target.value}.`
-                              : `${u.correo} ya no tiene puesto asignado.`,
+                            contenedor.administrar.cambiarRol(u.id, e.target.value as Rol),
+                            `${u.correo} ahora es ${NOMBRE_ROL[e.target.value as Rol].toLowerCase()}.`,
                           )
                         }
                       >
-                        <option value="">Sin asignar</option>
-                        {puntos.map((p) => (
-                          <option key={p.codigo} value={p.codigo}>
-                            {p.nombre}
+                        {ROLES.map((r) => (
+                          <option key={r} value={r}>
+                            {NOMBRE_ROL[r]}
                           </option>
                         ))}
                       </select>
-                    ) : (
-                      <span className="tenue">—</span>
-                    )}
-                  </td>
-                  <td>{u.activo ? "Activa" : "Desactivada"}</td>
-                  <td className="tabla__acciones">
-                    <button
-                      type="button"
-                      className="boton boton--suave"
-                      onClick={() =>
-                        void aplicar(
-                          contenedor.administrar.cambiarActivo(u.id, !u.activo),
-                          `${u.correo} ${u.activo ? "desactivada" : "reactivada"}.`,
-                        )
-                      }
-                    >
-                      {u.activo ? "Desactivar" : "Activar"}
-                    </button>
-                    <button type="button" className="boton boton--suave" onClick={() => restablecer(u)}>
-                      Contraseña
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td>
+                      {u.rol === "vendedor" ? (
+                        <select
+                          aria-label={`Puesto de ${u.correo}`}
+                          value={u.codigoPuntoVenta ?? ""}
+                          onChange={(e) =>
+                            void aplicar(
+                              contenedor.administrar.asignarPuntoVenta(u.id, e.target.value || null),
+                              e.target.value
+                                ? `${u.correo} vende en ${puntos.find((p) => p.codigo === e.target.value)?.nombre ?? e.target.value}.`
+                                : `${u.correo} ya no tiene puesto asignado.`,
+                            )
+                          }
+                        >
+                          <option value="">Sin asignar</option>
+                          {puntos.map((p) => (
+                            <option key={p.codigo} value={p.codigo}>
+                              {p.nombre}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className="tenue">—</span>
+                      )}
+                    </td>
+                    <td>{u.activo ? "Activa" : "Desactivada"}</td>
+                    <td>{u.auditoria && <CeldaAuditoria auditoria={u.auditoria} />}</td>
+                    <td className="tabla__acciones">
+                      {aEliminar === u.id ? (
+                        <>
+                          <span className="tenue">¿Eliminar la cuenta?</span>
+                          <button type="button" className="boton boton--peligro" onClick={() => void eliminar(u)}>
+                            Sí, eliminar
+                          </button>
+                          <button type="button" className="boton boton--suave" onClick={() => setAEliminar(null)}>
+                            No
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            className="boton boton--suave"
+                            onClick={() =>
+                              void aplicar(
+                                contenedor.administrar.cambiarActivo(u.id, !u.activo),
+                                `${u.correo} ${u.activo ? "desactivada" : "reactivada"}.`,
+                              )
+                            }
+                          >
+                            {u.activo ? "Desactivar" : "Activar"}
+                          </button>
+                          <button type="button" className="boton boton--suave" onClick={() => restablecer(u)}>
+                            Contraseña
+                          </button>
+                          {u.id !== yo.id && (
+                            <button type="button" className="boton boton--suave" onClick={() => setAEliminar(u.id)}>
+                              Eliminar
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                ),
+              )}
             </tbody>
           </table>
         </div>
       )}
     </>
+  );
+}
+
+/** Quién creó la fila y quién la cambió por última vez, con su fecha. */
+function CeldaAuditoria({ auditoria: a }: { auditoria: Auditoria }) {
+  return (
+    <span className="auditoria-celda">
+      <span>
+        Creada por {a.creadoPor} · {fechaCorta(a.creadoEn)}
+      </span>
+      {a.modificadoEn && (
+        <span className="tenue">
+          {a.eliminado ? "Eliminada" : "Modificada"} por {a.modificadoPor} · {fechaCorta(a.modificadoEn)}
+        </span>
+      )}
+    </span>
+  );
+}
+
+/** Una cuenta eliminada se muestra, sin acciones: el eliminado es lógico. */
+function FilaEliminada({ usuario: u }: { usuario: Usuario }) {
+  return (
+    <tr className="tabla__fila--inactiva tabla__fila--eliminada">
+      <td>{u.nombre}</td>
+      <td>{u.correo}</td>
+      <td>{NOMBRE_ROL[u.rol]}</td>
+      <td>
+        <span className="tenue">—</span>
+      </td>
+      <td>
+        <span className="accion accion--eliminado">Eliminada</span>
+      </td>
+      <td>{u.auditoria && <CeldaAuditoria auditoria={u.auditoria} />}</td>
+      <td />
+    </tr>
   );
 }
 

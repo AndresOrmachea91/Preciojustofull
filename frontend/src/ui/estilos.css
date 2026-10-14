@@ -327,3 +327,23 @@ button, a, [role="option"] { -webkit-tap-highlight-color: transparent; }
   }
   .segmentado__opcion, .boton { padding-top: 10px; padding-bottom: 10px; }
 }
+
+/* --- auditoría, roles y fuentes (administrador) -------------------------------- */
+.casilla--barra { margin: 4px 0 4px; }
+.campo--angosto { max-width: 280px; margin: 12px 0 4px; }
+.tabla__numero { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tabla__fila--eliminada td { text-decoration: line-through; text-decoration-color: var(--borde); }
+.tabla__fila--eliminada td:nth-last-child(-n + 3) { text-decoration: none; }
+.auditoria-celda { display: flex; flex-direction: column; gap: 2px; font-size: 0.85rem; }
+
+.accion { font-size: 0.75rem; padding: 3px 9px; border-radius: 6px; white-space: nowrap; font-weight: 600; }
+.accion--creado { background: var(--jade-claro); color: var(--jade); }
+.accion--modificado { background: var(--ambar-claro); color: var(--ambar); }
+.accion--eliminado { background: var(--peligro-claro); color: var(--peligro); }
+
+.roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.rol { background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; padding: 14px 16px; }
+.rol__nombre { margin: 0; font-size: 1rem; color: var(--tinta); }
+.rol__descripcion { margin: 4px 0 10px; font-size: 0.85rem; }
+.rol__permisos { margin: 0; padding-left: 18px; font-size: 0.88rem; display: flex; flex-direction: column; gap: 4px; }
+.rol__permisos li::marker { color: var(--jade); }

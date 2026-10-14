@@ -6,6 +6,8 @@
  * no sabe cuál está usando.
  */
 import type {
+  Referencias,
+  RegistroAuditado,
   CostoCanasta,
   ListaCompras,
   ItemLista,
@@ -66,7 +68,10 @@ export interface AlmacenSesion {
 }
 
 export interface AdministracionRepositorio {
-  usuarios(): Promise<Usuario[]>;
+  /** Sin el argumento, solo las vigentes: lo eliminado no se lista. */
+  usuarios(incluirEliminados?: boolean): Promise<Usuario[]>;
+  /** Eliminado LÓGICO: la cuenta deja de existir para el sistema, su fila y su auditoría quedan. */
+  eliminarUsuario(id: number): Promise<void>;
   crearUsuario(cuenta: NuevaCuenta & { rol: Rol }): Promise<Usuario>;
   actualizarUsuario(
     id: number,
@@ -98,6 +103,13 @@ export interface DatosProducto {
 }
 
 /** Lo que el administrador hace con el catálogo. Listar usa CatalogoRepositorio, el público. */
+/** Lo que el administrador consulta para rendir cuentas: auditoría y catálogos. */
+export interface AuditoriaRepositorio {
+  tablasAuditadas(): Promise<string[]>;
+  auditoria(tabla?: string, limite?: number): Promise<RegistroAuditado[]>;
+  referencias(): Promise<Referencias>;
+}
+
 export interface CatalogoAdminRepositorio {
   crearPuntoVenta(datos: DatosPuntoVenta): Promise<Mercado>;
   actualizarPuntoVenta(codigo: string, datos: DatosPuntoVenta): Promise<Mercado>;

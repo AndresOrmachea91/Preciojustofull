@@ -8,6 +8,7 @@
  */
 import { Administrar } from "@/aplicacion/casosUso/administracion/administrarCuentas";
 import { AdministrarCatalogo } from "@/aplicacion/casosUso/administracion/administrarCatalogo";
+import { VerAuditoria } from "@/aplicacion/casosUso/administracion/verAuditoria";
 import { ListasDeCompras } from "@/aplicacion/casosUso/usuario/listasCompras";
 import { ReportarPrecio } from "@/aplicacion/casosUso/usuario/reportarPrecio";
 import { MiPuesto } from "@/aplicacion/casosUso/vendedor/miPuesto";
@@ -19,6 +20,7 @@ import { VerMapa } from "@/aplicacion/casosUso/publico/verMapa";
 import type {
   AdministracionRepositorio,
   AlmacenSesion,
+  AuditoriaRepositorio,
   CatalogoAdminRepositorio,
   CatalogoRepositorio,
   ListasRepositorio,
@@ -47,6 +49,7 @@ export interface Contenedor {
   readonly sesion: GestionarSesion;
   readonly administrar: Administrar;
   readonly administrarCatalogo: AdministrarCatalogo;
+  readonly verAuditoria: VerAuditoria;
   readonly listas: ListasDeCompras;
   readonly reportarPrecio: ReportarPrecio;
   readonly miPuesto: MiPuesto;
@@ -57,7 +60,7 @@ export function crearContenedor(origen?: string, almacen?: AlmacenSesion): Conte
 
   let precios: PrecioRepositorio;
   let catalogo: CatalogoRepositorio;
-  let cuentas: SesionRepositorio & AdministracionRepositorio;
+  let cuentas: SesionRepositorio & AdministracionRepositorio & AuditoriaRepositorio;
   let catalogoAdmin: CatalogoAdminRepositorio;
   let reportes: ReporteRepositorio;
   let misReportes: MisReportesRepositorio;
@@ -105,6 +108,7 @@ export function crearContenedor(origen?: string, almacen?: AlmacenSesion): Conte
     sesion: new GestionarSesion(cuentas, almacen),
     administrar: new Administrar(cuentas),
     administrarCatalogo: new AdministrarCatalogo(catalogo, catalogoAdmin),
+    verAuditoria: new VerAuditoria(cuentas),
     listas: new ListasDeCompras(listas),
     reportarPrecio: new ReportarPrecio(reportes, misReportes),
     miPuesto: new MiPuesto(preciosVendedor),

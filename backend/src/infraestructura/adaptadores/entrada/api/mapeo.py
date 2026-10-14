@@ -5,7 +5,8 @@ from src.infraestructura.adaptadores.entrada.api import esquemas as e
 from src.aplicacion.puertos.entrada import CostoCanastaEnMercado, PrecioEnMercado
 from src.aplicacion.casos_uso.vendedor.publicar_precio import PrecioPublicado
 from src.dominio.modelo import (
-    ListaCompras, Mercado, PERMISOS_POR_ROL, PrecioConsolidado, Producto, Reporte, Usuario,
+    Auditoria, ListaCompras, Mercado, PERMISOS_POR_ROL, PrecioConsolidado, Producto, RegistroAuditado,
+    Reporte, Usuario,
 )
 
 
@@ -65,14 +66,25 @@ def canasta_a_salida(c: CostoCanastaEnMercado) -> e.CanastaSalida:
 
 
 
+def auditoria_a_salida(a: Auditoria) -> e.AuditoriaSalida:
+    return e.AuditoriaSalida(
+        creado_en=a.creado_en, creado_por=a.creado_por, modificado_en=a.modificado_en,
+        modificado_por=a.modificado_por, eliminado=a.eliminado,
+    )
+
+
+def registro_auditado_a_salida(r: RegistroAuditado) -> e.RegistroAuditadoSalida:
+    return e.RegistroAuditadoSalida(
+        tabla=r.tabla, clave=r.clave, descripcion=r.descripcion, accion=r.accion,
+        ultimo_cambio=r.ultimo_cambio, auditoria=auditoria_a_salida(r.auditoria),
+    )
+
+
 def usuario_auditado_a_salida(u: Usuario) -> e.UsuarioAuditadoSalida:
     a = u.auditoria
     return e.UsuarioAuditadoSalida(
         **usuario_a_salida(u).model_dump(),
-        auditoria=None if a is None else e.AuditoriaSalida(
-            creado_en=a.creado_en, creado_por=a.creado_por, modificado_en=a.modificado_en,
-            modificado_por=a.modificado_por, eliminado=a.eliminado,
-        ),
+        auditoria=None if a is None else auditoria_a_salida(a),
     )
 
 

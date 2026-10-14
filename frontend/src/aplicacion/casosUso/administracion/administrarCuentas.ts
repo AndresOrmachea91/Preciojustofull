@@ -9,8 +9,14 @@ import type { AdministracionRepositorio, NuevaCuenta } from "@/aplicacion/puerto
 export class Administrar {
   constructor(private readonly repositorio: AdministracionRepositorio) {}
 
-  usuarios(): Promise<Usuario[]> {
-    return this.repositorio.usuarios();
+  usuarios(incluirEliminados = false): Promise<Usuario[]> {
+    return this.repositorio.usuarios(incluirEliminados);
+  }
+
+  /** El backend impide eliminarse a sí mismo y al último administrador; acá se avisa antes. */
+  eliminarUsuario(id: number, yo: Usuario): Promise<void> {
+    if (id === yo.id) return Promise.reject(new Error("No puede eliminar su propia cuenta"));
+    return this.repositorio.eliminarUsuario(id);
   }
 
   crearUsuario(cuenta: NuevaCuenta & { rol: Rol }): Promise<Usuario> {
