@@ -4,12 +4,21 @@
   --tinta: #0e3b32;
   --jade: #1c6b57;
   --jade-claro: #dceae4;
-  --ambar: #b0560f;
+  --ambar: #a8520e;
   --crema: #eef3f0;
   --texto: #12211d;
   --tenue: #55665f;
   --borde: #cfd9d4;
   --superficie: #ffffff;
+  /* Texto sobre un relleno de --tinta o --jade (botones, insignias). */
+  --sobre-tinta: #ffffff;
+  /* Lo estimado y lo pendiente: ámbar. Lo rechazado o peligroso: rojo ladrillo. */
+  --ambar-claro: #f8f1e4;
+  --peligro: #93301d;
+  --peligro-claro: #f6e3dd;
+  --sobre-peligro: #ffffff;
+  --mapa-fondo: #dfe7e3;
+  --sombra: rgba(14, 59, 50, 0.14);
 }
 
 * { box-sizing: border-box; }
@@ -46,25 +55,30 @@ body {
 .tarjeta__nota { margin: 10px 0 0; font-size: 0.78rem; color: var(--tenue); }
 
 .insignia {
-  background: var(--jade); color: #fff; border-radius: 999px;
+  background: var(--jade); color: var(--sobre-tinta); border-radius: 999px;
   padding: 3px 10px; font-size: 0.72rem; white-space: nowrap;
 }
 
 .confianza { font-size: 0.78rem; padding: 3px 9px; border-radius: 999px; }
 .confianza--verificado { background: var(--jade-claro); color: var(--jade); }
 .confianza--alto { background: var(--jade-claro); color: var(--jade); }
-.confianza--medio { background: #f6efe2; color: var(--ambar); }
-.confianza--bajo { background: #f6e7e2; color: #93301d; }
+.confianza--medio { background: var(--ambar-claro); color: var(--ambar); }
+.confianza--bajo { background: var(--peligro-claro); color: var(--peligro); }
 
 .tenue { color: var(--tenue); font-size: 0.82rem; }
 
 .estado { padding: 16px; color: var(--tenue); }
-.estado--error { background: #f6e0da; border-radius: 10px; color: #93301d; }
+.estado--error { background: var(--peligro-claro); border-radius: 10px; color: var(--peligro); }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --crema: #0c1512; --superficie: #14211d; --texto: #e4ede9;
     --tenue: #93a49e; --borde: #2c3e38; --tinta: #4fc2a7; --jade-claro: #153029;
+    /* En oscuro los rellenos son claros: el texto encima va oscuro. */
+    --jade: #4fc2a7; --sobre-tinta: #06231c;
+    --ambar: #e3a35f; --ambar-claro: #2a2116;
+    --peligro: #f0a08e; --peligro-claro: #2e1a15; --sobre-peligro: #2b0d06;
+    --mapa-fondo: #1a2420; --sombra: rgba(0, 0, 0, 0.5);
   }
 }
 
@@ -72,7 +86,7 @@ body {
 /* --- mapa y panel ------------------------------------------------------- */
 .mapa-y-panel { display: grid; grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr); gap: 12px; margin: 16px 0 24px; }
 @media (max-width: 700px) { .mapa-y-panel { grid-template-columns: 1fr; } }
-.mapa { height: 460px; border-radius: 12px; border: 1px solid var(--borde); overflow: hidden; background: #dfe7e3; }
+.mapa { height: 460px; border-radius: 12px; border: 1px solid var(--borde); overflow: hidden; background: var(--mapa-fondo); }
 .panel { background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; padding: 16px 18px; }
 .panel--vacio { color: var(--tenue); display: flex; align-items: center; }
 .panel__nombre { margin: 0; font-size: 1.15rem; color: var(--tinta); }
@@ -81,7 +95,7 @@ body {
 .panel__nivel--minorista { color: var(--jade); }
 .panel__nivel--mayorista { color: var(--ambar); }
 .panel__precio { margin-top: 14px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--borde); }
-.panel__precio--estimado { border-style: dashed; background: #fbf6ee; }
+.panel__precio--estimado { border-style: dashed; background: var(--ambar-claro); }
 .panel__precio--observado { background: var(--jade-claro); }
 .panel__precio--sin-datos { color: var(--tenue); font-size: 0.9rem; }
 .panel__monto { margin: 8px 0 6px; font-size: 1.4rem; font-weight: 600; color: var(--tinta); }
@@ -90,20 +104,18 @@ body {
 
 /* --- procedencia: se distingue de un vistazo ----------------------------- */
 .procedencia { font-size: 0.78rem; padding: 3px 9px; border-radius: 999px; font-weight: 600; white-space: nowrap; }
-.procedencia--observado { background: var(--jade); color: #fff; }
-.procedencia--estimado { background: #fbf6ee; color: var(--ambar); border: 1px dashed var(--ambar); }
+.procedencia--observado { background: var(--jade); color: var(--sobre-tinta); }
+.procedencia--estimado { background: var(--ambar-claro); color: var(--ambar); border: 1px dashed var(--ambar); }
 .tarjeta--estimado { border-style: dashed; }
 .tarjeta__insignias { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .tarjeta__nota--estimado { color: var(--ambar); }
 
-.honestidad { background: var(--superficie); border: 1px solid var(--borde); border-left: 4px solid var(--ambar); border-radius: 10px; padding: 12px 16px; margin: 0 0 12px; font-size: 0.92rem; }
+/* Mismo lenguaje que un precio estimado: borde punteado ámbar. */
+.honestidad { background: var(--ambar-claro); border: 1px dashed var(--ambar); border-radius: 10px; padding: 12px 16px; margin: 0 0 12px; font-size: 0.92rem; }
 .honestidad p { margin: 0; }
 .honestidad__aviso { margin-top: 6px !important; color: var(--tenue); }
 .seccion { font-size: 1.1rem; color: var(--tinta); margin: 24px 0 8px; }
 
-@media (prefers-color-scheme: dark) {
-  .panel__precio--estimado, .procedencia--estimado { background: #2a2116; }
-}
 
 /* --- cuenta, formularios y administración ------------------------------- */
 .app__lema { margin: 0 0 20px; color: var(--tenue); }
@@ -111,7 +123,7 @@ body {
 .boton {
   display: inline-block; text-decoration: none; text-align: center;
   padding: 8px 16px; border-radius: 8px; border: 1px solid var(--tinta);
-  background: var(--tinta); color: #fff; font: inherit; font-size: 0.92rem; cursor: pointer;
+  background: var(--tinta); color: var(--sobre-tinta); font: inherit; font-size: 0.92rem; cursor: pointer;
 }
 .boton:disabled { opacity: 0.6; cursor: wait; }
 .boton--suave { background: var(--superficie); color: var(--tinta); border-color: var(--borde); }
@@ -140,19 +152,15 @@ body {
 .tabla__acciones { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
 
 .estado-reporte { font-size: 0.75rem; padding: 3px 9px; border-radius: 999px; text-transform: capitalize; white-space: nowrap; }
-.estado-reporte--pendiente { background: #f6efe2; color: var(--ambar); }
+.estado-reporte--pendiente { background: var(--ambar-claro); color: var(--ambar); }
 .estado-reporte--aprobado { background: var(--jade-claro); color: var(--jade); }
-.estado-reporte--rechazado { background: #f6e7e2; color: #93301d; }
+.estado-reporte--rechazado { background: var(--peligro-claro); color: var(--peligro); }
 
-@media (prefers-color-scheme: dark) {
-  .estado-reporte--pendiente { background: #2a2116; }
-  .estado-reporte--rechazado { background: #2e1a15; color: #f0a08e; }
-}
 
 /* --- catálogo del administrador y presentaciones ------------------------ */
 .barra { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .barra__buscar { flex: 1; min-width: 200px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--borde); background: var(--superficie); color: var(--texto); font: inherit; }
-.boton--peligro { background: #93301d; border-color: #93301d; color: #fff; }
+.boton--peligro { background: var(--peligro); border-color: var(--peligro); color: var(--sobre-peligro); }
 .mapa--selector { height: 280px; cursor: crosshair; }
 .campo--grupo { border: 1px solid var(--borde); border-radius: 8px; padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 6px 16px; }
 .campo--grupo legend { padding: 0 4px; font-size: 0.9rem; }
@@ -193,7 +201,7 @@ body {
 .lateral__marca { display: flex; align-items: center; justify-content: space-between; padding: 2px 8px 20px; }
 .lateral__titulo { margin: 0; font-size: inherit; }
 .lateral__logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.15rem; color: var(--tinta); text-decoration: none; letter-spacing: -0.01em; }
-.lateral__sello { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 9px; background: var(--tinta); color: #fff; }
+.lateral__sello { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 9px; background: var(--tinta); color: var(--sobre-tinta); }
 .lateral__menu { display: none; border: 1px solid var(--borde); background: var(--superficie); color: var(--tinta); border-radius: 8px; padding: 6px; cursor: pointer; }
 .lateral__cuerpo { display: flex; flex-direction: column; flex: 1; gap: 16px; }
 .lateral__grupo { display: flex; flex-direction: column; gap: 2px; }
@@ -237,7 +245,7 @@ body {
 .buscador__lista {
   position: absolute; z-index: 1100; top: calc(100% + 4px); left: 0; right: 0; margin: 0; padding: 4px; list-style: none;
   max-height: 320px; overflow-y: auto; background: var(--superficie); border: 1px solid var(--borde);
-  border-radius: 10px; box-shadow: 0 12px 32px rgba(14, 59, 50, 0.14);
+  border-radius: 10px; box-shadow: 0 12px 32px var(--sombra);
 }
 .buscador__grupo { padding: 10px 10px 4px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--tenue); }
 .buscador__opcion { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 6px; color: var(--texto); cursor: pointer; }
@@ -253,7 +261,7 @@ body {
   font: inherit; font-size: 0.88rem; color: var(--texto); cursor: pointer;
 }
 .segmentado__opcion:last-child { border-right: 0; }
-.segmentado__opcion[aria-pressed="true"] { background: var(--tinta); color: #fff; }
+.segmentado__opcion[aria-pressed="true"] { background: var(--tinta); color: var(--sobre-tinta); }
 .segmentado__opcion:focus-visible { outline: 2px solid var(--jade); outline-offset: -2px; }
 
 .pestanas { display: flex; gap: 4px; margin-bottom: 18px; border-bottom: 1px solid var(--borde); overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
@@ -309,4 +317,13 @@ button, a, [role="option"] { -webkit-tap-highlight-color: transparent; }
   .buscador__lista, .lateral--abierta .lateral__cuerpo { transition: opacity 150ms ease; }
   .buscador__lista { @starting-style { transform: none; } }
   .lateral--abierta .lateral__cuerpo { @starting-style { transform: none; } }
+}
+
+/* --- pantallas táctiles: nada menor a 44 px de alto se toca con el dedo ------- */
+@media (pointer: coarse) {
+  .boton, .segmentado__opcion, .pestanas__pestana, .lateral__enlace, .lateral__menu,
+  .buscador__opcion, .campo input, .campo select, .buscador__caja {
+    min-height: 44px;
+  }
+  .segmentado__opcion, .boton { padding-top: 10px; padding-bottom: 10px; }
 }

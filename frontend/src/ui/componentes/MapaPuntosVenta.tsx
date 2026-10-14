@@ -22,6 +22,17 @@ const COLOR_TIPO: Record<TipoPuntoVenta, string> = {
   mayorista: "#b0560f",
 };
 
+/** Con el dedo un punto de 14 px no se acierta: en pantallas táctiles, más grande. */
+const TACTIL = globalThis.matchMedia?.("(pointer: coarse)").matches ?? false;
+
+function radio(activo: boolean): number {
+  return (TACTIL ? 10 : 7) + (activo ? 4 : 0);
+}
+
+function estiloDe(activo: boolean): L.CircleMarkerOptions {
+  return { radius: radio(activo), color: activo ? "#12211d" : "#ffffff", weight: activo ? 3 : 1.5 };
+}
+
 interface Props {
   readonly marcadores: readonly MarcadorMapa[];
   readonly seleccionado: string | null;
@@ -49,17 +60,20 @@ export function MapaPuntosVenta({ marcadores, seleccionado, onSeleccionar }: Pro
     };
   }, []);
 
+  // Los puntos se crean cuando cambian los datos; elegir uno solo cambia el
+  // estilo del anterior y del nuevo, no redibuja los 88.
+  const puntos = useRef(new Map<string, L.CircleMarker>());
+  const elegido = useRef<string | null>(null);
+
   useEffect(() => {
     const grupo = capa.current;
     if (!grupo) return;
     grupo.clearLayers();
+    puntos.current.clear();
     for (const { mercado, precio } of marcadores) {
       if (mercado.latitud === undefined || mercado.longitud === undefined) continue;
-      const activo = mercado.codigo === seleccionado;
       const punto = L.circleMarker([mercado.latitud, mercado.longitud], {
-        radius: activo ? 11 : 7,
-        color: activo ? "#12211d" : "#ffffff",
-        weight: activo ? 3 : 1.5,
+        ...estiloDe(false),
         fillColor: COLOR_TIPO[mercado.tipo],
         // Sin precio: el punto está, pero apagado. No se inventa nada.
         fillOpacity: precio ? 0.9 : 0.35,
@@ -69,8 +83,18 @@ export function MapaPuntosVenta({ marcadores, seleccionado, onSeleccionar }: Pro
       punto.bindTooltip(mercado.nombre, { direction: "top", offset: [0, -6] });
       punto.on("click", () => onSeleccionar(mercado.codigo));
       punto.addTo(grupo);
+      puntos.current.set(mercado.codigo, punto);
     }
-  }, [marcadores, seleccionado, onSeleccionar]);
+    elegido.current = null;
+  }, [marcadores, onSeleccionar]);
+
+  useEffect(() => {
+    if (elegido.current === seleccionado) return;
+    if (elegido.current) puntos.current.get(elegido.current)?.setStyle(estiloDe(false)).setRadius(radio(false));
+    const nuevo = seleccionado ? puntos.current.get(seleccionado) : undefined;
+    nuevo?.setStyle(estiloDe(true)).setRadius(radio(true)).bringToFront();
+    elegido.current = seleccionado;
+  }, [seleccionado, marcadores]);
 
   return (
     <div
