@@ -1,4 +1,6 @@
 :root {
+  /* Curvas con más carácter que las de CSS por defecto. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --tinta: #0e3b32;
   --jade: #1c6b57;
   --jade-claro: #dceae4;
@@ -199,7 +201,6 @@ body {
   display: flex; align-items: center; gap: 12px; width: 100%; padding: 9px 12px; border: 0; border-radius: 8px;
   background: none; color: var(--tenue); font: inherit; font-size: 0.93rem; text-align: left; text-decoration: none; cursor: pointer;
 }
-.lateral__enlace:hover { background: var(--crema); color: var(--tinta); }
 .lateral__enlace--activo { background: var(--jade-claro); color: var(--tinta); font-weight: 600; }
 .lateral__enlace--activo .icono { color: var(--jade); }
 .lateral__enlace:focus-visible, .lateral__logo:focus-visible, .lateral__menu:focus-visible { outline: 2px solid var(--jade); outline-offset: 1px; }
@@ -252,7 +253,6 @@ body {
   font: inherit; font-size: 0.88rem; color: var(--texto); cursor: pointer;
 }
 .segmentado__opcion:last-child { border-right: 0; }
-.segmentado__opcion:hover { background: var(--crema); }
 .segmentado__opcion[aria-pressed="true"] { background: var(--tinta); color: #fff; }
 .segmentado__opcion:focus-visible { outline: 2px solid var(--jade); outline-offset: -2px; }
 
@@ -261,7 +261,6 @@ body {
   margin-bottom: -1px; padding: 10px 14px; border: 0; border-bottom: 2px solid transparent; background: none;
   font: inherit; font-size: 0.92rem; color: var(--tenue); white-space: nowrap; cursor: pointer;
 }
-.pestanas__pestana:hover { color: var(--tinta); }
 .pestanas__pestana[aria-selected="true"] { color: var(--tinta); border-bottom-color: var(--jade); font-weight: 600; }
 .pestanas__pestana:focus-visible { outline: 2px solid var(--jade); outline-offset: -2px; }
 
@@ -272,3 +271,42 @@ body {
 .formulario-cuenta__cabeza p { margin: 2px 0 0; }
 .formulario-cuenta__icono { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 12px; background: var(--jade-claro); color: var(--jade); }
 .formulario-cuenta .boton[type="submit"] { width: 100%; padding: 10px; }
+
+/* --- movimiento y respuesta al tacto ------------------------------------------
+   Solo donde ayuda: confirmar que se apretó algo y que lo que aparece no
+   salte. Nada en lo que se repite con el teclado (flechas, Enter, pestañas). */
+button, a, [role="option"] { -webkit-tap-highlight-color: transparent; }
+
+.boton, .segmentado__opcion, .lateral__menu { transition: transform 160ms var(--ease-out), background-color 150ms ease, color 150ms ease; }
+.boton:active, .segmentado__opcion:active, .lateral__menu:active { transform: scale(0.97); }
+.lateral__enlace, .pestanas__pestana, .buscador__opcion { transition: background-color 150ms ease, color 150ms ease; }
+
+@media (hover: hover) and (pointer: fine) {
+  .lateral__enlace:hover { background: var(--crema); color: var(--tinta); }
+  .segmentado__opcion:not([aria-pressed="true"]):hover { background: var(--crema); }
+  .pestanas__pestana:hover { color: var(--tinta); }
+  .boton--suave:hover { border-color: var(--tenue); }
+}
+
+/* La lista del buscador crece desde la caja que la abre. */
+.buscador__lista {
+  transform-origin: top center;
+  transition: opacity 150ms var(--ease-out), transform 150ms var(--ease-out);
+  @starting-style { opacity: 0; transform: translateY(-4px) scale(0.98); }
+}
+
+/* El menú del celular baja un poco al abrirse, en vez de aparecer de golpe. */
+@media (max-width: 800px) {
+  .lateral--abierta .lateral__cuerpo {
+    transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out);
+    @starting-style { opacity: 0; transform: translateY(-6px); }
+  }
+}
+
+/* Menos movimiento si la persona lo pidió: quedan los cambios de color. */
+@media (prefers-reduced-motion: reduce) {
+  .boton:active, .segmentado__opcion:active, .lateral__menu:active { transform: none; }
+  .buscador__lista, .lateral--abierta .lateral__cuerpo { transition: opacity 150ms ease; }
+  .buscador__lista { @starting-style { transform: none; } }
+  .lateral--abierta .lateral__cuerpo { @starting-style { transform: none; } }
+}
