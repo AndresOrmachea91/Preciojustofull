@@ -1,15 +1,12 @@
-# Recolector diario sobre GitHub Actions: no hace falta servidor propio.
-# El historial de ejecuciones queda visible en GitHub y sirve como evidencia
-# para la métrica de disponibilidad efectiva del dato.
-name: Recolector diario
+# Recolector sobre GitHub Actions contra Neon. RETIRADO del calendario el
+# 13 de octubre de 2026 (C118): la recolección diaria la hace el contenedor
+# "recolector" (docker-compose.yml) sobre la base propia, y Neon queda solo
+# para leer. Dos recolectores en dos bases darían dos series distintas.
+# Queda la ejecución manual (workflow_dispatch) por si hiciera falta
+# completar Neon alguna vez; necesita el secreto BASE_DATOS_URL.
+name: Recolector (manual, contra Neon)
 
 on:
-  schedule:
-    # 07:00, 15:00 y 23:00 UTC = 03:00, 11:00 y 19:00 en Bolivia.
-    # Tres ventanas y no una sola: si el único intento falla, se pierde el
-    # día, y el bloque diario del SIIP es una ventana móvil que no se
-    # puede recuperar después.
-    - cron: "0 7,15,23 * * *"
   workflow_dispatch:
 
 defaults:
