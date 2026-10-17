@@ -166,6 +166,20 @@ En el frontend:
 | Rutas `#/ingresar` y `#/registrarse` (la misma pantalla en dos modos) | `src/ui/hooks/useRuta.ts`, `src/ui/paginas/cuentas/PaginaIngreso.tsx` |
 | Piezas compartidas                    | `src/ui/componentes/Pestanas.tsx`, `Mensajes.tsx`; `src/ui/hooks/useCatalogo.ts` |
 
+## Agregado el 13 al 17 de octubre
+
+| Qué | Dónde (backend: `backend/src/`, web: `frontend/src/`) |
+|-----|-------|
+| Vista de auditoría de las 14 tablas (`/bd/auditoria`) | `aplicacion/casos_uso/administracion/ver_auditoria.py`; `persistencia/auditoria.py → AuditoriaPostgres`; web: `ui/paginas/administracion/Auditoria.tsx` |
+| Roles, permisos y fuentes descritos | `dominio/modelo/referencias.py`; ruta `GET /admin/referencias`; web: `ui/paginas/administracion/Referencias.tsx` |
+| Eliminar cuentas desde la web y ver las eliminadas | `ui/paginas/administracion/PaginaAdmin.tsx → Usuarios` |
+| Historial del precio (gráfico) | `aplicacion/casos_uso/precios/historial_precio.py`; ruta `GET /precios/{producto}/historial`; web: `ui/componentes/GraficoHistorial.tsx` |
+| Cerca de mí | dominio web `masCercanos`, `distanciaKm`; `aplicacion/casosUso/publico/cercaDeMi.ts`; GPS: `infraestructura/ubicacion/ubicacionNavegador.ts` |
+| Recuperar la contraseña por correo | `aplicacion/casos_uso/cuentas/recuperar_contrasena.py`; enlace: `seguridad/enlaces.py`; correo: `salida/correo/smtp.py`; rutas `POST /auth/recuperar` y `/auth/restablecer`; web: `ui/paginas/cuentas/PaginaRecuperar.tsx` |
+| Buzón de prueba (los correos no salen a internet) | servicio `mailpit` en `docker-compose.yml` → http://localhost:8025 |
+| Presentaciones según la categoría | `dominio/modelo/producto.py → presentaciones_habituales` |
+| Cada producto cotizado en su unidad | `aplicacion/casos_uso/precios/comparar_mercados.py → en_unidad_del_producto` |
+
 ## Rutas de la API
 
 | Ruta                                  | Quién            | Archivo |
