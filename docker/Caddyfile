@@ -1,0 +1,20 @@
+# Caddy: la puerta de entrada en producción. Con un dominio que apunte a la
+# IP del servidor, pide y renueva solo el certificado HTTPS (Let's Encrypt).
+# DOMINIO sale de docker/.env.produccion (por ejemplo preciojusto.bo).
+
+{$DOMINIO} {
+	encode zstd gzip
+
+	header {
+		# Solo HTTPS, también en adelante.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		# La ubicación solo la pide esta página ("Cerca de mí"); cámara y micrófono, nadie.
+		Permissions-Policy "geolocation=(self), camera=(), microphone=()"
+		-Server
+	}
+
+	reverse_proxy app:8000
+}

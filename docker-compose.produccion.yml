@@ -1,0 +1,90 @@
+# PrecioJusto en un servidor propio (VPS con Linux): el mismo sistema que en
+# la laptop, más Caddy al frente para HTTPS. Nada de plataformas "backend como
+# servicio": la base, la API, el recolector y los respaldos corren en
+# contenedores que controlamos, sobre una máquina alquilada por mes.
+#
+#   docker compose -f docker-compose.produccion.yml --env-file docker/.env.produccion up -d --build
+#
+# Diferencias con docker-compose.yml (el de desarrollo):
+#   - La base NO publica su puerto: solo la ven los otros contenedores.
+#   - La app tampoco: entra todo por Caddy (80/443), que pide y renueva solo
+#     el certificado HTTPS de Let's Encrypt para DOMINIO.
+#   - No hay Mailpit: el correo sale por el SMTP real configurado en el .env.
+#   - Los respaldos quedan en ./respaldos del servidor (ver docs/DESPLIEGUE.md
+#     para copiarlos también fuera del servidor).
+
+name: preciojusto
+
+services:
+  db:
+    image: postgres:18-alpine
+    env_file: docker/.env.produccion
+    volumes:
+      - datos_pg:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  app:
+    build: .
+    image: preciojusto-app:produccion
+    env_file: docker/.env.produccion
+    depends_on:
+      db:
+        condition: service_healthy
+    # Sin "ports": solo Caddy le habla, por la red interna.
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/salud', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    restart: unless-stopped
+
+  recolector:
+    image: preciojusto-app:produccion
+    command: ["python", "-m", "src.infraestructura.adaptadores.entrada.cli.programador"]
+    env_file: docker/.env.produccion
+    depends_on:
+      db:
+        condition: service_healthy
+      app:
+        condition: service_started
+    restart: unless-stopped
+
+  respaldos:
+    image: postgres:18-alpine
+    env_file: docker/.env.produccion
+    entrypoint: ["sh", "/scripts/respaldar.sh"]
+    volumes:
+      - ./respaldos:/respaldos
+      - ./docker:/scripts:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # La única puerta de entrada: HTTPS automático y cabeceras de seguridad.
+  caddy:
+    image: caddy:2.10-alpine
+    env_file: docker/.env.produccion
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_datos:/data
+      - caddy_config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  datos_pg:
+  caddy_datos:
+  caddy_config:

@@ -29,3 +29,6 @@ Thumbs.db
 
 # Respaldos de la base hechos por el contenedor "respaldos"
 respaldos/
+
+# Secretos del servidor de producción
+docker/.env.produccion
