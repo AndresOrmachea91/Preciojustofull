@@ -6,6 +6,7 @@
  * no sabe cuál está usando.
  */
 import type {
+  Coordenadas,
   HistorialPrecio,
   Referencias,
   RegistroAuditado,
@@ -35,6 +36,11 @@ export interface PrecioRepositorio {
 /** El precio de la ciudad mes a mes. Puerto aparte: no todo el que compara precios necesita historia. */
 export interface HistorialRepositorio {
   historial(codigoProducto: string, meses?: number): Promise<HistorialPrecio>;
+}
+
+/** Dónde está la persona ahora. Lo da el GPS del navegador, con su permiso. */
+export interface UbicacionRepositorio {
+  actual(): Promise<Coordenadas>;
 }
 
 export interface CatalogoRepositorio {

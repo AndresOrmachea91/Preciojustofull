@@ -7,7 +7,7 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-import type { MarcadorMapa, TipoPuntoVenta } from "@/dominio/modelo";
+import type { Coordenadas, MarcadorMapa, TipoPuntoVenta } from "@/dominio/modelo";
 
 /** Centro del municipio de La Paz. */
 const CENTRO_LA_PAZ: [number, number] = [-16.505, -68.13];
@@ -37,9 +37,11 @@ interface Props {
   readonly marcadores: readonly MarcadorMapa[];
   readonly seleccionado: string | null;
   readonly onSeleccionar: (codigo: string) => void;
+  /** Dónde está la persona, si pidió ver lo cercano. */
+  readonly ubicacion?: Coordenadas | null;
 }
 
-export function MapaPuntosVenta({ marcadores, seleccionado, onSeleccionar }: Props) {
+export function MapaPuntosVenta({ marcadores, seleccionado, onSeleccionar, ubicacion = null }: Props) {
   const contenedor = useRef<HTMLDivElement>(null);
   const mapa = useRef<L.Map | null>(null);
   const capa = useRef<L.LayerGroup | null>(null);
@@ -95,6 +97,20 @@ export function MapaPuntosVenta({ marcadores, seleccionado, onSeleccionar }: Pro
     nuevo?.setStyle(estiloDe(true)).setRadius(radio(true)).bringToFront();
     elegido.current = seleccionado;
   }, [seleccionado, marcadores]);
+
+  // La persona: un punto azul con halo, distinto de cualquier mercado.
+  const aqui = useRef<L.CircleMarker | null>(null);
+  useEffect(() => {
+    aqui.current?.remove();
+    aqui.current = null;
+    if (!mapa.current || !ubicacion) return;
+    aqui.current = L.circleMarker([ubicacion.latitud, ubicacion.longitud], {
+      radius: 8, color: "#ffffff", weight: 3, fillColor: "#1f5aa6", fillOpacity: 1, interactive: false,
+    })
+      .bindTooltip("Usted está aquí", { direction: "top", offset: [0, -8] })
+      .addTo(mapa.current);
+    mapa.current.setView([ubicacion.latitud, ubicacion.longitud], 15);
+  }, [ubicacion]);
 
   return (
     <div

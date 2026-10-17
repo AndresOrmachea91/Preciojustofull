@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 
 export type NombreIcono =
   | "precios" | "listas" | "puesto" | "admin" | "ingresar" | "registrarse"
-  | "salir" | "buscar" | "elegido" | "menu";
+  | "salir" | "buscar" | "elegido" | "menu" | "ubicacion";
 
 const TRAZOS: Record<NombreIcono, ReactNode> = {
   // Etiqueta de precio
@@ -69,6 +69,13 @@ const TRAZOS: Record<NombreIcono, ReactNode> = {
   ),
   elegido: <path d="M5 12l5 5 9-10" />,
   menu: <path d="M4 7h16M4 12h16M4 17h16" />,
+  // Alfiler de mapa
+  ubicacion: (
+    <>
+      <path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z" />
+      <circle cx="12" cy="9.5" r="2.5" />
+    </>
+  ),
 };
 
 export function Icono({ nombre, tamano = 20 }: { nombre: NombreIcono; tamano?: number }) {

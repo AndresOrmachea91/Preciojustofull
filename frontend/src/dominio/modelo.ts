@@ -346,6 +346,42 @@ export const CATEGORIAS: readonly { codigo: string; nombre: string }[] = [
 ];
 
 /** Área que cubre el sistema (La Paz y El Alto). La misma regla que el backend. */
+export interface Coordenadas {
+  readonly latitud: number;
+  readonly longitud: number;
+}
+
+/** Distancia en línea recta, en km (fórmula del haversine; alcanza para una ciudad). */
+export function distanciaKm(a: Coordenadas, b: Coordenadas): number {
+  const rad = (g: number) => (g * Math.PI) / 180;
+  const dLat = rad(b.latitud - a.latitud);
+  const dLon = rad(b.longitud - a.longitud);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.latitud)) * Math.cos(rad(b.latitud)) * Math.sin(dLon / 2) ** 2;
+  return 6371 * 2 * Math.asin(Math.sqrt(h));
+}
+
+export interface PuntoCercano {
+  readonly marcador: MarcadorMapa;
+  readonly distanciaKm: number;
+}
+
+/**
+ * Los puntos con precio más cercanos a una ubicación. Solo los que tienen
+ * precio: un lugar cercano sin dato no ayuda a decidir dónde comprar.
+ */
+export function masCercanos(marcadores: readonly MarcadorMapa[], aqui: Coordenadas, cuantos = 5): PuntoCercano[] {
+  return marcadores
+    .filter((m) => m.precio && m.mercado.latitud !== undefined && m.mercado.longitud !== undefined)
+    .map((m) => ({ marcador: m, distanciaKm: distanciaKm(aqui, { latitud: m.mercado.latitud!, longitud: m.mercado.longitud! }) }))
+    .sort((a, b) => a.distanciaKm - b.distanciaKm)
+    .slice(0, cuantos);
+}
+
+/** "350 m" o "1,4 km". */
+export function textoDistancia(km: number): string {
+  return km < 1 ? `${Math.round((km * 1000) / 10) * 10} m` : `${km.toFixed(1).replace(".", ",")} km`;
+}
+
 export function ubicacionValida(latitud: number | null, longitud: number | null): boolean {
   if (latitud === null && longitud === null) return true;
   if (latitud === null || longitud === null) return false;

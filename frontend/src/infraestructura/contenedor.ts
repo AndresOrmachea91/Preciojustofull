@@ -16,6 +16,7 @@ import { CalcularCanasta } from "@/aplicacion/casosUso/publico/calcularCanasta";
 import { CompararMercados } from "@/aplicacion/casosUso/publico/compararMercados";
 import { ConsultarCatalogo } from "@/aplicacion/casosUso/publico/consultarCatalogo";
 import { GestionarSesion } from "@/aplicacion/casosUso/cuentas/gestionarSesion";
+import { CercaDeMi } from "@/aplicacion/casosUso/publico/cercaDeMi";
 import { VerHistorial } from "@/aplicacion/casosUso/publico/verHistorial";
 import { VerMapa } from "@/aplicacion/casosUso/publico/verMapa";
 import type {
@@ -42,6 +43,7 @@ import { VendedorApi } from "@/infraestructura/http/VendedorApi";
 import { CuentasMemoria } from "@/infraestructura/memoria/CuentasMemoria";
 import { PreciosMemoria } from "@/infraestructura/memoria/PreciosMemoria";
 import { ListasMemoria, PreciosVendedorMemoria } from "@/infraestructura/memoria/UsuarioMemoria";
+import { UbicacionNavegador } from "@/infraestructura/ubicacion/ubicacionNavegador";
 
 export interface Contenedor {
   readonly compararMercados: CompararMercados;
@@ -49,6 +51,7 @@ export interface Contenedor {
   readonly catalogo: ConsultarCatalogo;
   readonly verMapa: VerMapa;
   readonly verHistorial: VerHistorial;
+  readonly cercaDeMi: CercaDeMi;
   readonly sesion: GestionarSesion;
   readonly administrar: Administrar;
   readonly administrarCatalogo: AdministrarCatalogo;
@@ -109,6 +112,8 @@ export function crearContenedor(origen?: string, almacen?: AlmacenSesion): Conte
     catalogo: new ConsultarCatalogo(catalogo),
     verMapa: new VerMapa(catalogo, precios),
     verHistorial: new VerHistorial(precios),
+    // El GPS es del navegador en los dos modos: no depende de dónde salen los precios.
+    cercaDeMi: new CercaDeMi(new UbicacionNavegador()),
     sesion: new GestionarSesion(cuentas, almacen),
     administrar: new Administrar(cuentas),
     administrarCatalogo: new AdministrarCatalogo(catalogo, catalogoAdmin),

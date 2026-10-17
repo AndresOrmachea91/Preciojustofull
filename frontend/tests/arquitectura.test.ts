@@ -64,4 +64,11 @@ describe("arquitectura del frontend", () => {
       .map((r) => r.replace(RAIZ, "src").replace(/\\/g, "/"));
     expect(conAlmacen).toEqual(["src/infraestructura/almacen/almacenSesion.ts"]);
   });
+
+  it("solo el adaptador de ubicación pide el GPS del navegador", () => {
+    const conGps = archivos(RAIZ)
+      .filter((r) => /geolocation/.test(readFileSync(r, "utf-8")))
+      .map((r) => r.replace(RAIZ, "src").replace(/\\/g, "/"));
+    expect(conGps).toEqual(["src/infraestructura/ubicacion/ubicacionNavegador.ts"]);
+  });
 });

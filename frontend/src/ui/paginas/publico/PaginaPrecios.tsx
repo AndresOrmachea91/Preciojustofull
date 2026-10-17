@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 
 import type { Producto } from "@/dominio/modelo";
-import { precioEnPresentacion, presentacionBase, unidadDePresentacion } from "@/dominio/modelo";
+import { precioEnPresentacion, presentacionBase, textoDistancia, unidadDePresentacion } from "@/dominio/modelo";
 import { ahorroPosible } from "@/dominio/servicio/ordenarPorConveniencia";
 import type { Contenedor } from "@/infraestructura/contenedor";
 import { GraficoHistorial } from "@/ui/componentes/GraficoHistorial";
+import { Icono } from "@/ui/componentes/Iconos";
 import { MapaPuntosVenta } from "@/ui/componentes/MapaPuntosVenta";
 import { PanelPunto } from "@/ui/componentes/PanelPunto";
 import { SelectorProducto } from "@/ui/componentes/SelectorProducto";
 import { TarjetaMercado } from "@/ui/componentes/TarjetaMercado";
+import { useCercania } from "@/ui/hooks/useCercania";
 import { useComparativa } from "@/ui/hooks/useComparativa";
 import { useHistorial } from "@/ui/hooks/useHistorial";
 import { useMapa } from "@/ui/hooks/useMapa";
@@ -57,6 +59,7 @@ export function PaginaPrecios({ contenedor }: { contenedor: Contenedor }) {
     [mapa.datos, escalar],
   );
   const marcadorSeleccionado = marcadores.find((m) => m.mercado.codigo === seleccionado) ?? null;
+  const cercania = useCercania(contenedor, marcadores);
 
   // Solo se ofrecen presentaciones de la magnitud en que llegó el precio: si
   // la fuente publica por unidad, no hay "por arroba" que mostrar.
@@ -102,7 +105,68 @@ export function PaginaPrecios({ contenedor }: { contenedor: Contenedor }) {
             </div>
           </div>
         )}
+
+        <div className="consulta__cerca">
+          <span className="buscador__etiqueta" aria-hidden="true">
+            &nbsp;
+          </span>
+          <button
+            type="button"
+            className="boton boton--suave boton--icono"
+            disabled={cercania.buscando}
+            onClick={() => void cercania.buscar()}
+          >
+            <Icono nombre="ubicacion" tamano={18} />
+            {cercania.buscando ? "Buscando…" : "Cerca de mí"}
+          </button>
+        </div>
       </div>
+
+      {cercania.error && (
+        <p className="estado estado--error" role="alert">
+          {cercania.error}
+        </p>
+      )}
+      {cercania.ubicacion && (
+        <section className="cercanos" aria-labelledby="titulo-cercanos">
+          <div className="cercanos__cabeza">
+            <h2 id="titulo-cercanos" className="seccion">
+              Más cerca de usted
+            </h2>
+            <button type="button" className="enlace" onClick={cercania.olvidar}>
+              Ocultar
+            </button>
+          </div>
+          {cercania.cercanos.length === 0 ? (
+            <p className="estado">Ningún punto cercano tiene precio para este producto.</p>
+          ) : (
+            <ol className="cercanos__lista">
+              {cercania.cercanos.map(({ marcador, distanciaKm }) => {
+                const precio = marcador.precio && escalar({ precio: marcador.precio }).precio;
+                return (
+                  <li key={marcador.mercado.codigo}>
+                    <button
+                      type="button"
+                      className="cercanos__punto"
+                      aria-pressed={seleccionado === marcador.mercado.codigo}
+                      onClick={() => setSeleccionado(marcador.mercado.codigo)}
+                    >
+                      <span className="cercanos__nombre">{marcador.mercado.nombre}</span>
+                      <span className="tenue">{textoDistancia(distanciaKm)}</span>
+                      {precio && (
+                        <span className="cercanos__precio">
+                          Bs {precio.rango.centro.toFixed(2)}
+                          <span className="tenue"> /{precio.unidad}</span>
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+        </section>
+      )}
 
       {mapa.datos && (
         <section className="honestidad" aria-label="De dónde salen estos precios">
@@ -145,6 +209,7 @@ export function PaginaPrecios({ contenedor }: { contenedor: Contenedor }) {
             marcadores={marcadores}
             seleccionado={seleccionado}
             onSeleccionar={setSeleccionado}
+            ubicacion={cercania.ubicacion}
           />
           <PanelPunto marcador={marcadorSeleccionado} producto={productoActual} />
         </div>
