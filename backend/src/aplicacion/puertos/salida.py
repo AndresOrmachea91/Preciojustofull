@@ -145,6 +145,26 @@ class EmisorTokens(Protocol):
         ...
 
 
+@runtime_checkable
+class EnlacesRecuperacion(Protocol):
+    """Enlaces de un solo uso para elegir una contraseña nueva."""
+
+    def emitir(self, usuario: Usuario) -> str: ...
+
+    def id_de(self, enlace: str) -> int | None:
+        """De quién es el enlace, si no venció ni fue adulterado."""
+        ...
+
+    def vigente_para(self, enlace: str, usuario: Usuario) -> bool:
+        """False si la contraseña cambió después de emitirlo: así sirve una sola vez."""
+        ...
+
+
+@runtime_checkable
+class EnviadorCorreo(Protocol):
+    def enviar(self, para: str, asunto: str, texto: str) -> None: ...
+
+
 # --- usuario y vendedor -------------------------------------------------------
 
 @runtime_checkable

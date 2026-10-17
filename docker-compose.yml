@@ -38,9 +38,16 @@ services:
     build: .
     image: preciojusto-app:local
     env_file: docker/.env
+    # El correo de recuperar contraseña va a Mailpit: no sale a internet.
+    # En producción se reemplaza por un SMTP real desde docker/.env.
+    environment:
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PUERTO: ${SMTP_PUERTO:-1025}
     depends_on:
       db:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     ports:
       - "127.0.0.1:8088:8000"
     healthcheck:
@@ -73,6 +80,14 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    restart: unless-stopped
+
+  # Buzón de prueba: atrapa todo correo que manda la app y lo muestra en
+  # http://localhost:8025 (recuperar contraseña). Ocupa unos pocos MB.
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports:
+      - "127.0.0.1:8025:8025"
     restart: unless-stopped
 
 volumes:

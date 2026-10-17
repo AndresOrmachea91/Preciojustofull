@@ -241,6 +241,13 @@ export function autorDelUltimoCambio(a: Auditoria): string {
   return a.modificadoPor ?? a.creadoPor;
 }
 
+/** Qué le falta a una contraseña, o null si cumple. Es la regla del backend: se avisa antes de enviar. */
+export function problemaConContrasena(contrasena: string): string | null {
+  if (contrasena.length < 8) return "La contraseña debe tener al menos 8 caracteres";
+  if (/^\d+$/.test(contrasena) || /^\p{L}+$/u.test(contrasena)) return "La contraseña debe combinar letras y números";
+  return null;
+}
+
 export function puede(usuario: Usuario | null, permiso: Permiso): boolean {
   return usuario !== null && usuario.activo && usuario.permisos.includes(permiso);
 }

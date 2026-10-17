@@ -7,6 +7,7 @@ import type {
   AdministracionRepositorio,
   AuditoriaRepositorio,
   NuevaCuenta,
+  RecuperacionRepositorio,
   SesionRepositorio,
 } from "@/aplicacion/puertos";
 import type {
@@ -115,7 +116,9 @@ export function aReporte(d: ReporteDto): ReporteEnRevision {
   };
 }
 
-export class CuentasApi implements SesionRepositorio, AdministracionRepositorio, AuditoriaRepositorio {
+export class CuentasApi
+  implements SesionRepositorio, AdministracionRepositorio, AuditoriaRepositorio, RecuperacionRepositorio
+{
   constructor(private readonly http: ClienteHttp) {}
 
   async ingresar(correo: string, contrasena: string): Promise<{ token: string; usuario: Usuario }> {
@@ -124,6 +127,14 @@ export class CuentasApi implements SesionRepositorio, AdministracionRepositorio,
       contrasena,
     });
     return { token: d.token, usuario: aUsuario(d.usuario) };
+  }
+
+  async pedirEnlace(correo: string): Promise<void> {
+    await this.http.post("/auth/recuperar", { correo });
+  }
+
+  async restablecerConEnlace(token: string, contrasena: string): Promise<void> {
+    await this.http.post("/auth/restablecer", { token, contrasena });
   }
 
   async registrarse(cuenta: NuevaCuenta): Promise<Usuario> {

@@ -12,11 +12,13 @@ export function PaginaIngreso({
   sesion,
   modo,
   cambiarModo,
+  alOlvidar,
   alIngresar,
 }: {
   sesion: EstadoSesion;
   modo: Modo;
   cambiarModo: (modo: Modo) => void;
+  alOlvidar: () => void;
   alIngresar: (usuario: Usuario) => void;
 }) {
   const [correo, setCorreo] = useState("");
@@ -93,6 +95,14 @@ export function PaginaIngreso({
           {enviando ? "Enviando…" : modo === "ingresar" ? "Ingresar" : "Crear cuenta"}
         </button>
       </form>
+
+      {modo === "ingresar" && (
+        <p className="tenue">
+          <button type="button" className="enlace" onClick={alOlvidar}>
+            ¿Olvidó su contraseña?
+          </button>
+        </p>
+      )}
 
       <p className="tenue">
         {modo === "ingresar" ? "¿No tiene cuenta? " : "¿Ya tiene cuenta? "}

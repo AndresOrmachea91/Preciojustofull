@@ -27,6 +27,8 @@ from src.infraestructura.adaptadores.salida.persistencia.sesion import (
     crear_esquema, crear_motor, fabrica_sesiones,
 )
 from src.infraestructura.adaptadores.salida.seguridad.cifrador import CifradorScrypt
+from src.infraestructura.adaptadores.salida.correo.smtp import CorreoEnBitacora, CorreoSmtp
+from src.infraestructura.adaptadores.salida.seguridad.enlaces import EnlacesJwt
 from src.infraestructura.adaptadores.salida.seguridad.tokens import EmisorJwt
 from src.aplicacion.casos_uso.precios.calcular_canasta import CalcularCanastaCasoUso
 from src.aplicacion.casos_uso.precios.comparar_mercados import CompararMercadosCasoUso
@@ -34,6 +36,7 @@ from src.aplicacion.casos_uso.precios.consultar_precio import ConsultarPrecioPro
 from src.aplicacion.casos_uso.precios.historial_precio import HistorialPrecio
 from src.aplicacion.casos_uso.administracion.gestionar_usuarios import AdministrarUsuarios
 from src.aplicacion.casos_uso.cuentas.iniciar_sesion import IniciarSesion, ResolverSesion
+from src.aplicacion.casos_uso.cuentas.recuperar_contrasena import RecuperarContrasena
 from src.aplicacion.casos_uso.cuentas.registrar_usuario import RegistrarUsuario
 from src.aplicacion.casos_uso.administracion.gestionar_catalogo import (
     GestionarProductos, GestionarPuntosVenta,
@@ -104,6 +107,23 @@ def _cifrador() -> CifradorScrypt:
 @lru_cache
 def _tokens() -> EmisorJwt:
     return EmisorJwt(config.secreto_tokens(), horas_validez=config.sesion_horas)
+
+
+@lru_cache
+def _enlaces() -> EnlacesJwt:
+    return EnlacesJwt(config.secreto_tokens())
+
+
+@lru_cache
+def _correo():
+    if not config.smtp_host:
+        return CorreoEnBitacora()
+    return CorreoSmtp(config.smtp_host, config.smtp_puerto, config.smtp_remitente,
+                      config.smtp_usuario, config.smtp_clave, config.smtp_tls)
+
+
+def caso_recuperar_contrasena() -> RecuperarContrasena:
+    return RecuperarContrasena(_cuentas()[0], _enlaces(), _correo(), _cifrador(), config.url_publica)
 
 
 @lru_cache

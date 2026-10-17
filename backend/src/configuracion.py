@@ -30,6 +30,17 @@ class Configuracion(BaseSettings):
     admin_inicial_correo: str = ""
     admin_inicial_contrasena: str = ""
 
+    # Correo saliente (recuperar contraseña). Sin SMTP_HOST, el correo se
+    # escribe en el log. En Docker va a Mailpit; en producción, a un SMTP real.
+    smtp_host: str = ""
+    smtp_puerto: int = 25
+    smtp_remitente: str = "PrecioJusto <no-responder@preciojusto.bo>"
+    smtp_usuario: str = ""
+    smtp_clave: str = ""
+    smtp_tls: bool = False
+    # Dónde abre la persona el enlace del correo.
+    url_publica: str = "http://localhost:8088"
+
     class Config:
         env_file = str(ARCHIVO_ENV)
         env_file_encoding = "utf-8"

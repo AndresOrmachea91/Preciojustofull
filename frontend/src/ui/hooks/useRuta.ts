@@ -5,13 +5,21 @@ import { useCallback, useEffect, useState } from "react";
  * necesitan que el servidor conozca las rutas (el backend sirve un solo
  * index.html) y no suman una dependencia.
  */
-export type Ruta = "precios" | "ingresar" | "registrarse" | "mi-cuenta" | "mi-puesto" | "admin";
+export type Ruta =
+  | "precios" | "ingresar" | "registrarse" | "recuperar" | "restablecer" | "mi-cuenta" | "mi-puesto" | "admin";
 
-const RUTAS: readonly Ruta[] = ["ingresar", "registrarse", "mi-cuenta", "mi-puesto", "admin"];
+const RUTAS: readonly Ruta[] = ["ingresar", "registrarse", "recuperar", "restablecer", "mi-cuenta", "mi-puesto", "admin"];
 
 /** El enlace de una ruta, para usar en <a href>. */
 export function hrefDe(ruta: Ruta): string {
   return ruta === "precios" ? "#/" : `#/${ruta}`;
+}
+
+/** Un parámetro de la ruta actual: "#/restablecer?token=abc" → parametroDeRuta("token") = "abc". */
+export function parametroDeRuta(nombre: string): string {
+  const hash = globalThis.location?.hash ?? "";
+  const consulta = hash.includes("?") ? hash.slice(hash.indexOf("?") + 1) : "";
+  return new URLSearchParams(consulta).get(nombre) ?? "";
 }
 
 function leer(): Ruta {

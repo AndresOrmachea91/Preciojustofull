@@ -8,6 +8,7 @@ import { useSesion } from "@/ui/hooks/useSesion";
 // Pantallas agrupadas por quién las usa: publico/, cuentas/, usuario/, vendedor/, administracion/.
 import { PaginaAdmin } from "@/ui/paginas/administracion/PaginaAdmin";
 import { PaginaIngreso } from "@/ui/paginas/cuentas/PaginaIngreso";
+import { PaginaRecuperar } from "@/ui/paginas/cuentas/PaginaRecuperar";
 import { PaginaPrecios } from "@/ui/paginas/publico/PaginaPrecios";
 import { PaginaUsuario } from "@/ui/paginas/usuario/PaginaUsuario";
 import { PaginaVendedor } from "@/ui/paginas/vendedor/PaginaVendedor";
@@ -60,7 +61,17 @@ export default function App() {
 
       <main className="app__contenido">
         {cuenta && !usuario && (
-          <PaginaIngreso sesion={sesion} modo={cuenta} cambiarModo={ir} alIngresar={(u) => ir(inicioDe(u))} />
+          <PaginaIngreso
+            sesion={sesion}
+            modo={cuenta}
+            cambiarModo={ir}
+            alOlvidar={() => ir("recuperar")}
+            alIngresar={(u) => ir(inicioDe(u))}
+          />
+        )}
+
+        {(ruta === "recuperar" || ruta === "restablecer") && (
+          <PaginaRecuperar contenedor={contenedor} modo={ruta} alTerminar={() => ir("ingresar")} />
         )}
 
         {ruta === "mi-cuenta" &&

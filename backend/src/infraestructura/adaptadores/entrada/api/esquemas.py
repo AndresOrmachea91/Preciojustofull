@@ -170,6 +170,15 @@ class HistorialSalida(BaseModel):
     puntos: list[PuntoHistorialSalida]
 
 
+class RecuperarEntrada(BaseModel):
+    correo: str = Field(max_length=255)
+
+
+class RestablecerEntrada(BaseModel):
+    token: str = Field(max_length=2000)
+    contrasena: str = Field(max_length=128)
+
+
 class RegistroAuditadoSalida(BaseModel):
     """Una fila de cualquier tabla, con sus 5 campos de auditoría."""
     tabla: str

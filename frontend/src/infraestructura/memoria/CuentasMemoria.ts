@@ -11,6 +11,7 @@ import type {
   AuditoriaRepositorio,
   MisReportesRepositorio,
   NuevaCuenta,
+  RecuperacionRepositorio,
   ReporteRepositorio,
   SesionRepositorio,
 } from "@/aplicacion/puertos";
@@ -84,8 +85,17 @@ export function idDeSesion(almacen: AlmacenSesion): number | null {
 }
 
 export class CuentasMemoria
-  implements SesionRepositorio, AdministracionRepositorio, AuditoriaRepositorio, ReporteRepositorio, MisReportesRepositorio
+  implements
+    SesionRepositorio,
+    AdministracionRepositorio,
+    AuditoriaRepositorio,
+    RecuperacionRepositorio,
+    ReporteRepositorio,
+    MisReportesRepositorio
 {
+  /** En memoria no hay correo: los enlaces "enviados" quedan acá (las pruebas los leen). */
+  readonly enlacesEnviados: { correo: string; token: string }[] = [];
+
   private readonly cuentas = new Map<number, Cuenta>();
   private readonly listaReportes = new Map<number, ReporteEnRevision>();
   private siguiente = 1;
@@ -146,6 +156,23 @@ export class CuentasMemoria
       throw new Error("Correo o contraseña incorrectos");
     }
     return { token: `memoria:${cuenta.usuario.id}`, usuario: cuenta.usuario };
+  }
+
+  async pedirEnlace(correo: string): Promise<void> {
+    const cuenta = this.vigentes().find((c) => c.usuario.correo === correo.trim().toLowerCase());
+    if (cuenta?.usuario.activo) {
+      this.enlacesEnviados.push({ correo: cuenta.usuario.correo, token: `enlace:${cuenta.usuario.id}:${cuenta.contrasena}` });
+    }
+  }
+
+  async restablecerConEnlace(token: string, contrasena: string): Promise<void> {
+    // Como en el backend: el enlace lleva la contraseña vieja y deja de servir al cambiarla.
+    const [, id, vieja] = token.split(":");
+    const cuenta = this.cuentas.get(Number(id));
+    if (!cuenta || cuenta.contrasena !== vieja || cuenta.usuario.auditoria?.eliminado) {
+      throw new Error("El enlace no es válido o ya venció. Pida uno nuevo.");
+    }
+    cuenta.contrasena = contrasena;
   }
 
   async registrarse(cuenta: NuevaCuenta): Promise<Usuario> {

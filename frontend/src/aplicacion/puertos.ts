@@ -72,6 +72,13 @@ export interface SesionRepositorio {
   yo(): Promise<Usuario>;
 }
 
+/** Recuperar la contraseña con un enlace al correo. Aparte de la sesión: no hace falta estar dentro. */
+export interface RecuperacionRepositorio {
+  /** Siempre resuelve igual, exista o no la cuenta: no revela qué correos hay. */
+  pedirEnlace(correo: string): Promise<void>;
+  restablecerConEnlace(token: string, contrasena: string): Promise<void>;
+}
+
 /** Dónde se guarda el token entre recargas. El navegador es un detalle. */
 export interface AlmacenSesion {
   leer(): string | null;

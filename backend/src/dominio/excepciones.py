@@ -110,6 +110,13 @@ class CredencialesInvalidas(ErrorDominio):
         super().__init__("Correo o contraseña incorrectos")
 
 
+class EnlaceInvalido(ErrorDominio):
+    """El enlace para recuperar la contraseña no sirve: vencido, ya usado o adulterado."""
+
+    def __init__(self):
+        super().__init__("El enlace no es válido o ya venció. Pida uno nuevo.")
+
+
 class UsuarioNoEncontrado(ErrorDominio):
     def __init__(self, id_usuario: int):
         self.id_usuario = id_usuario

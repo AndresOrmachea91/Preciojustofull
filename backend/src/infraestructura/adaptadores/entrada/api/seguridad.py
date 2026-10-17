@@ -64,6 +64,7 @@ class ActorPorPeticion:
 
 _ESTADO_POR_ERROR: list[tuple[type[ex.ErrorDominio], int]] = [
     (ex.CredencialesInvalidas, status.HTTP_401_UNAUTHORIZED),
+    (ex.EnlaceInvalido, status.HTTP_400_BAD_REQUEST),
     (ex.PermisoDenegado, status.HTTP_403_FORBIDDEN),
     (ex.UsuarioNoEncontrado, status.HTTP_404_NOT_FOUND),
     (ex.ReporteNoEncontrado, status.HTTP_404_NOT_FOUND),

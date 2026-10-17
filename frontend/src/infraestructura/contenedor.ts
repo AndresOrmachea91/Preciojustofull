@@ -16,6 +16,7 @@ import { CalcularCanasta } from "@/aplicacion/casosUso/publico/calcularCanasta";
 import { CompararMercados } from "@/aplicacion/casosUso/publico/compararMercados";
 import { ConsultarCatalogo } from "@/aplicacion/casosUso/publico/consultarCatalogo";
 import { GestionarSesion } from "@/aplicacion/casosUso/cuentas/gestionarSesion";
+import { RecuperarContrasena } from "@/aplicacion/casosUso/cuentas/recuperarContrasena";
 import { CercaDeMi } from "@/aplicacion/casosUso/publico/cercaDeMi";
 import { VerHistorial } from "@/aplicacion/casosUso/publico/verHistorial";
 import { VerMapa } from "@/aplicacion/casosUso/publico/verMapa";
@@ -27,6 +28,7 @@ import type {
   CatalogoRepositorio,
   HistorialRepositorio,
   ListasRepositorio,
+  RecuperacionRepositorio,
   MisReportesRepositorio,
   PrecioRepositorio,
   PreciosVendedorRepositorio,
@@ -53,6 +55,7 @@ export interface Contenedor {
   readonly verHistorial: VerHistorial;
   readonly cercaDeMi: CercaDeMi;
   readonly sesion: GestionarSesion;
+  readonly recuperar: RecuperarContrasena;
   readonly administrar: Administrar;
   readonly administrarCatalogo: AdministrarCatalogo;
   readonly verAuditoria: VerAuditoria;
@@ -66,7 +69,7 @@ export function crearContenedor(origen?: string, almacen?: AlmacenSesion): Conte
 
   let precios: PrecioRepositorio & HistorialRepositorio;
   let catalogo: CatalogoRepositorio;
-  let cuentas: SesionRepositorio & AdministracionRepositorio & AuditoriaRepositorio;
+  let cuentas: SesionRepositorio & AdministracionRepositorio & AuditoriaRepositorio & RecuperacionRepositorio;
   let catalogoAdmin: CatalogoAdminRepositorio;
   let reportes: ReporteRepositorio;
   let misReportes: MisReportesRepositorio;
@@ -115,6 +118,7 @@ export function crearContenedor(origen?: string, almacen?: AlmacenSesion): Conte
     // El GPS es del navegador en los dos modos: no depende de dónde salen los precios.
     cercaDeMi: new CercaDeMi(new UbicacionNavegador()),
     sesion: new GestionarSesion(cuentas, almacen),
+    recuperar: new RecuperarContrasena(cuentas),
     administrar: new Administrar(cuentas),
     administrarCatalogo: new AdministrarCatalogo(catalogo, catalogoAdmin),
     verAuditoria: new VerAuditoria(cuentas),
