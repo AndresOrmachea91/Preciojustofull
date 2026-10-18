@@ -166,7 +166,7 @@ En el frontend:
 | Rutas `#/ingresar` y `#/registrarse` (la misma pantalla en dos modos) | `src/ui/hooks/useRuta.ts`, `src/ui/paginas/cuentas/PaginaIngreso.tsx` |
 | Piezas compartidas                    | `src/ui/componentes/Pestanas.tsx`, `Mensajes.tsx`; `src/ui/hooks/useCatalogo.ts` |
 
-## Agregado el 13 al 17 de octubre
+## Agregado del 13 al 17 de octubre
 
 | Qué | Dónde (backend: `backend/src/`, web: `frontend/src/`) |
 |-----|-------|
@@ -179,6 +179,14 @@ En el frontend:
 | Buzón de prueba (los correos no salen a internet) | servicio `mailpit` en `docker-compose.yml` → http://localhost:8025 |
 | Presentaciones según la categoría | `dominio/modelo/producto.py → presentaciones_habituales` |
 | Cada producto cotizado en su unidad | `aplicacion/casos_uso/precios/comparar_mercados.py → en_unidad_del_producto` |
+| Una voz por informante (C126) | `dominio/servicio/motor_fusion.py → _una_evidencia_por_clan`; columna `observacion_precio.informante` |
+| Procedencia en palabras y precios viejos (C125) | `PrecioConsolidado.voces` y `factor_mercado`; web: `dominio/modelo.ts → explicacionProcedencia`, `esPrecioViejo`; leyenda en `PaginaPrecios.tsx` |
+| Rango honesto y empates (C128) | `dominio/servicio/rango_honesto.py`; web: `empatan` en `dominio/modelo.ts` |
+| "Ahorra X Bs yendo a Y" (C129) | web: `aplicacion/casosUso/publico/calcularCanasta.ts → resumirCanasta`; `ui/paginas/usuario/MisListas.tsx → ResumenAhorro` |
+| Planilla de campo (C127) | `aplicacion/casos_uso/administracion/importar_campo.py`; ruta `POST /admin/campo/importar`; web: `ui/paginas/administracion/PlanillaCampo.tsx` |
+| ¿Qué tan confiable es? — backtest (C130) | `aplicacion/casos_uso/precios/evaluar_estimador.py`; ruta `GET /precios/confiabilidad`; web: `ui/paginas/publico/PaginaConfiabilidad.tsx` |
+| Límite de intentos (C131) | `adaptadores/entrada/api/limite_intentos.py`; usado en `rutas/cuentas.py` |
+| Salud del sistema y respaldos verificados (C132) | `aplicacion/casos_uso/administracion/salud_sistema.py`; `persistencia/salud.py`; `salida/respaldos/estado_archivo.py`; `docker/respaldar.sh` (restauración de prueba → `respaldos/estado.json`); web: `ui/paginas/administracion/SaludSistema.tsx` |
 
 ## Rutas de la API
 
