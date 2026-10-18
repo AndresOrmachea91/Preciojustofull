@@ -15,8 +15,8 @@ from fastapi.staticfiles import StaticFiles
 from src.infraestructura.adaptadores.entrada.api.dependencias import asegurar_admin_inicial
 from src.infraestructura.adaptadores.entrada.api.rutas import cuentas
 from src.infraestructura.adaptadores.entrada.api.rutas.administracion import (
-    auditoria as admin_auditoria, catalogo as admin_catalogo, reportes as admin_reportes,
-    usuarios as admin_usuarios,
+    auditoria as admin_auditoria, campo_y_salud as admin_campo_y_salud, catalogo as admin_catalogo,
+    reportes as admin_reportes, usuarios as admin_usuarios,
 )
 from src.infraestructura.adaptadores.entrada.api.rutas.publico import canasta, catalogo, precios
 from src.infraestructura.adaptadores.entrada.api.rutas.usuario import listas, reportes
@@ -87,6 +87,7 @@ app.include_router(admin_usuarios.router, prefix="/api/v1")
 app.include_router(admin_reportes.router, prefix="/api/v1")
 app.include_router(admin_catalogo.router, prefix="/api/v1")
 app.include_router(admin_auditoria.router, prefix="/api/v1")
+app.include_router(admin_campo_y_salud.router, prefix="/api/v1")
 
 
 @app.get("/api/v1/salud", tags=["salud"])

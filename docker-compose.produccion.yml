@@ -35,6 +35,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    # Solo lectura: el panel de salud lee el estado del último respaldo.
+    volumes:
+      - ./respaldos:/respaldos:ro
     # Sin "ports": solo Caddy le habla, por la red interna.
     expose:
       - "8000"

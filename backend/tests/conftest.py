@@ -8,6 +8,9 @@ os.environ["BASE_DATOS_URL"] = ""
 os.environ["JWT_SECRETO"] = "secreto-de-pruebas-que-no-sirve-en-produccion-0123456789"
 os.environ["ADMIN_INICIAL_CORREO"] = ""
 os.environ["ADMIN_INICIAL_CONTRASENA"] = ""
+# Las pruebas ingresan muchas veces seguidas desde la misma "IP": el límite
+# de intentos se prueba aparte (test_limite_intentos.py), encendiéndolo.
+os.environ["LIMITE_INTENTOS_ACTIVO"] = "false"
 
 from datetime import datetime, timezone
 

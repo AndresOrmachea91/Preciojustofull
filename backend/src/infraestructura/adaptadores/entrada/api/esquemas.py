@@ -345,3 +345,102 @@ class ListaSalida(BaseModel):
     nombre: str
     items: list[ItemListaSalida]
     creado_en: datetime | None = None
+
+
+# --- campo, confiabilidad y salud (C127, C130, C132) --------------------------
+
+class ImportarCampoEntrada(BaseModel):
+    # El texto de la planilla, tal cual (la web lo lee del archivo elegido).
+    csv: str = Field(min_length=1, max_length=2_000_000)
+    archivo: str = Field(default="planilla", max_length=120)
+    solo_revisar: bool = False
+
+
+class FilaRechazadaSalida(BaseModel):
+    fila: int
+    motivo: str
+
+
+class ImportarCampoSalida(BaseModel):
+    leidas: int
+    validas: int
+    guardadas: int
+    rechazadas: list[FilaRechazadaSalida]
+    solo_revisar: bool
+
+
+class ResumenProductoSalida(BaseModel):
+    codigo_producto: str
+    nombre_producto: str
+    casos: int
+    error_medio: float
+    cobertura: float
+
+
+class CasoEvaluadoSalida(BaseModel):
+    codigo_producto: str
+    nombre_producto: str
+    codigo_mercado: str
+    nombre_mercado: str
+    periodo: str
+    observado: float
+    estimado: float
+    estimado_minimo: float
+    estimado_maximo: float
+    sin_factor: float
+    error: float
+    dentro_del_rango: bool
+    voces: dict[str, int]
+
+
+class EvaluacionSalida(BaseModel):
+    casos: int
+    error_medio: float | None
+    sesgo: float | None
+    cobertura: float | None
+    error_medio_sin_factor: float | None
+    el_factor_ayuda: bool | None
+    mercados: int
+    productos: int
+    por_producto: list[ResumenProductoSalida]
+    detalle: list[CasoEvaluadoSalida]
+    calculado_en: datetime
+
+
+class PuntoSaludSalida(BaseModel):
+    nombre: str
+    estado: Literal["bien", "revisar", "sin_datos"]
+    detalle: str
+
+
+class FuenteSaludSalida(BaseModel):
+    fuente: str
+    observaciones: int
+    ultima_captura: datetime | None
+
+
+class RecoleccionSalida(BaseModel):
+    fuente: str
+    ocurrido_en: datetime
+    exito: bool
+    detalle: str | None
+    hechos_nuevos_24h: int
+
+
+class RespaldoSalida(BaseModel):
+    fecha: datetime | None
+    archivo: str | None
+    tamano_bytes: int | None
+    verificado: bool
+    filas_observaciones: int | None
+    detalle: str | None
+
+
+class SaludSalida(BaseModel):
+    estado_general: Literal["bien", "revisar", "sin_datos"]
+    puntos: list[PuntoSaludSalida]
+    fuentes: list[FuenteSaludSalida]
+    recolecciones: list[RecoleccionSalida]
+    respaldo: RespaldoSalida | None
+    cobertura_observada: float | None
+    ventana_dias: int

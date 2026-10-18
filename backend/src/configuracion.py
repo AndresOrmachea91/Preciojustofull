@@ -40,6 +40,11 @@ class Configuracion(BaseSettings):
     smtp_tls: bool = False
     # Dónde abre la persona el enlace del correo.
     url_publica: str = "http://localhost:8088"
+    # Carpeta de respaldos (montada solo lectura en el contenedor de la
+    # app): de ahí el panel de salud lee estado.json, que deja el respaldo.
+    respaldos_dir: str = "/respaldos"
+    # Límite de intentos en ingresar, registro y recuperar (C131).
+    limite_intentos_activo: bool = True
 
     class Config:
         env_file = str(ARCHIVO_ENV)

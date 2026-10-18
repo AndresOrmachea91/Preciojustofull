@@ -43,6 +43,9 @@ services:
     environment:
       SMTP_HOST: ${SMTP_HOST:-mailpit}
       SMTP_PUERTO: ${SMTP_PUERTO:-1025}
+    # Solo lectura: el panel de salud lee el estado del último respaldo.
+    volumes:
+      - ./respaldos:/respaldos:ro
     depends_on:
       db:
         condition: service_healthy

@@ -35,6 +35,12 @@ from src.aplicacion.casos_uso.precios.calcular_canasta import CalcularCanastaCas
 from src.aplicacion.casos_uso.precios.comparar_mercados import CompararMercadosCasoUso
 from src.aplicacion.casos_uso.precios.consultar_precio import ConsultarPrecioProducto
 from src.aplicacion.casos_uso.precios.historial_precio import HistorialPrecio
+from src.aplicacion.casos_uso.precios.evaluar_estimador import EvaluarEstimador
+from src.aplicacion.casos_uso.administracion.importar_campo import ImportarCotizacionesCampo
+from src.aplicacion.casos_uso.administracion.salud_sistema import VerSaludSistema
+from src.infraestructura.adaptadores.salida.memoria.salud import SaludEnMemoria
+from src.infraestructura.adaptadores.salida.persistencia.salud import SaludPostgres
+from src.infraestructura.adaptadores.salida.respaldos.estado_archivo import RespaldosEnArchivo
 from src.aplicacion.casos_uso.administracion.gestionar_usuarios import AdministrarUsuarios
 from src.aplicacion.casos_uso.cuentas.iniciar_sesion import IniciarSesion, ResolverSesion
 from src.aplicacion.casos_uso.cuentas.recuperar_contrasena import RecuperarContrasena
@@ -223,6 +229,22 @@ def caso_mis_reportes() -> MisReportes:
 
 def caso_gestionar_listas() -> GestionarListas:
     return GestionarListas(_listas(), _repositorios()[0], caso_calcular_canasta())
+
+
+def caso_evaluar_estimador() -> EvaluarEstimador:
+    p, m, o = _repositorios()
+    return EvaluarEstimador(p, m, o, obtener_motor())
+
+
+def caso_importar_campo() -> ImportarCotizacionesCampo:
+    p, m, o = _repositorios()
+    return ImportarCotizacionesCampo(p, m, o)
+
+
+def caso_salud_sistema() -> VerSaludSistema:
+    fabrica = _fabrica()
+    salud = SaludEnMemoria(*_repositorios()) if fabrica is None else SaludPostgres(fabrica)
+    return VerSaludSistema(salud, RespaldosEnArchivo(config.respaldos_dir))
 
 
 # --- vendedor ------------------------------------------------------------------

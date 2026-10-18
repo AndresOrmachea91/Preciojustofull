@@ -89,7 +89,7 @@ def test_api_auditoria_y_referencias(cliente):
     ref = cliente.get("/api/v1/admin/referencias", headers=admin).json()
     roles = {r["codigo"]: [p["codigo"] for p in r["permisos"]] for r in ref["roles"]}
     assert roles["usuario"] == ["reportar_precio", "gestionar_listas"]
-    assert len(roles["administrador"]) == 7
+    assert len(roles["administrador"]) == 9   # + importar_campo y ver_salud
     ipc = next(f for f in ref["fuentes"] if f["codigo"] == "siip_ipc")
     assert ipc["automatica"] is True and ipc["confianza_base"] == "alto"
 

@@ -27,6 +27,8 @@ DESCRIPCION_PERMISO: dict[Permiso, str] = {
     Permiso.GESTIONAR_CATALOGO: "Registrar y editar mercados, tiendas y productos.",
     Permiso.VALIDAR_REPORTES: "Aprobar o rechazar los reportes de precio.",
     Permiso.VER_AUDITORIA: "Ver quién creó, modificó o eliminó cada registro.",
+    Permiso.IMPORTAR_CAMPO: "Cargar la planilla CSV del levantamiento de campo (fuente campo).",
+    Permiso.VER_SALUD: "Ver el estado del sistema: recolección, respaldos y cobertura de los datos.",
 }
 
 _URL_SIIP = "https://siip.produccion.gob.bo"

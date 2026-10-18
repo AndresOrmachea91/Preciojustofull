@@ -10,10 +10,12 @@ medios y reportes ciudadanos son cuatro adaptadores del mismo puerto. Por
 eso perder una fuente no obliga a tocar nada más.
 """
 from __future__ import annotations
+from datetime import date
 from typing import Protocol, runtime_checkable
 
 from src.dominio.modelo import (
-    EstadoReporte, Fuente, ListaCompras, Mercado, Observacion, Producto, RegistroAuditado, Reporte, Usuario,
+    DatosSalud, EstadoReporte, EstadoRespaldo, Fuente, ListaCompras, Mercado, Observacion, Producto,
+    RegistroAuditado, Reporte, Usuario,
 )
 from src.dominio.valor import Periodo
 
@@ -199,4 +201,20 @@ class LectorAuditoria(Protocol):
 
     def recientes(self, tabla: str | None, limite: int) -> list[RegistroAuditado]:
         """Las filas con el cambio más reciente primero; de una tabla o de todas."""
+        ...
+
+
+# --- salud del sistema (C132) -------------------------------------------------
+
+@runtime_checkable
+class LectorSalud(Protocol):
+    def leer(self, desde: date) -> DatosSalud:
+        """Observaciones por fuente, la última recolección de cada una y la cobertura observada desde `desde`."""
+        ...
+
+
+@runtime_checkable
+class LectorRespaldos(Protocol):
+    def ultimo(self) -> EstadoRespaldo | None:
+        """El último respaldo y si su restauración de prueba salió bien. None si no hay registro."""
         ...

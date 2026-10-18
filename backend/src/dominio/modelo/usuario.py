@@ -45,6 +45,8 @@ class Permiso(str, Enum):
     GESTIONAR_CATALOGO = "gestionar_catalogo"
     VALIDAR_REPORTES = "validar_reportes"
     VER_AUDITORIA = "ver_auditoria"
+    IMPORTAR_CAMPO = "importar_campo"
+    VER_SALUD = "ver_salud"
 
 
 # La matriz de permisos es una regla del negocio, no de la API: vive acá

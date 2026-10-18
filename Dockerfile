@@ -27,4 +27,7 @@ RUN useradd --system --no-create-home preciojusto
 USER preciojusto
 
 EXPOSE 8000
-CMD ["python", "-m", "uvicorn", "src.infraestructura.adaptadores.entrada.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# --proxy-headers: detrás de Caddy, la IP real de quien llama viene en
+# X-Forwarded-For; el límite de intentos la necesita para no contar a todos
+# como si fueran el proxy.
+CMD ["python", "-m", "uvicorn", "src.infraestructura.adaptadores.entrada.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips", "*"]
