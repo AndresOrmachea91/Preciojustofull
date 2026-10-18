@@ -10,12 +10,12 @@ medios y reportes ciudadanos son cuatro adaptadores del mismo puerto. Por
 eso perder una fuente no obliga a tocar nada más.
 """
 from __future__ import annotations
-from datetime import date
+from datetime import date, datetime
 from typing import Protocol, runtime_checkable
 
 from src.dominio.modelo import (
-    DatosSalud, EstadoReporte, EstadoRespaldo, Fuente, ListaCompras, Mercado, Observacion, Producto,
-    RegistroAuditado, Reporte, Usuario,
+    Confirmacion, DatosSalud, EstadoReporte, EstadoRespaldo, Fuente, ListaCompras, Mercado, Observacion, Oferta,
+    Producto, Puesto, RegistroAuditado, Reporte, Usuario,
 )
 from src.dominio.valor import Periodo
 
@@ -217,4 +217,41 @@ class LectorSalud(Protocol):
 class LectorRespaldos(Protocol):
     def ultimo(self) -> EstadoRespaldo | None:
         """El último respaldo y si su restauración de prueba salió bien. None si no hay registro."""
+        ...
+
+
+# --- puestos y ofertas de los caseros (C133) ------------------------------------
+
+@runtime_checkable
+class RepositorioPuestos(Protocol):
+    def del_vendedor(self, id_vendedor: int) -> Puesto | None: ...
+    def del_mercado(self, codigo_mercado: str) -> list[Puesto]:
+        """Los puestos vigentes de un mercado, por número."""
+        ...
+    def obtener_por_numero(self, codigo_mercado: str, numero: str) -> Puesto | None: ...
+    def guardar(self, puesto: Puesto) -> Puesto:
+        """Inserta si no tiene id, actualiza si lo tiene."""
+        ...
+    def contar_por_mercado(self) -> dict[str, int]:
+        """Cuántos puestos vigentes tiene cada mercado (para el directorio)."""
+        ...
+
+
+@runtime_checkable
+class RepositorioOfertas(Protocol):
+    def obtener(self, id_oferta: int) -> Oferta | None: ...
+    def guardar(self, oferta: Oferta) -> Oferta: ...
+    def del_vendedor(self, id_vendedor: int) -> list[Oferta]:
+        """Todas las del vendedor, de la más nueva a la más vieja."""
+        ...
+    def vigentes(self, ahora: datetime, codigo_mercado: str | None = None,
+                 codigo_producto: str | None = None) -> list[Oferta]:
+        """Activas y sin vencer, con filtros opcionales."""
+        ...
+    def en_revision(self) -> list[Oferta]: ...
+    def confirmaciones(self, ids_oferta: list[int]) -> dict[int, list[Confirmacion]]:
+        """Las confirmaciones de varias ofertas en una consulta."""
+        ...
+    def guardar_confirmacion(self, confirmacion: Confirmacion) -> None:
+        """Una por persona y oferta: si ya había, se reemplaza."""
         ...

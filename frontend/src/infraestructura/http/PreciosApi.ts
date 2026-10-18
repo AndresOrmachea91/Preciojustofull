@@ -106,7 +106,7 @@ export function aCostoCanasta(d: CanastaDto): CostoCanasta {
   };
 }
 
-export type { CanastaDto, ProductoDto, MercadoDto };
+export type { CanastaDto, ProductoDto, MercadoDto, PrecioDto };
 
 interface CanastaDto {
   codigo_mercado: string;
@@ -123,7 +123,7 @@ interface CanastaDto {
   costo_maximo?: number;
 }
 
-function aPrecio(d: PrecioDto): Precio {
+export function aPrecio(d: PrecioDto): Precio {
   return {
     codigoProducto: d.codigo_producto,
     codigoMercado: d.codigo_mercado,

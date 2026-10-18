@@ -1,7 +1,13 @@
-/** Adaptador HTTP de lo que hace el VENDEDOR: /api/v1/vendedor/precios. */
-import type { PreciosVendedorRepositorio } from "@/aplicacion/puertos";
-import type { PrecioPublicado, UnidadBase } from "@/dominio/modelo";
+/** Adaptador HTTP de lo que hace el VENDEDOR: /api/v1/vendedor/precios, /puesto y /ofertas. */
+import type {
+  DatosPuesto,
+  NuevaOferta,
+  OfertasVendedorRepositorio,
+  PreciosVendedorRepositorio,
+} from "@/aplicacion/puertos";
+import type { MiOferta, PrecioPublicado, Puesto, UnidadBase } from "@/dominio/modelo";
 import type { ClienteHttp } from "@/infraestructura/http/clienteHttp";
+import { aPuesto, type PuestoDto } from "@/infraestructura/http/MercadosApi";
 
 interface PrecioPublicadoDto {
   codigo_producto: string;
@@ -13,7 +19,22 @@ interface PrecioPublicadoDto {
   publicado_en: string;
 }
 
-export class VendedorApi implements PreciosVendedorRepositorio {
+interface MiOfertaDto {
+  id: number;
+  codigo_producto: string;
+  nombre_producto: string;
+  monto: number;
+  presentacion: string;
+  precio_por_unidad_base: number;
+  desde: string;
+  hasta: string;
+  nota: string;
+  estado: MiOferta["estado"];
+  confirmaron: number;
+  desmintieron: number;
+}
+
+export class VendedorApi implements PreciosVendedorRepositorio, OfertasVendedorRepositorio {
   constructor(private readonly http: ClienteHttp) {}
 
   async misPrecios(): Promise<PrecioPublicado[]> {
@@ -35,5 +56,46 @@ export class VendedorApi implements PreciosVendedorRepositorio {
       monto: entrada.monto,
       presentacion: entrada.presentacion,
     });
+  }
+
+  async miPuesto(): Promise<Puesto | null> {
+    const dato = await this.http.get<PuestoDto | null>("/vendedor/puesto");
+    return dato ? aPuesto(dato) : null;
+  }
+
+  async guardarMiPuesto(datos: DatosPuesto): Promise<Puesto> {
+    return aPuesto(await this.http.put<PuestoDto>("/vendedor/puesto", datos));
+  }
+
+  async misOfertas(): Promise<MiOferta[]> {
+    const datos = await this.http.get<MiOfertaDto[]>("/vendedor/ofertas");
+    return datos.map((d) => ({
+      id: d.id,
+      codigoProducto: d.codigo_producto,
+      nombreProducto: d.nombre_producto,
+      monto: d.monto,
+      presentacion: d.presentacion,
+      precioPorUnidadBase: d.precio_por_unidad_base,
+      desde: d.desde,
+      hasta: d.hasta,
+      nota: d.nota,
+      estado: d.estado,
+      confirmaron: d.confirmaron,
+      desmintieron: d.desmintieron,
+    }));
+  }
+
+  async publicarOferta(oferta: NuevaOferta): Promise<void> {
+    await this.http.post("/vendedor/ofertas", {
+      codigo_producto: oferta.codigoProducto,
+      monto: oferta.monto,
+      presentacion: oferta.presentacion,
+      horas: oferta.horas,
+      nota: oferta.nota,
+    });
+  }
+
+  async retirarOferta(id: number): Promise<void> {
+    await this.http.post(`/vendedor/ofertas/${id}/retirar`);
   }
 }

@@ -54,6 +54,14 @@ from src.aplicacion.casos_uso.usuario.listas_compras import GestionarListas
 from src.aplicacion.casos_uso.usuario.mis_reportes import MisReportes
 from src.aplicacion.casos_uso.usuario.reportar_precio import RegistrarReporteCiudadano
 from src.aplicacion.casos_uso.vendedor.publicar_precio import MisPrecios, PublicarPrecioPropio
+from src.aplicacion.casos_uso.vendedor.mi_puesto import MiPuestoCasoUso
+from src.aplicacion.casos_uso.vendedor.ofertas import OfertasDelCasero
+from src.aplicacion.casos_uso.precios.ofertas_vigentes import VerOfertasVigentes
+from src.aplicacion.casos_uso.precios.ficha_mercado import DirectorioMercados, FichaMercado
+from src.aplicacion.casos_uso.usuario.confirmar_oferta import ConfirmarOferta
+from src.aplicacion.casos_uso.administracion.revisar_ofertas import RevisarOfertas
+from src.infraestructura.adaptadores.salida.memoria.puestos_y_ofertas import OfertasEnMemoria, PuestosEnMemoria
+from src.infraestructura.adaptadores.salida.persistencia.puestos_y_ofertas import OfertasPostgres, PuestosPostgres
 from src.configuracion import config
 from src.dominio.modelo import Rol
 from src.dominio.servicio.motor_fusion import MotorFusion
@@ -247,11 +255,56 @@ def caso_salud_sistema() -> VerSaludSistema:
     return VerSaludSistema(salud, RespaldosEnArchivo(config.respaldos_dir))
 
 
+# --- puestos y ofertas (C133) y ficha del mercado (C134) -------------------------
+
+@lru_cache
+def _puestos_y_ofertas():
+    fabrica = _fabrica()
+    if fabrica is None:
+        return PuestosEnMemoria(), OfertasEnMemoria()
+    return PuestosPostgres(fabrica), OfertasPostgres(fabrica)
+
+
+def caso_ofertas_vigentes() -> VerOfertasVigentes:
+    p, m, o = _repositorios()
+    puestos, ofertas = _puestos_y_ofertas()
+    return VerOfertasVigentes(p, m, o, obtener_motor(), ofertas, puestos, reloj=hoy_en_bolivia)
+
+
+def caso_ficha_mercado() -> FichaMercado:
+    p, m, o = _repositorios()
+    return FichaMercado(p, m, o, obtener_motor(), _puestos_y_ofertas()[0], caso_ofertas_vigentes(),
+                        reloj=hoy_en_bolivia)
+
+
+def caso_directorio_mercados() -> DirectorioMercados:
+    return DirectorioMercados(_repositorios()[1], _puestos_y_ofertas()[0], caso_ofertas_vigentes())
+
+
+def caso_confirmar_oferta() -> ConfirmarOferta:
+    return ConfirmarOferta(_puestos_y_ofertas()[1])
+
+
+def caso_revisar_ofertas() -> RevisarOfertas:
+    p, m, _ = _repositorios()
+    return RevisarOfertas(_puestos_y_ofertas()[1], p, m)
+
+
+def caso_mi_puesto() -> MiPuestoCasoUso:
+    return MiPuestoCasoUso(_repositorios()[1], _puestos_y_ofertas()[0])
+
+
+def caso_ofertas_del_casero() -> OfertasDelCasero:
+    p, m, o = _repositorios()
+    puestos, ofertas = _puestos_y_ofertas()
+    return OfertasDelCasero(p, m, o, obtener_motor(), ofertas, puestos, reloj=hoy_en_bolivia)
+
+
 # --- vendedor ------------------------------------------------------------------
 
 def caso_publicar_precio() -> PublicarPrecioPropio:
     p, m, o = _repositorios()
-    return PublicarPrecioPropio(p, m, o)
+    return PublicarPrecioPropio(p, m, o, _puestos_y_ofertas()[0])
 
 
 def caso_mis_precios() -> MisPrecios:

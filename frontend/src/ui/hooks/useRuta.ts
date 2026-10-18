@@ -6,15 +6,22 @@ import { useCallback, useEffect, useState } from "react";
  * index.html) y no suman una dependencia.
  */
 export type Ruta =
-  | "precios" | "confiabilidad" | "ingresar" | "registrarse" | "recuperar" | "restablecer" | "mi-cuenta" | "mi-puesto" | "admin";
+  | "precios" | "mercados" | "mercado" | "ofertas" | "confiabilidad" | "ingresar" | "registrarse" | "recuperar"
+  | "restablecer" | "mi-cuenta" | "mi-puesto" | "admin";
 
 const RUTAS: readonly Ruta[] = [
-  "confiabilidad", "ingresar", "registrarse", "recuperar", "restablecer", "mi-cuenta", "mi-puesto", "admin",
+  "mercados", "mercado", "ofertas", "confiabilidad", "ingresar", "registrarse", "recuperar", "restablecer",
+  "mi-cuenta", "mi-puesto", "admin",
 ];
 
 /** El enlace de una ruta, para usar en <a href>. */
 export function hrefDe(ruta: Ruta): string {
   return ruta === "precios" ? "#/" : `#/${ruta}`;
+}
+
+/** El enlace a la ficha de un mercado (C134): #/mercado?codigo=rodriguez. */
+export function hrefMercado(codigo: string): string {
+  return `#/mercado?codigo=${encodeURIComponent(codigo)}`;
 }
 
 /** Un parámetro de la ruta actual: "#/restablecer?token=abc" → parametroDeRuta("token") = "abc". */
@@ -25,8 +32,9 @@ export function parametroDeRuta(nombre: string): string {
 }
 
 function leer(): Ruta {
-  const hash = globalThis.location?.hash ?? "";
-  return RUTAS.find((r) => hash.startsWith(`#/${r}`)) ?? "precios";
+  // Se compara la ruta entera, sin la consulta: "mercado" no es "mercados".
+  const camino = (globalThis.location?.hash ?? "").replace(/^#\/?/, "").split("?")[0];
+  return RUTAS.find((r) => r === camino) ?? "precios";
 }
 
 export function useRuta(): [Ruta, (ruta: Ruta) => void] {
@@ -44,4 +52,15 @@ export function useRuta(): [Ruta, (ruta: Ruta) => void] {
   }, []);
 
   return [ruta, ir];
+}
+
+/** Un parámetro de la ruta que se actualiza si cambia el hash (de un mercado a otro, sin cambiar de pantalla). */
+export function useParametroDeRuta(nombre: string): string {
+  const [valor, setValor] = useState(() => parametroDeRuta(nombre));
+  useEffect(() => {
+    const alCambiar = () => setValor(parametroDeRuta(nombre));
+    globalThis.addEventListener?.("hashchange", alCambiar);
+    return () => globalThis.removeEventListener?.("hashchange", alCambiar);
+  }, [nombre]);
+  return valor;
 }

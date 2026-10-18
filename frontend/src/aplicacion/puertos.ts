@@ -6,6 +6,13 @@
  * no sabe cuál está usando.
  */
 import type {
+  EntradaDirectorio,
+  FichaMercado,
+  MiOferta,
+  Oferta,
+  OfertaEnRevision,
+  Puesto,
+  ResultadoConfirmacion,
   EvaluacionEstimador,
   ResultadoImportacion,
   SaludSistema,
@@ -170,4 +177,49 @@ export interface ConfiabilidadRepositorio {
 export interface OperacionRepositorio {
   importarCampo(csv: string, archivo: string, soloRevisar: boolean): Promise<ResultadoImportacion>;
   salud(): Promise<SaludSistema>;
+}
+
+// --- mercados por dentro, puestos y ofertas (C133, C134) -------------------------
+
+/** Entrar a un lugar: el directorio y la ficha de cada mercado. Público. */
+export interface MercadosRepositorio {
+  directorio(): Promise<EntradaDirectorio[]>;
+  ficha(codigoMercado: string): Promise<FichaMercado>;
+}
+
+/** Las ofertas vigentes (públicas) y el "¿Lo viste así?" de quien tiene sesión. */
+export interface OfertasRepositorio {
+  vigentes(filtro?: { mercado?: string; producto?: string }): Promise<Oferta[]>;
+  confirmar(idOferta: number, laVioAsi: boolean): Promise<ResultadoConfirmacion>;
+}
+
+export interface DatosPuesto {
+  numero: string;
+  nombre: string;
+  rubros: string[];
+  referencia: string;
+}
+
+export interface NuevaOferta {
+  codigoProducto: string;
+  monto: number;
+  presentacion: string;
+  horas: number;
+  nota: string;
+}
+
+/** Lo que el VENDEDOR hace con su puesto y sus ofertas. */
+export interface OfertasVendedorRepositorio {
+  miPuesto(): Promise<Puesto | null>;
+  guardarMiPuesto(datos: DatosPuesto): Promise<Puesto>;
+  misOfertas(): Promise<MiOferta[]>;
+  publicarOferta(oferta: NuevaOferta): Promise<void>;
+  retirarOferta(id: number): Promise<void>;
+}
+
+/** Las ofertas que los compradores desmintieron: las decide el administrador. */
+export interface RevisionOfertasRepositorio {
+  ofertasEnRevision(): Promise<OfertaEnRevision[]>;
+  reactivarOferta(id: number): Promise<void>;
+  retirarOfertaRevisada(id: number): Promise<void>;
 }

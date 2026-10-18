@@ -187,6 +187,12 @@ En el frontend:
 | ¿Qué tan confiable es? — backtest (C130) | `aplicacion/casos_uso/precios/evaluar_estimador.py`; ruta `GET /precios/confiabilidad`; web: `ui/paginas/publico/PaginaConfiabilidad.tsx` |
 | Límite de intentos (C131) | `adaptadores/entrada/api/limite_intentos.py`; usado en `rutas/cuentas.py` |
 | Salud del sistema y respaldos verificados (C132) | `aplicacion/casos_uso/administracion/salud_sistema.py`; `persistencia/salud.py`; `salida/respaldos/estado_archivo.py`; `docker/respaldar.sh` (restauración de prueba → `respaldos/estado.json`); web: `ui/paginas/administracion/SaludSistema.tsx` |
+| Puesto del casero (C133) | `dominio/modelo/puesto.py`; `aplicacion/casos_uso/vendedor/mi_puesto.py`; `persistencia/puestos_y_ofertas.py`; rutas `GET/PUT /vendedor/puesto`; web: pestaña «Datos del puesto» en `ui/paginas/vendedor/PaginaVendedor.tsx` |
+| Oferta con candado (C133) | `dominio/modelo/oferta.py` (vence, máx. 3, ahorro contra el sistema); `aplicacion/casos_uso/vendedor/ofertas.py`; `precios/referencia_sistema.py` (precio sin la voz del casero); `precios/ofertas_vigentes.py`; rutas `GET /ofertas`, `POST /vendedor/ofertas`; web: `ui/paginas/publico/PaginaOfertas.tsx`, `ui/componentes/TarjetaOferta.tsx` |
+| ¿Lo viste así? y revisión (C133) | `aplicacion/casos_uso/usuario/confirmar_oferta.py`; `administracion/revisar_ofertas.py`; rutas `POST /ofertas/{id}/confirmar`, `/admin/ofertas/*`; web: `ui/paginas/administracion/OfertasEnRevision.tsx` |
+| Ofertas dentro de la lista (C133) | `ofertasParaLista` en `dominio/modelo.ts`; `OfertasDeLaLista` en `ui/paginas/usuario/MisListas.tsx` |
+| Entrar a un mercado (C134) | `aplicacion/casos_uso/precios/ficha_mercado.py` (ficha y directorio); rutas `GET /mercados/directorio`, `GET /mercados/{codigo}/ficha` (caché en `api/cache_fichas.py`); web: `ui/paginas/publico/PaginaMercados.tsx`, `PaginaMercado.tsx`; anillo dorado y «Entrar al mercado» en `MapaPuntosVenta.tsx` y `PanelPunto.tsx` |
+| Planilla de campo con puesto (A4200) | columna `puesto` en `importar_campo.py`; `Observacion.puesto` y clave natural v2 (`tablas.py`, `sesion.py`) |
 
 ## Rutas de la API
 

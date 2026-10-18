@@ -660,3 +660,244 @@ export interface SaludSistema {
   readonly coberturaObservada: number | null;
   readonly ventanaDias: number;
 }
+
+// --- puestos, ofertas del casero (C133) y ficha del mercado (C134) ----------------
+
+/** Un puesto dentro de un mercado: "el 14 del Rodríguez". */
+export interface Puesto {
+  readonly id: number | null;
+  readonly codigoMercado: string;
+  readonly numero: string;
+  readonly nombre: string;
+  /** Categorías del catálogo: hortaliza, carne... */
+  readonly rubros: readonly string[];
+  /** Cómo encontrarlo adentro: "pasillo de verduras, frente a la puerta 2". */
+  readonly referencia: string;
+  /** False si el número solo aparece en mediciones de campo: nadie lo registró todavía. */
+  readonly registrado: boolean;
+}
+
+/**
+ * Una oferta vigente del casero, con su candado: el ahorro se mide contra
+ * el precio del SISTEMA en ese mercado (sin la voz del casero), nunca
+ * contra un "antes" que escribe él.
+ */
+export interface Oferta {
+  readonly id: number;
+  readonly codigoProducto: string;
+  readonly nombreProducto: string;
+  readonly unidadBase: UnidadBase;
+  readonly codigoMercado: string;
+  readonly nombreMercado: string;
+  readonly numeroPuesto: string | null;
+  readonly nombrePuesto: string | null;
+  readonly monto: number;
+  readonly presentacion: string;
+  readonly precioPorUnidadBase: number;
+  readonly desde: string;
+  readonly hasta: string;
+  readonly nota: string;
+  /** El precio del sistema en ese mercado, por unidad base, y si es observado o estimado. */
+  readonly precioSistema: number;
+  readonly procedenciaSistema: Procedencia;
+  readonly ahorroPorUnidad: number;
+  /** 0.12 = 12 % más barata que el sistema. */
+  readonly ahorroRelativo: number;
+  readonly confirmaron: number;
+  readonly desmintieron: number;
+}
+
+export type EstadoMiOferta = "activa" | "vencida" | "en_revision" | "retirada";
+
+/** Una oferta tal como la ve el casero que la publicó. */
+export interface MiOferta {
+  readonly id: number;
+  readonly codigoProducto: string;
+  readonly nombreProducto: string;
+  readonly monto: number;
+  readonly presentacion: string;
+  readonly precioPorUnidadBase: number;
+  readonly desde: string;
+  readonly hasta: string;
+  readonly nota: string;
+  readonly estado: EstadoMiOferta;
+  readonly confirmaron: number;
+  readonly desmintieron: number;
+}
+
+/** Una oferta que dos compradores desmintieron: espera que el administrador la mire. */
+export interface OfertaEnRevision {
+  readonly id: number;
+  readonly nombreProducto: string;
+  readonly nombreMercado: string;
+  readonly numeroPuesto: string | null;
+  readonly monto: number;
+  readonly presentacion: string;
+  readonly hasta: string;
+  readonly nota: string;
+  readonly confirmaron: number;
+  readonly desmintieron: number;
+}
+
+export interface ResultadoConfirmacion {
+  readonly confirmaron: number;
+  readonly desmintieron: number;
+  /** Con este desmentido ya son dos personas: la oferta se pausó. */
+  readonly pausada: boolean;
+}
+
+/** Cuánto dura una oferta: vence sola. */
+export const DURACIONES_OFERTA = [24, 48, 72] as const;
+export const MAXIMO_OFERTAS_ACTIVAS = 3;
+
+/** El precio de un producto en un lugar, y cuánto se aparta de la ciudad. */
+export interface PrecioDeProducto {
+  readonly codigoProducto: string;
+  readonly nombreProducto: string;
+  readonly categoria: string;
+  readonly precio: Precio;
+  readonly ciudad: number | null;
+  /** +0.06 = 6 % más caro que la referencia de la ciudad. */
+  readonly diferencia: number | null;
+}
+
+/** Lo último que se supo de un producto en un puesto: lo que declaró el casero o midió el campo. */
+export interface PrecioDelPuesto {
+  readonly codigoProducto: string;
+  readonly nombreProducto: string;
+  readonly monto: number;
+  readonly unidad: string;
+  readonly precioPorUnidadBase: number;
+  readonly unidadBase: UnidadBase;
+  readonly fecha: string | null;
+  readonly fuente: "vendedor" | "campo";
+}
+
+export interface PuestoEnFicha {
+  readonly puesto: Puesto;
+  readonly precios: readonly PrecioDelPuesto[];
+  readonly ofertas: readonly Oferta[];
+}
+
+/** Todo lo que el sistema sabe de un lugar (C134). */
+export interface FichaMercado {
+  readonly mercado: Mercado;
+  readonly padre: Mercado | null;
+  readonly sectores: readonly Mercado[];
+  readonly factorMercado: number;
+  readonly precios: readonly PrecioDeProducto[];
+  readonly puestos: readonly PuestoEnFicha[];
+  readonly ofertas: readonly Oferta[];
+  readonly observados: number;
+  readonly estimados: number;
+  readonly productosSinPrecio: number;
+  readonly datoMasReciente: string | null;
+}
+
+export interface EntradaDirectorio {
+  readonly mercado: Mercado;
+  readonly puestos: number;
+  readonly ofertas: number;
+  readonly sectores: number;
+}
+
+/** "Puesto 14 · Verduras Doña Rosa", o solo "Puesto 14". */
+export function tituloPuesto(numero: string, nombre?: string | null): string {
+  return `Puesto ${numero}${nombre ? ` · ${nombre}` : ""}`;
+}
+
+/** Cuánto le queda a una oferta: "vence en 5 h", "vence mañana", "venció". */
+export function textoVence(hasta: string, ahora: Date = new Date()): string {
+  const horas = (Date.parse(hasta) - ahora.getTime()) / 3_600_000;
+  if (horas <= 0) return "venció";
+  if (horas < 1) return "vence en menos de una hora";
+  if (horas < 20) return `vence en ${Math.round(horas)} h`;
+  if (horas < 36) return "vence mañana";
+  return `vence en ${Math.round(horas / 24)} días`;
+}
+
+/** Bs con coma decimal, como se escribe en Bolivia: 1.2 → "1,20". */
+export function bs(monto: number): string {
+  return monto.toFixed(2).replace(".", ",");
+}
+
+/**
+ * La frase del candado: cuánto menos que el precio del sistema y qué precio
+ * es ése. "Bs 2,35 menos por kilo que el precio estimado de Mercado Lanza (−16 %)".
+ */
+export function textoAhorroOferta(o: Oferta): string {
+  const unidad = NOMBRE_UNIDAD_BASE[o.unidadBase].toLowerCase();
+  return (
+    `Bs ${bs(o.ahorroPorUnidad)} menos por ${unidad} que el precio ${o.procedenciaSistema} de ${o.nombreMercado} ` +
+    `(−${Math.round(o.ahorroRelativo * 100)} %)`
+  );
+}
+
+/** "6 % más caro que la ciudad", "3 % más barato", "igual que la ciudad". Null si no se puede comparar. */
+export function textoDiferenciaCiudad(diferencia: number | null): string | null {
+  if (diferencia === null) return null;
+  const pct = Math.round(Math.abs(diferencia) * 100);
+  if (pct === 0) return "igual que la ciudad";
+  return `${pct} % más ${diferencia > 0 ? "caro" : "barato"} que la ciudad`;
+}
+
+/** Lo que se ahorra en un renglón de la lista si se compra en oferta. */
+export interface OfertaParaLista {
+  readonly oferta: Oferta;
+  /** Cuánto del producto pide la lista, en unidad base (2 arrobas = 23 kg). */
+  readonly cantidadBase: number;
+  readonly ahorro: number;
+}
+
+/**
+ * Las ofertas que tocan una lista (F4): por cada producto de la lista, la
+ * oferta vigente que más ahorra frente al sistema. Ordenadas por cuánto se
+ * ahorra en la cantidad que la persona pidió.
+ */
+export function ofertasParaLista(
+  items: readonly ItemLista[],
+  productos: readonly Producto[],
+  ofertas: readonly Oferta[],
+): OfertaParaLista[] {
+  const salida: OfertaParaLista[] = [];
+  for (const item of items) {
+    const producto = productos.find((p) => p.codigo === item.codigoProducto);
+    const candidatas = ofertas.filter((o) => o.codigoProducto === item.codigoProducto);
+    if (!producto || candidatas.length === 0) continue;
+    const mejor = candidatas.reduce((a, b) => (b.ahorroPorUnidad > a.ahorroPorUnidad ? b : a));
+    const cantidadBase = enUnidadBase(item, producto);
+    salida.push({ oferta: mejor, cantidadBase, ahorro: Math.round(mejor.ahorroPorUnidad * cantidadBase * 100) / 100 });
+  }
+  return salida.sort((a, b) => b.ahorro - a.ahorro);
+}
+
+/** Sin tildes ni mayúsculas, para buscar como escribe la gente. */
+export function sinTildes(texto: string): string {
+  return texto.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+}
+
+/**
+ * El directorio filtrado: por texto (nombre, zona o macrodistrito) y por
+ * tipo. Primero los que tienen ofertas, después por nombre. Los sectores
+ * no se listan sueltos: se entra por su mercado.
+ */
+export function filtrarDirectorio(
+  entradas: readonly EntradaDirectorio[],
+  texto: string,
+  tipo: TipoPuntoVenta | "todos" = "todos",
+): EntradaDirectorio[] {
+  const buscado = sinTildes(texto.trim());
+  return entradas
+    .filter((e) => !e.mercado.codigoPadre)
+    .filter((e) => tipo === "todos" || e.mercado.tipo === tipo)
+    .filter(
+      (e) =>
+        !buscado ||
+        [e.mercado.nombre, e.mercado.zona, e.mercado.macrodistrito].some((t) => sinTildes(t).includes(buscado)),
+    )
+    .sort((a, b) => Number(b.ofertas > 0) - Number(a.ofertas > 0) || a.mercado.nombre.localeCompare(b.mercado.nombre));
+}
+
+export function nombreCategoria(codigo: string): string {
+  return CATEGORIAS.find((c) => c.codigo === codigo)?.nombre ?? codigo;
+}

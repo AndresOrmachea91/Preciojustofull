@@ -88,6 +88,7 @@ def _a_observacion(f: ObservacionTabla) -> Observacion:
         tipo_precio=TipoPrecio(f.tipo_precio or "desconocido"),
         evidencia=f.evidencia,
         informante=f.informante,
+        puesto=f.puesto,
     )
 
 
@@ -116,6 +117,7 @@ def _de_observacion(o: Observacion) -> dict:
         "evidencia": o.evidencia,
         "reputacion_informante": o.reputacion_informante,
         "informante": o.informante,
+        "puesto": o.puesto,
         "ambito": o.ambito.value,
         "capturada_en": o.capturada_en,
     }
@@ -307,6 +309,7 @@ class ObservacionesPostgres(_Base):
             clave = (
                 f.fuente, f.nivel, f.codigo_producto, f.ambito, f.codigo_mercado, f.ciudad,
                 f.anio, f.mes, f.dia, f.unidad_texto, f.cantidad if f.cantidad else 1.0,
+                f.informante, f.puesto,
             )
             conocidas.setdefault(clave, {})[f.precio_monto] = f.id
         return conocidas

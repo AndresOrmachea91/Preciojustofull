@@ -8,6 +8,7 @@ from fastapi.responses import PlainTextResponse
 
 from src.aplicacion.casos_uso.administracion.importar_campo import COLUMNAS_OBLIGATORIAS, COLUMNAS_OPCIONALES
 from src.infraestructura.adaptadores.entrada.api import esquemas as e
+from src.infraestructura.adaptadores.entrada.api.cache_fichas import olvidar
 from src.infraestructura.adaptadores.entrada.api.dependencias import (
     caso_importar_campo, caso_salud_sistema, hoy_en_bolivia,
 )
@@ -16,8 +17,8 @@ from src.infraestructura.adaptadores.entrada.api.seguridad import usuario_actual
 router = APIRouter(prefix="/admin", tags=["administración"])
 
 _EJEMPLO = [
-    ("2026-10-18", "rodriguez", "papa_holandesa", "8,50", "kilo", "", "", "ana", "cotizado"),
-    ("2026-10-18", "rodriguez", "tomate", "60", "arroba", "", "", "ana", "pagado"),
+    ("2026-10-18", "rodriguez", "papa_holandesa", "8,50", "kilo", "", "", "ana", "cotizado", "14"),
+    ("2026-10-18", "rodriguez", "tomate", "60", "arroba", "", "", "ana", "pagado", "22"),
 ]
 
 
@@ -51,6 +52,8 @@ def plantilla():
 def importar(cuerpo: e.ImportarCampoEntrada, actor=Depends(usuario_actual), caso=Depends(caso_importar_campo)):
     """Carga las cotizaciones de campo. Con solo_revisar=true dice qué entraría, sin guardar."""
     r = caso.ejecutar(actor, _filas(cuerpo.csv), hoy_en_bolivia(), cuerpo.solo_revisar, cuerpo.archivo)
+    if r.guardadas:
+        olvidar()
     return e.ImportarCampoSalida(
         leidas=r.leidas, validas=r.validas, guardadas=r.guardadas, solo_revisar=cuerpo.solo_revisar,
         rechazadas=[e.FilaRechazadaSalida(fila=f.fila, motivo=f.motivo) for f in r.rechazadas],

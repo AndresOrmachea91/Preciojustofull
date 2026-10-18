@@ -3,7 +3,7 @@ import type { OperacionRepositorio } from "@/aplicacion/puertos";
 
 /** Las columnas de la planilla de campo, en el orden de la plantilla. Las 5 primeras son obligatorias. */
 export const COLUMNAS_CAMPO = [
-  "fecha", "mercado", "producto", "monto", "presentacion", "cantidad", "variedad", "observador", "tipo",
+  "fecha", "mercado", "producto", "monto", "presentacion", "cantidad", "variedad", "observador", "tipo", "puesto",
 ] as const;
 
 /**
@@ -12,8 +12,8 @@ export const COLUMNAS_CAMPO = [
  */
 export const PLANTILLA_CAMPO = [
   COLUMNAS_CAMPO.join(";"),
-  "2026-10-18;rodriguez;papa_holandesa;8,50;kilo;;;ana;cotizado",
-  "2026-10-18;rodriguez;tomate;60;arroba;;;ana;pagado",
+  "2026-10-18;rodriguez;papa_holandesa;8,50;kilo;;;ana;cotizado;14",
+  "2026-10-18;rodriguez;tomate;60;arroba;;;ana;pagado;22",
   "",
 ].join("\n");
 

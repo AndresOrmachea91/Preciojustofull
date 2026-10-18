@@ -22,6 +22,9 @@ import { VerHistorial } from "@/aplicacion/casosUso/publico/verHistorial";
 import { VerMapa } from "@/aplicacion/casosUso/publico/verMapa";
 import { VerConfiabilidad } from "@/aplicacion/casosUso/publico/verConfiabilidad";
 import { OperarSistema } from "@/aplicacion/casosUso/administracion/operarSistema";
+import { RevisarOfertas } from "@/aplicacion/casosUso/administracion/revisarOfertas";
+import { ExplorarMercados } from "@/aplicacion/casosUso/publico/explorarMercados";
+import { VerOfertas } from "@/aplicacion/casosUso/publico/verOfertas";
 import type {
   AdministracionRepositorio,
   AlmacenSesion,
@@ -32,6 +35,10 @@ import type {
   HistorialRepositorio,
   OperacionRepositorio,
   ListasRepositorio,
+  MercadosRepositorio,
+  OfertasRepositorio,
+  OfertasVendedorRepositorio,
+  RevisionOfertasRepositorio,
   RecuperacionRepositorio,
   MisReportesRepositorio,
   PrecioRepositorio,
@@ -44,11 +51,13 @@ import { CatalogoAdminApi } from "@/infraestructura/http/CatalogoAdminApi";
 import { ClienteHttp } from "@/infraestructura/http/clienteHttp";
 import { CuentasApi } from "@/infraestructura/http/CuentasApi";
 import { OperacionApi } from "@/infraestructura/http/OperacionApi";
+import { MercadosApi } from "@/infraestructura/http/MercadosApi";
 import { PreciosApi } from "@/infraestructura/http/PreciosApi";
 import { UsuarioApi } from "@/infraestructura/http/UsuarioApi";
 import { VendedorApi } from "@/infraestructura/http/VendedorApi";
 import { CuentasMemoria } from "@/infraestructura/memoria/CuentasMemoria";
 import { OperacionMemoria } from "@/infraestructura/memoria/OperacionMemoria";
+import { MercadosMemoria } from "@/infraestructura/memoria/MercadosMemoria";
 import { PreciosMemoria } from "@/infraestructura/memoria/PreciosMemoria";
 import { ListasMemoria, PreciosVendedorMemoria } from "@/infraestructura/memoria/UsuarioMemoria";
 import { UbicacionNavegador } from "@/infraestructura/ubicacion/ubicacionNavegador";
@@ -70,6 +79,9 @@ export interface Contenedor {
   readonly miPuesto: MiPuesto;
   readonly verConfiabilidad: VerConfiabilidad;
   readonly operarSistema: OperarSistema;
+  readonly mercados: ExplorarMercados;
+  readonly ofertas: VerOfertas;
+  readonly revisarOfertas: RevisarOfertas;
 }
 
 export function crearContenedor(origen?: string, almacen?: AlmacenSesion): Contenedor {
@@ -84,6 +96,8 @@ export function crearContenedor(origen?: string, almacen?: AlmacenSesion): Conte
   let listas: ListasRepositorio;
   let preciosVendedor: PreciosVendedorRepositorio;
   let operacion: ConfiabilidadRepositorio & OperacionRepositorio;
+  let mercados: MercadosRepositorio & OfertasRepositorio & RevisionOfertasRepositorio;
+  let ofertasVendedor: OfertasVendedorRepositorio;
 
   if (modo === "http") {
     const almacenSesion = almacen ?? new AlmacenSesionLocal();
@@ -100,8 +114,11 @@ export function crearContenedor(origen?: string, almacen?: AlmacenSesion): Conte
     const usuario = new UsuarioApi(http);
     misReportes = usuario;
     listas = usuario;
-    preciosVendedor = new VendedorApi(http);
+    const vendedor = new VendedorApi(http);
+    preciosVendedor = vendedor;
+    ofertasVendedor = vendedor;
     operacion = new OperacionApi(http);
+    mercados = new MercadosApi(http);
     almacen = almacenSesion;
   } else {
     const memoria = new PreciosMemoria();
@@ -118,6 +135,9 @@ export function crearContenedor(origen?: string, almacen?: AlmacenSesion): Conte
     listas = new ListasMemoria(almacen, memoria, memoria);
     preciosVendedor = new PreciosVendedorMemoria(almacen, memoria);
     operacion = new OperacionMemoria();
+    const mercadosMemoria = new MercadosMemoria(almacen, memoria, memoria);
+    mercados = mercadosMemoria;
+    ofertasVendedor = mercadosMemoria;
   }
 
   return {
@@ -135,8 +155,11 @@ export function crearContenedor(origen?: string, almacen?: AlmacenSesion): Conte
     verAuditoria: new VerAuditoria(cuentas),
     listas: new ListasDeCompras(listas),
     reportarPrecio: new ReportarPrecio(reportes, misReportes),
-    miPuesto: new MiPuesto(preciosVendedor),
+    miPuesto: new MiPuesto(preciosVendedor, ofertasVendedor),
     verConfiabilidad: new VerConfiabilidad(operacion),
     operarSistema: new OperarSistema(operacion),
+    mercados: new ExplorarMercados(mercados),
+    ofertas: new VerOfertas(mercados),
+    revisarOfertas: new RevisarOfertas(mercados),
   };
 }

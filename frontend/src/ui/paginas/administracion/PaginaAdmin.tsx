@@ -18,11 +18,13 @@ import { fechaCorta } from "@/ui/formato";
 import { Auditoria as VistaAuditoria } from "@/ui/paginas/administracion/Auditoria";
 import { CatalogoProductos } from "@/ui/paginas/administracion/CatalogoProductos";
 import { CatalogoPuntosVenta } from "@/ui/paginas/administracion/CatalogoPuntosVenta";
+import { OfertasEnRevision } from "@/ui/paginas/administracion/OfertasEnRevision";
 import { PlanillaCampo } from "@/ui/paginas/administracion/PlanillaCampo";
 import { Referencias } from "@/ui/paginas/administracion/Referencias";
 import { SaludSistema } from "@/ui/paginas/administracion/SaludSistema";
 
-type Pestana = "usuarios" | "reportes" | "puntos" | "productos" | "campo" | "salud" | "auditoria" | "referencias";
+type Pestana =
+  | "usuarios" | "reportes" | "ofertas" | "puntos" | "productos" | "campo" | "salud" | "auditoria" | "referencias";
 
 export function PaginaAdmin({ contenedor, usuario }: { contenedor: Contenedor; usuario: Usuario }) {
   const verUsuarios = puede(usuario, "gestionar_usuarios");
@@ -38,6 +40,7 @@ export function PaginaAdmin({ contenedor, usuario }: { contenedor: Contenedor; u
     { id: "puntos", texto: "Mercados y tiendas", visible: verCatalogo },
     { id: "productos", texto: "Productos", visible: verCatalogo },
     { id: "reportes", texto: "Reportes por revisar", visible: verReportes },
+    { id: "ofertas", texto: "Ofertas en revisión", visible: verReportes },
     { id: "campo", texto: "Planilla de campo", visible: verCampo },
     { id: "salud", texto: "Salud del sistema", visible: verSalud },
     { id: "auditoria", texto: "Auditoría", visible: verAuditoria },
@@ -54,6 +57,7 @@ export function PaginaAdmin({ contenedor, usuario }: { contenedor: Contenedor; u
       {pestana === "puntos" && verCatalogo && <CatalogoPuntosVenta contenedor={contenedor} />}
       {pestana === "productos" && verCatalogo && <CatalogoProductos contenedor={contenedor} />}
       {pestana === "reportes" && verReportes && <Reportes contenedor={contenedor} />}
+      {pestana === "ofertas" && verReportes && <OfertasEnRevision contenedor={contenedor} />}
       {pestana === "campo" && verCampo && <PlanillaCampo contenedor={contenedor} />}
       {pestana === "salud" && verSalud && <SaludSistema contenedor={contenedor} />}
       {pestana === "auditoria" && verAuditoria && <VistaAuditoria contenedor={contenedor} />}

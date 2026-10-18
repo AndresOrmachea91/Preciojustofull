@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 
 from src.aplicacion.casos_uso.cuentas.permisos import exigir
 from src.aplicacion.puertos.salida import (
-    EscritorObservaciones, LectorMercados, LectorProductos, LectorPublicacionesPuntoVenta,
+    EscritorObservaciones, LectorMercados, LectorProductos, LectorPublicacionesPuntoVenta, RepositorioPuestos,
 )
 from src.dominio.excepciones import (
     DatoInvalido, MercadoNoEncontrado, PresentacionInvalida, ProductoNoEncontrado, SinPuntoVenta,
@@ -32,7 +32,8 @@ class PrecioPublicado:
     publicado_en: datetime
 
 
-def _puesto_del(vendedor: Usuario, mercados: LectorMercados) -> Mercado:
+def punto_de_venta_del(vendedor: Usuario, mercados: LectorMercados) -> Mercado:
+    """El mercado o la tienda que el administrador le asignó al vendedor."""
     if not vendedor.codigo_punto_venta:
         raise SinPuntoVenta()
     puesto = mercados.obtener(vendedor.codigo_punto_venta)
@@ -44,15 +45,18 @@ def _puesto_del(vendedor: Usuario, mercados: LectorMercados) -> Mercado:
 
 class PublicarPrecioPropio:
     def __init__(self, productos: LectorProductos, mercados: LectorMercados,
-                 observaciones: EscritorObservaciones):
+                 observaciones: EscritorObservaciones, puestos: RepositorioPuestos | None = None):
         self._productos = productos
         self._mercados = mercados
         self._observaciones = observaciones
+        # Con los puestos, el precio queda anotado con el número del puesto
+        # del vendedor ("14"): así la ficha del mercado sabe a quién comprarle.
+        self._puestos = puestos
 
     def ejecutar(self, vendedor: Usuario, codigo_producto: str, monto: float,
                  presentacion: Presentacion) -> Observacion:
         exigir(vendedor, Permiso.PUBLICAR_PRECIO_PROPIO)
-        puesto = _puesto_del(vendedor, self._mercados)
+        puesto = punto_de_venta_del(vendedor, self._mercados)
         producto = self._productos.obtener(codigo_producto)
         if producto is None:
             raise ProductoNoEncontrado(codigo_producto)
@@ -62,6 +66,7 @@ class PublicarPrecioPropio:
             raise DatoInvalido("El precio tiene que ser mayor a cero")
 
         ahora = datetime.now(timezone.utc)
+        suyo = self._puestos.del_vendedor(vendedor.id) if self._puestos else None
         observacion = Observacion(
             fuente=Fuente.VENDEDOR,
             # Un mayorista declara precio mayorista: el nivel lo da el puesto.
@@ -77,6 +82,7 @@ class PublicarPrecioPropio:
             tipo_precio=TipoPrecio.ANUNCIADO,
             evidencia=f"vendedor:{vendedor.id}",
             informante=f"usuario:{vendedor.id}",
+            puesto=suyo.numero if suyo and suyo.codigo_mercado == puesto.codigo else None,
         )
         self._observaciones.guardar_varias([observacion])
         return observacion
@@ -93,7 +99,7 @@ class MisPrecios:
 
     def ejecutar(self, vendedor: Usuario) -> list[PrecioPublicado]:
         exigir(vendedor, Permiso.PUBLICAR_PRECIO_PROPIO)
-        puesto = _puesto_del(vendedor, self._mercados)
+        puesto = punto_de_venta_del(vendedor, self._mercados)
         ultimos: dict[str, PrecioPublicado] = {}
         # Vienen del más nuevo al más viejo: el primero de cada producto gana.
         for o in self._publicaciones.publicadas_en(puesto.codigo, Fuente.VENDEDOR):

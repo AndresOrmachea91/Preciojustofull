@@ -444,3 +444,107 @@ button, a, [role="option"] { -webkit-tap-highlight-color: transparent; }
 .salud__punto--revisar { border-color: var(--peligro); }
 .salud__punto--revisar .salud__marca { background: var(--peligro); }
 .salud__etiqueta { color: var(--tenue); font-size: 0.85rem; }
+
+/* --- ofertas de los caseros (C133) y mercados por dentro (C134) ----------------- */
+/* Lo que declara el casero va en dorado: se distingue de lo observado (jade)
+   y de lo estimado (ámbar), y nunca se confunde con un precio del sistema. */
+:root { --oro: #835c00; --oro-claro: #fbf3dc; --oro-borde: #d49a00; }
+@media (prefers-color-scheme: dark) {
+  :root { --oro: #e7bf55; --oro-claro: #282210; --oro-borde: #b98a12; }
+}
+
+.lateral__secciones { display: flex; flex-direction: column; gap: 4px; }
+.lateral__rotulo { margin: 8px 12px 4px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tenue); }
+.lateral__lema { margin: 4px 12px 0; padding: 10px 12px; border-radius: 10px; background: var(--crema); color: var(--tenue); font-size: 0.78rem; line-height: 1.45; }
+@media (max-width: 800px) { .lateral__lema { display: none; } }
+
+.boton--chico { padding: 4px 10px; font-size: 0.82rem; }
+.candado { background: var(--oro-claro); border: 1px solid var(--oro-borde); border-radius: 10px; padding: 12px 16px; margin: 0 0 16px; font-size: 0.9rem; }
+.candado p { margin: 0; }
+.candado p + p { margin-top: 6px; }
+.barra__buscar--suelta { display: block; width: 100%; max-width: 440px; margin: 0 0 16px; }
+
+.ofertas { display: flex; flex-direction: column; gap: 12px; }
+.oferta { background: var(--superficie); border: 1px solid var(--oro-borde); border-left-width: 4px; border-radius: 12px; padding: 14px 16px; }
+.panel .oferta { margin-top: 12px; padding: 12px 14px; }
+.oferta__cabeza { display: flex; align-items: flex-start; gap: 12px; }
+.oferta__sello { display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: 9px; background: var(--oro-claro); color: var(--oro); }
+.oferta__titulo { flex: 1; min-width: 0; }
+.oferta__producto { margin: 0; font-size: 1rem; color: var(--tinta); }
+.oferta__lugar { margin: 2px 0 0; font-size: 0.85rem; color: var(--tenue); }
+.oferta__lugar a, .ofertas-lista a, .ficha a, .panel__entrar { color: var(--jade); }
+.oferta__precio { margin: 0; font-size: 1.25rem; font-weight: 650; color: var(--tinta); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.oferta__ahorro { margin: 10px 0 6px; font-size: 0.92rem; font-weight: 600; color: var(--oro); }
+.oferta__meta { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; font-size: 0.8rem; color: var(--tenue); }
+.oferta__declarada { color: var(--oro); font-weight: 600; }
+.oferta__pie { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 12px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--borde); }
+.oferta__botones { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.oferta__gracias { margin: 8px 0 0; font-size: 0.85rem; color: var(--jade); }
+@media (max-width: 560px) {
+  .oferta__cabeza { flex-wrap: wrap; }
+  .oferta__precio { width: 100%; padding-left: 46px; }
+}
+
+.estado-oferta { font-size: 0.75rem; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.estado-oferta--activa { background: var(--oro-claro); color: var(--oro); }
+.estado-oferta--en_revision { background: var(--peligro-claro); color: var(--peligro); }
+.estado-oferta--vencida, .estado-oferta--retirada { background: var(--crema); color: var(--tenue); border: 1px solid var(--borde); }
+
+.ofertas-lista { margin: 0 0 12px; padding: 10px 14px; border-radius: 10px; background: var(--oro-claro); border: 1px solid var(--oro-borde); }
+.ofertas-lista .subseccion { margin: 0 0 6px; }
+.ofertas-lista__items { margin: 0; padding-left: 18px; font-size: 0.9rem; display: flex; flex-direction: column; gap: 6px; }
+
+.honestidad__oferta { margin-top: 6px !important; }
+.honestidad__oferta a { color: var(--jade); }
+.leyenda__punto--oferta { background: var(--jade); box-shadow: 0 0 0 2.5px var(--oro-borde); }
+.panel__entrar { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 0.88rem; font-weight: 600; text-decoration: none; }
+.panel__entrar:hover { text-decoration: underline; }
+
+/* El directorio: una tarjeta por lugar, toda la tarjeta es el enlace. */
+.barra--directorio { margin: 0 0 12px; }
+.directorio { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.directorio__lugar {
+  display: flex; align-items: center; gap: 12px; height: 100%; padding: 12px 14px; border: 1px solid var(--borde); border-radius: 12px;
+  background: var(--superficie); color: var(--texto); text-decoration: none; transition: border-color 150ms ease, background-color 150ms ease;
+}
+.directorio__lugar:focus-visible { outline: 2px solid var(--jade); outline-offset: 2px; }
+.directorio__lugar > .icono:last-child { color: var(--tenue); }
+.directorio__icono { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 10px; background: var(--jade-claro); color: var(--jade); }
+.directorio__icono--supermercado, .directorio__icono--minimarket, .directorio__icono--tienda { background: var(--crema); color: #1f5aa6; }
+.directorio__icono--mayorista { background: var(--ambar-claro); color: var(--ambar); }
+.directorio__texto { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.directorio__texto strong { color: var(--tinta); }
+.directorio__cifras { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+@media (hover: hover) and (pointer: fine) {
+  .directorio__lugar:hover { border-color: var(--jade); background: var(--crema); }
+}
+
+.chip { font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; background: var(--crema); color: var(--tenue); border: 1px solid var(--borde); white-space: nowrap; }
+.chip--oferta { background: var(--oro-claro); color: var(--oro); border-color: var(--oro-borde); font-weight: 600; }
+
+/* La ficha del mercado. */
+.ficha__volver { display: inline-block; margin-bottom: 12px; font-size: 0.88rem; color: var(--jade); text-decoration: none; }
+.ficha__volver:hover { text-decoration: underline; }
+.ficha__cabeza { display: flex; align-items: flex-start; gap: 14px; }
+.ficha__cabeza p { margin: 2px 0 0; }
+.ficha__sello { display: grid; place-items: center; flex: none; width: 52px; height: 52px; border-radius: 14px; background: var(--tinta); color: var(--sobre-tinta); }
+.ficha__nombre { margin: 0; font-size: 1.4rem; color: var(--tinta); }
+.ficha__caro { color: var(--peligro); }
+.ficha__barato { color: var(--jade); font-weight: 600; }
+.tabla__titulo { text-align: left; padding: 10px 12px 0; font-weight: 600; color: var(--tinta); }
+.ficha .tabla-envoltura + .tabla-envoltura { margin-top: 12px; }
+
+.puestos { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.puesto { background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; padding: 14px 16px; }
+.puesto__cabeza { display: flex; align-items: flex-start; gap: 12px; }
+.puesto__cabeza p { margin: 2px 0 0; }
+.puesto__numero {
+  display: grid; place-items: center; flex: none; min-width: 40px; height: 40px; padding: 0 6px; border-radius: 10px;
+  background: var(--jade-claro); color: var(--jade); font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.puesto__nombre { margin: 0; font-size: 1rem; color: var(--tinta); }
+.puesto__rubros { display: flex; flex-wrap: wrap; gap: 4px; margin: 10px 0 0; }
+.puesto__precios { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 0.88rem; }
+.puesto__precios li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 10px; padding-bottom: 6px; border-bottom: 1px dashed var(--borde); }
+.puesto__precios li .tenue:last-child { grid-column: 1 / -1; font-size: 0.78rem; }
+.puesto .oferta { margin-top: 10px; }

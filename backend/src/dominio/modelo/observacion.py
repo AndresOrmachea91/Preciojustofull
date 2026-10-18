@@ -155,6 +155,10 @@ class Observacion:
     # de la misma persona son una voz, no cinco: el motor junta por acá.
     # None = no se sabe (datos de prensa, históricos): cada una cuenta sola.
     informante: str | None = None
+    # En qué puesto del mercado se vio ("14"), si se sabe: una medición de
+    # campo o el precio que declara un casero. El precio del MERCADO se arma
+    # con todos sus puestos; el número sirve para mostrar a quién comprarle.
+    puesto: str | None = None
 
     def __post_init__(self):
         if self.ambito is Ambito.CIUDAD:
@@ -211,6 +215,9 @@ class Observacion:
         unidad original + cantidad: la presentación. "Bs 9,78 por 946 ml"
           y "Bs 10,32 por kilo" del mismo producto, mes y ciudad son dos
           hechos distintos, y el IPC publica los dos.
+        informante + puesto: dos caseros del mismo mercado que cobran lo
+          mismo el mismo día son dos hechos, no uno visto dos veces. Para
+          el SIIP los dos son None y la clave queda como antes.
 
         No entran: el monto (si difiere, es una REVISIÓN de la fuente, no
         un hecho nuevo, y se guarda aparte con su captura), la reputación
@@ -221,7 +228,7 @@ class Observacion:
             self.fuente.value, self.nivel.value, self.codigo_producto,
             self.ambito.value, self.codigo_mercado, self.ciudad,
             self.periodo.anio, self.periodo.mes, self.periodo.dia,
-            self.precio.unidad.texto, self.cantidad,
+            self.precio.unidad.texto, self.cantidad, self.informante, self.puesto,
         )
 
     @property

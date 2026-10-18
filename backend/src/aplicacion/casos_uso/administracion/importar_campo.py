@@ -15,7 +15,10 @@ demás y nada se corrige a ojo:
 
 Quién midió queda como informante ("campo:ana"), así la regla de una voz
 por informante también vale en campo: diez filas de la misma persona en
-el mismo puesto son una medición.
+el mismo puesto son una medición. Con la columna `puesto` (A4200), cada
+puesto que visitó es una voz aparte ("campo:ana:puesto:14"): son vendedores
+distintos, y el puesto queda anotado para la ficha del mercado. El sector
+se indica en la columna mercado con el código del sector (rodriguez_cubierto).
 """
 from __future__ import annotations
 
@@ -24,11 +27,13 @@ from datetime import date, datetime, timezone
 
 from src.aplicacion.casos_uso.cuentas.permisos import exigir
 from src.aplicacion.puertos.salida import EscritorObservaciones, LectorMercados, LectorProductos
+from src.dominio.excepciones import DatoInvalido
 from src.dominio.modelo import Fuente, Observacion, Permiso, Presentacion, Usuario
+from src.dominio.modelo.puesto import normalizar_numero
 from src.dominio.valor import VARIEDAD_DESCONOCIDA, Dinero, Periodo, TipoPrecio, Unidad
 
 COLUMNAS_OBLIGATORIAS = ("fecha", "mercado", "producto", "monto", "presentacion")
-COLUMNAS_OPCIONALES = ("cantidad", "variedad", "observador", "tipo")
+COLUMNAS_OPCIONALES = ("cantidad", "variedad", "observador", "tipo", "puesto")
 MAXIMO_FILAS = 2000
 _PRIMERA_FECHA = date(2020, 1, 1)
 
@@ -115,6 +120,12 @@ class ImportarCotizacionesCampo:
             raise ValueError(f"Tipo {valor['tipo']!r}: use anunciado, cotizado o pagado") from None
 
         observador = valor["observador"].lower() or f"usuario-{actor.id}"
+        puesto = None
+        if valor["puesto"]:
+            try:
+                puesto = normalizar_numero(valor["puesto"])
+            except DatoInvalido as error:
+                raise ValueError(str(error)) from None
         return Observacion(
             fuente=Fuente.CAMPO,
             nivel=mercado.nivel_precio,
@@ -128,7 +139,8 @@ class ImportarCotizacionesCampo:
             fecha_observacion=fecha,
             tipo_precio=tipo,
             evidencia=evidencia,
-            informante=f"campo:{observador}",
+            informante=f"campo:{observador}" + (f":puesto:{puesto}" if puesto else ""),
+            puesto=puesto,
         )
 
 

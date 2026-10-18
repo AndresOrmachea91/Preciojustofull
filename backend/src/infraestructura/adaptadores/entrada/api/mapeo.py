@@ -141,3 +141,78 @@ def precio_publicado_a_salida(p: PrecioPublicado) -> e.PrecioPublicadoSalida:
         presentacion=p.presentacion, precio_por_unidad_base=round(p.precio_por_unidad_base, 4),
         unidad_base=p.producto.unidad_base.value, publicado_en=p.publicado_en,
     )
+
+
+# --- puestos, ofertas y ficha del mercado (C133, C134) ---------------------------
+
+def puesto_a_salida(p, registrado: bool = True) -> e.PuestoSalida:
+    return e.PuestoSalida(
+        id=p.id, codigo_mercado=p.codigo_mercado, numero=p.numero, nombre=p.nombre,
+        rubros=[r.value for r in p.rubros], referencia=p.referencia, registrado=registrado,
+    )
+
+
+def oferta_a_salida(v) -> e.OfertaSalida:
+    o = v.oferta
+    return e.OfertaSalida(
+        id=o.id, codigo_producto=o.codigo_producto, nombre_producto=v.producto.nombre,
+        unidad_base=v.producto.unidad_base.value, codigo_mercado=o.codigo_mercado,
+        nombre_mercado=v.mercado.nombre, numero_puesto=o.numero_puesto,
+        nombre_puesto=(v.puesto.nombre or None) if v.puesto else None,
+        monto=o.monto, presentacion=o.presentacion.value, precio_por_unidad_base=o.precio_por_unidad_base,
+        desde=o.desde, hasta=o.hasta, nota=o.nota,
+        precio_sistema=v.precio_sistema.rango.centro, procedencia_sistema=v.precio_sistema.procedencia.value,
+        ahorro_por_unidad=v.ahorro_por_unidad, ahorro_relativo=v.ahorro_relativo,
+        confirmaron=v.confirmaron, desmintieron=v.desmintieron,
+    )
+
+
+def mi_oferta_a_salida(m) -> e.MiOfertaSalida:
+    o = m.oferta
+    return e.MiOfertaSalida(
+        id=o.id, codigo_producto=o.codigo_producto, nombre_producto=m.nombre_producto, monto=o.monto,
+        presentacion=o.presentacion.value, precio_por_unidad_base=o.precio_por_unidad_base,
+        desde=o.desde, hasta=o.hasta, nota=o.nota, estado=m.estado,
+        confirmaron=m.confirmaron, desmintieron=m.desmintieron,
+    )
+
+
+def oferta_en_revision_a_salida(r) -> e.OfertaEnRevisionSalida:
+    o = r.oferta
+    return e.OfertaEnRevisionSalida(
+        id=o.id, nombre_producto=r.nombre_producto, nombre_mercado=r.nombre_mercado,
+        numero_puesto=o.numero_puesto, monto=o.monto, presentacion=o.presentacion.value, hasta=o.hasta,
+        nota=o.nota, confirmaron=r.confirmaron, desmintieron=r.desmintieron,
+    )
+
+
+def ficha_a_salida(f) -> e.FichaMercadoSalida:
+    return e.FichaMercadoSalida(
+        mercado=mercado_a_salida(f.mercado),
+        padre=mercado_a_salida(f.padre) if f.padre else None,
+        sectores=[mercado_a_salida(m) for m in f.sectores],
+        factor_mercado=f.mercado.factor_mercado,
+        precios=[e.PrecioDeProductoSalida(
+            codigo_producto=p.producto.codigo, nombre_producto=p.producto.nombre,
+            categoria=p.producto.categoria.value, precio=precio_a_salida(p.precio),
+            ciudad=p.ciudad, diferencia=p.diferencia,
+        ) for p in f.precios],
+        puestos=[e.PuestoEnFichaSalida(
+            puesto=puesto_a_salida(x.puesto, x.registrado),
+            precios=[e.PrecioDelPuestoSalida(
+                codigo_producto=p.producto.codigo, nombre_producto=p.producto.nombre, monto=p.monto,
+                unidad=p.unidad, precio_por_unidad_base=p.precio_por_unidad_base,
+                unidad_base=p.producto.unidad_base.value, fecha=p.fecha, fuente=p.fuente,
+            ) for p in x.precios],
+            ofertas=[oferta_a_salida(v) for v in x.ofertas],
+        ) for x in f.puestos],
+        ofertas=[oferta_a_salida(v) for v in f.ofertas],
+        observados=f.observados, estimados=f.estimados, productos_sin_precio=f.productos_sin_precio,
+        dato_mas_reciente=f.dato_mas_reciente,
+    )
+
+
+def entrada_directorio_a_salida(x) -> e.EntradaDirectorioSalida:
+    return e.EntradaDirectorioSalida(
+        mercado=mercado_a_salida(x.mercado), puestos=x.puestos, ofertas=x.ofertas, sectores=x.sectores,
+    )

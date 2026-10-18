@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import type { Producto } from "@/dominio/modelo";
+import type { Oferta, Producto, Usuario } from "@/dominio/modelo";
 import {
   empatan,
   esPrecioViejo,
@@ -26,7 +26,7 @@ import { useMapa } from "@/ui/hooks/useMapa";
 // Si el catálogo no lo trae, se usa el primero.
 const PRODUCTO_INICIAL = "arroz_primera";
 
-export function PaginaPrecios({ contenedor }: { contenedor: Contenedor }) {
+export function PaginaPrecios({ contenedor, usuario = null }: { contenedor: Contenedor; usuario?: Usuario | null }) {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [producto, setProducto] = useState<string | null>(null);
   const [seleccionado, setSeleccionado] = useState<string | null>(null);
@@ -44,6 +44,21 @@ export function PaginaPrecios({ contenedor }: { contenedor: Contenedor }) {
 
   const codigo = producto ?? "";
   const mapa = useMapa(contenedor, codigo);
+
+  // Las ofertas de los caseros para este producto (C133): anillo dorado en el mapa.
+  const [ofertas, setOfertas] = useState<Oferta[]>([]);
+  useEffect(() => {
+    if (!codigo) return;
+    let vigente = true;
+    contenedor.ofertas.vigentes({ producto: codigo }).then(
+      (o) => vigente && setOfertas(o),
+      () => vigente && setOfertas([]),
+    );
+    return () => {
+      vigente = false;
+    };
+  }, [contenedor, codigo]);
+  const conOferta = useMemo(() => new Set(ofertas.map((o) => o.codigoMercado)), [ofertas]);
   const comparativa = useComparativa(contenedor, codigo);
   const historial = useHistorial(contenedor, codigo);
   const productoActual = productos.find((p) => p.codigo === producto) ?? null;
@@ -189,6 +204,12 @@ export function PaginaPrecios({ contenedor }: { contenedor: Contenedor }) {
             )}
             .
           </p>
+          {ofertas.length > 0 && (
+            <p className="honestidad__oferta">
+              Hoy {ofertas.length === 1 ? "hay una oferta" : `hay ${ofertas.length} ofertas`} de caseros para este
+              producto (anillo dorado en el mapa). <a href="#/ofertas">Ver todas las ofertas</a>
+            </p>
+          )}
           {mapa.datos.resumen.observados === 0 && mapa.datos.resumen.estimados > 0 && (
             <p className="honestidad__aviso">
               Todavía nadie verificó este precio en ningún mercado concreto: todos son estimaciones a
@@ -218,8 +239,15 @@ export function PaginaPrecios({ contenedor }: { contenedor: Contenedor }) {
               seleccionado={seleccionado}
               onSeleccionar={setSeleccionado}
               ubicacion={cercania.ubicacion}
+              conOferta={conOferta}
             />
-            <PanelPunto marcador={marcadorSeleccionado} producto={productoActual} />
+            <PanelPunto
+              marcador={marcadorSeleccionado}
+              producto={productoActual}
+              ofertas={ofertas.filter((o) => o.codigoMercado === seleccionado)}
+              contenedor={contenedor}
+              usuario={usuario}
+            />
           </div>
           <LeyendaMapa />
         </>
@@ -317,6 +345,9 @@ function LeyendaMapa() {
       </li>
       <li>
         <span className="leyenda__punto leyenda__punto--viejo" aria-hidden="true" /> Atenuado: el dato tiene más de una semana
+      </li>
+      <li>
+        <span className="leyenda__punto leyenda__punto--oferta" aria-hidden="true" /> Anillo dorado: un casero tiene una oferta
       </li>
     </ul>
   );

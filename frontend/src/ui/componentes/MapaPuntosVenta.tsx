@@ -30,8 +30,12 @@ function radio(activo: boolean): number {
   return (TACTIL ? 10 : 7) + (activo ? 4 : 0);
 }
 
-function estiloDe(activo: boolean): L.CircleMarkerOptions {
-  return { radius: radio(activo), color: activo ? "#12211d" : "#ffffff", weight: activo ? 3 : 1.5 };
+/** El anillo de un lugar con oferta del casero: dorado, se ve sin tapar el color del tipo. */
+const COLOR_OFERTA = "#d49a00";
+
+function estiloDe(activo: boolean, conOferta = false): L.CircleMarkerOptions {
+  if (activo) return { radius: radio(true), color: "#12211d", weight: 3 };
+  return { radius: radio(false), color: conOferta ? COLOR_OFERTA : "#ffffff", weight: conOferta ? 3.5 : 1.5 };
 }
 
 interface Props {
@@ -40,9 +44,13 @@ interface Props {
   readonly onSeleccionar: (codigo: string) => void;
   /** Dónde está la persona, si pidió ver lo cercano. */
   readonly ubicacion?: Coordenadas | null;
+  /** Códigos de los lugares con una oferta vigente del casero para este producto. */
+  readonly conOferta?: ReadonlySet<string>;
 }
 
-export function MapaPuntosVenta({ marcadores, seleccionado, onSeleccionar, ubicacion = null }: Props) {
+const NINGUNO: ReadonlySet<string> = new Set();
+
+export function MapaPuntosVenta({ marcadores, seleccionado, onSeleccionar, ubicacion = null, conOferta = NINGUNO }: Props) {
   const contenedor = useRef<HTMLDivElement>(null);
   const mapa = useRef<L.Map | null>(null);
   const capa = useRef<L.LayerGroup | null>(null);
@@ -76,7 +84,7 @@ export function MapaPuntosVenta({ marcadores, seleccionado, onSeleccionar, ubica
     for (const { mercado, precio } of marcadores) {
       if (mercado.latitud === undefined || mercado.longitud === undefined) continue;
       const punto = L.circleMarker([mercado.latitud, mercado.longitud], {
-        ...estiloDe(false),
+        ...estiloDe(false, conOferta.has(mercado.codigo)),
         fillColor: COLOR_TIPO[mercado.tipo],
         // Sin precio: el punto está, pero apagado. No se inventa nada. Con un
         // dato de más de una semana, a media luz: se ve, pero avisa.
@@ -84,21 +92,29 @@ export function MapaPuntosVenta({ marcadores, seleccionado, onSeleccionar, ubica
         // Un estimado se ve punteado; un observado, sólido.
         dashArray: precio?.procedencia === "estimado" ? "3 3" : undefined,
       });
-      punto.bindTooltip(mercado.nombre, { direction: "top", offset: [0, -6] });
+      punto.bindTooltip(conOferta.has(mercado.codigo) ? `${mercado.nombre} · con oferta` : mercado.nombre, {
+        direction: "top",
+        offset: [0, -6],
+      });
       punto.on("click", () => onSeleccionar(mercado.codigo));
       punto.addTo(grupo);
       puntos.current.set(mercado.codigo, punto);
     }
     elegido.current = null;
-  }, [marcadores, onSeleccionar]);
+  }, [marcadores, onSeleccionar, conOferta]);
 
   useEffect(() => {
     if (elegido.current === seleccionado) return;
-    if (elegido.current) puntos.current.get(elegido.current)?.setStyle(estiloDe(false)).setRadius(radio(false));
+    if (elegido.current) {
+      puntos.current
+        .get(elegido.current)
+        ?.setStyle(estiloDe(false, conOferta.has(elegido.current)))
+        .setRadius(radio(false));
+    }
     const nuevo = seleccionado ? puntos.current.get(seleccionado) : undefined;
     nuevo?.setStyle(estiloDe(true)).setRadius(radio(true)).bringToFront();
     elegido.current = seleccionado;
-  }, [seleccionado, marcadores]);
+  }, [seleccionado, marcadores, conOferta]);
 
   // La persona: un punto azul con halo, distinto de cualquier mercado.
   const aqui = useRef<L.CircleMarker | null>(null);

@@ -144,6 +144,8 @@ class ObservacionTabla(Base, Auditable):
     # Quién lo afirmó ("usuario:12"); NULL si no es una persona conocida.
     # El motor junta por acá: una voz por informante.
     informante = Column(String(64), nullable=True, index=True)
+    # Número del puesto dentro del mercado ("14"), si se sabe.
+    puesto = Column(String(16), nullable=True)
     # "punto_venta" si se midió en un local; "ciudad" si la fuente publica
     # un valor para toda la ciudad (SIIP). Lo segundo estima, no mide.
     ambito = Column(String(16), nullable=False, default="punto_venta")
@@ -172,9 +174,12 @@ class ObservacionTabla(Base, Auditable):
 # hecho con otro valor es una revisión y tiene que poder convivir.
 CLAVE_NATURAL = (
     "fuente", "nivel", "codigo_producto", "ambito", "codigo_mercado", "ciudad",
-    "anio", "mes", "dia", "unidad_texto", "cantidad",
+    "anio", "mes", "dia", "unidad_texto", "cantidad", "informante", "puesto",
 )
-NOMBRE_INDICE_CLAVE_NATURAL = "uq_hecho_observado"
+# v2: con informante y puesto (C133). El índice anterior se reemplaza al
+# arrancar (sesion.py): como la clave nueva es más fina, no puede chocar.
+NOMBRE_INDICE_CLAVE_NATURAL = "uq_hecho_observado_v2"
+NOMBRE_INDICE_CLAVE_NATURAL_ANTERIOR = "uq_hecho_observado"
 # Índice de expresión, portable entre SQLite y PostgreSQL: coalesce vuelve
 # comparables los NULL de mes y dia. Se crea con asegurar_indice_clave_natural,
 # nunca desde create_all, porque sobre una tabla con duplicados falla y
@@ -182,7 +187,8 @@ NOMBRE_INDICE_CLAVE_NATURAL = "uq_hecho_observado"
 INDICE_CLAVE_NATURAL = (
     f"CREATE UNIQUE INDEX IF NOT EXISTS {NOMBRE_INDICE_CLAVE_NATURAL} ON observacion_precio "
     "(fuente, nivel, codigo_producto, ambito, coalesce(codigo_mercado, ''), coalesce(ciudad, ''), "
-    "anio, coalesce(mes, 0), coalesce(dia, 0), unidad_texto, cantidad, precio_monto)"
+    "anio, coalesce(mes, 0), coalesce(dia, 0), unidad_texto, cantidad, "
+    "coalesce(informante, ''), coalesce(puesto, ''), precio_monto)"
 )
 
 
@@ -313,3 +319,72 @@ class ItemListaTabla(Base, Auditable):
     presentacion = Column(String(16), nullable=False)
 
     __table_args__ = (Index("ix_item_lista", "id_lista"),)
+
+
+# --- puestos y ofertas de los caseros (C133) ------------------------------------
+
+class PuestoTabla(Base, Auditable):
+    """
+    Un puesto dentro de un mercado: número, nombre, rubros y dueño. Se
+    identifica por (mercado, número), como lo dice la gente: "el 14 del
+    Rodríguez". Único solo entre los vigentes (índice parcial en sesion.py).
+    """
+
+    __tablename__ = "puesto"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    codigo_mercado = Column(String(64), ForeignKey("mercado.codigo"), nullable=False)
+    numero = Column(String(16), nullable=False)
+    nombre = Column(String(80), nullable=False, default="")
+    # "hortaliza,fruta": categorías del catálogo.
+    rubros = Column(String(128), nullable=False, default="")
+    referencia = Column(String(160), nullable=False, default="")
+    id_vendedor = Column(Integer, ForeignKey("usuario.id"), nullable=True)
+
+    __table_args__ = (Index("ix_puesto_mercado", "codigo_mercado"),)
+
+
+class OfertaTabla(Base, Auditable):
+    """
+    La oferta que declara un casero. NO es una observación y el motor de
+    fusión no la lee: una rebaja la elige el vendedor y no debe mover la
+    referencia del mercado. Vence sola (hasta); no se borra nunca.
+    """
+
+    __tablename__ = "oferta"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    id_vendedor = Column(Integer, ForeignKey("usuario.id"), nullable=False)
+    codigo_mercado = Column(String(64), ForeignKey("mercado.codigo"), nullable=False)
+    numero_puesto = Column(String(16), nullable=True)
+    codigo_producto = Column(String(64), ForeignKey("producto.codigo"), nullable=False)
+    monto = Column(Float, nullable=False)
+    presentacion = Column(String(16), nullable=False)
+    # Bs por unidad base: con esto se compara contra el sistema.
+    precio_por_unidad_base = Column(Float, nullable=False)
+    desde = Column(DateTime(timezone=True), nullable=False)
+    hasta = Column(DateTime(timezone=True), nullable=False)
+    nota = Column(String(80), nullable=False, default="")
+    estado = Column(String(16), nullable=False, default="activa")
+
+    __table_args__ = (
+        Index("ix_oferta_vigencia", "estado", "hasta"),
+        Index("ix_oferta_vendedor", "id_vendedor"),
+    )
+
+
+class ConfirmacionOfertaTabla(Base, Auditable):
+    """
+    "¿Lo viste así?": un comprador confirma o desmiente una oferta. Una
+    fila por persona y oferta; si cambia de opinión se actualiza la misma
+    (y la auditoría guarda cuándo).
+    """
+
+    __tablename__ = "confirmacion_oferta"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    id_oferta = Column(Integer, ForeignKey("oferta.id"), nullable=False)
+    id_usuario = Column(Integer, ForeignKey("usuario.id"), nullable=False)
+    la_vio_asi = Column(Boolean, nullable=False)
+
+    __table_args__ = (Index("ix_confirmacion_oferta", "id_oferta", "id_usuario", unique=True),)

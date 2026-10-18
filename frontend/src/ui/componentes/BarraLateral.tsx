@@ -12,11 +12,24 @@ interface Seccion {
 
 /** Las secciones que ve cada rol. Mostrar u ocultar es comodidad: quien protege es la API. */
 export function seccionesDe(usuario: Usuario | null): Seccion[] {
-  const secciones: Seccion[] = [
+  return [...seccionesPublicas(), ...seccionesDeCuenta(usuario)];
+}
+
+/** Lo que ve cualquiera, con o sin cuenta. */
+export function seccionesPublicas(): Seccion[] {
+  return [
     { ruta: "precios", texto: "Precios", icono: "precios" },
+    // Entrar a un mercado: sus precios, sus puestos y sus ofertas (C134).
+    { ruta: "mercados", texto: "Mercados", icono: "mercado" },
+    { ruta: "ofertas", texto: "Ofertas de hoy", icono: "oferta" },
     // Pública: cualquiera puede ver cuánto se equivoca el estimado.
     { ruta: "confiabilidad", texto: "¿Qué tan confiable es?", icono: "confiabilidad" },
   ];
+}
+
+/** Lo que depende del rol de la cuenta. */
+export function seccionesDeCuenta(usuario: Usuario | null): Seccion[] {
+  const secciones: Seccion[] = [];
   if (puede(usuario, "gestionar_listas")) {
     secciones.push({ ruta: "mi-cuenta", texto: "Mis listas y reportes", icono: "listas" });
   }
@@ -42,7 +55,8 @@ interface Props {
 }
 
 function Enlace({ ruta, actual, texto, icono, alIr }: Seccion & { actual: Ruta; alIr: (ruta: Ruta) => void }) {
-  const activo = ruta === actual;
+  // La ficha de un mercado es parte de "Mercados".
+  const activo = ruta === actual || (ruta === "mercados" && actual === "mercado");
   return (
     <a
       href={hrefDe(ruta)}
@@ -103,11 +117,33 @@ export function BarraLateral({ usuario, verificando, ruta, ir, salir }: Props) {
       </div>
 
       <div id="lateral-navegacion" className="lateral__cuerpo">
-        <nav aria-label="Secciones" className="lateral__grupo">
-          {seccionesDe(usuario).map((s) => (
-            <Enlace key={s.ruta} {...s} actual={ruta} alIr={navegar} />
-          ))}
+        <nav aria-label="Secciones" className="lateral__secciones">
+          <p className="lateral__rotulo" aria-hidden="true">
+            Explorar
+          </p>
+          <div className="lateral__grupo">
+            {seccionesPublicas().map((s) => (
+              <Enlace key={s.ruta} {...s} actual={ruta} alIr={navegar} />
+            ))}
+          </div>
+          {seccionesDeCuenta(usuario).length > 0 && (
+            <>
+              <p className="lateral__rotulo" aria-hidden="true">
+                Mi cuenta
+              </p>
+              <div className="lateral__grupo">
+                {seccionesDeCuenta(usuario).map((s) => (
+                  <Enlace key={s.ruta} {...s} actual={ruta} alIr={navegar} />
+                ))}
+              </div>
+            </>
+          )}
         </nav>
+
+        <p className="lateral__lema">
+          Precios de La Paz con su procedencia: observado si alguien lo midió, estimado si sale del boletín oficial.
+          Nadie paga por aparecer.
+        </p>
 
         <div className="lateral__cuenta">
           {usuario ? (

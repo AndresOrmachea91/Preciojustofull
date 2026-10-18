@@ -191,3 +191,23 @@ class ListaNoEncontrada(ErrorDominio):
     def __init__(self, id_lista: int):
         self.id_lista = id_lista
         super().__init__(f"No existe la lista {id_lista}")
+
+
+# --- puestos y ofertas (C133) ---------------------------------------------------
+
+class PuestoNoEncontrado(ErrorDominio):
+    def __init__(self, descripcion: str):
+        super().__init__(f"No existe el puesto {descripcion}")
+
+
+class OfertaNoEncontrada(ErrorDominio):
+    def __init__(self, id_oferta: int):
+        self.id_oferta = id_oferta
+        super().__init__(f"No existe la oferta {id_oferta}")
+
+
+class OfertaNoPermitida(ErrorDominio):
+    """
+    La oferta rompe un candado: no es más barata que el precio del sistema,
+    ya hay tres activas, o se quiere confirmar la propia. El mensaje dice cuál.
+    """

@@ -45,7 +45,8 @@ export function PlanillaCampo({ contenedor }: { contenedor: Contenedor }) {
       <p className="tenue">
         Una fila por precio anotado en un puesto. Columnas: <code>{COLUMNAS_CAMPO.join(", ")}</code>. Las cinco
         primeras son obligatorias; el monto acepta coma decimal (8,50) y la presentación es kilo, libra, arroba,
-        quintal, unidad, docena, maple, litro o atado.
+        quintal, unidad, docena, maple, litro o atado. En <code>puesto</code> va el número del puesto visitado (14,
+        B-3); para un sector, ponga en <code>mercado</code> el código del sector.
       </p>
       <p>
         <a className="boton boton--suave" href={ENLACE_PLANTILLA} download="plantilla_campo.csv">

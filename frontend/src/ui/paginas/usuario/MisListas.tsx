@@ -2,8 +2,13 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 
 import type { CotizacionLista } from "@/aplicacion/casosUso/usuario/listasCompras";
 import {
+  bs,
   describirItem,
+  ofertasParaLista,
   presentacionBase,
+  textoVence,
+  tituloPuesto,
+  type Oferta,
   type CostoCanasta,
   type ItemLista,
   type ListaCompras,
@@ -13,6 +18,7 @@ import type { Contenedor } from "@/infraestructura/contenedor";
 import { MensajeAviso, MensajeError, textoDeError } from "@/ui/componentes/Mensajes";
 import { SelectorProducto } from "@/ui/componentes/SelectorProducto";
 import { useCatalogo } from "@/ui/hooks/useCatalogo";
+import { hrefMercado } from "@/ui/hooks/useRuta";
 
 /** Las listas de compras: armarlas y ver en qué mercado sale más barata cada una. */
 export function MisListas({ contenedor }: { contenedor: Contenedor }) {
@@ -130,6 +136,7 @@ function Cotizacion({ contenedor, lista, productos }: { contenedor: Contenedor; 
   return (
     <div className="cotizacion" aria-label="Dónde conviene comprar esta lista">
       <ResumenAhorro resultado={minoristas} />
+      <OfertasDeLaLista contenedor={contenedor} lista={lista} productos={productos} />
       <Ranking costos={minoristas.opciones.slice(0, 5)} nombre={nombre} />
       {mayoristas.length > 0 && (
         <>
@@ -320,5 +327,43 @@ function ResumenAhorro({ resultado }: { resultado: CotizacionLista["minoristas"]
         </p>
       )}
     </div>
+  );
+}
+
+/**
+ * Las ofertas de los caseros que tocan esta lista (C133, F4): "su tomate
+ * está en oferta en el puesto 14 del Rodríguez". El ahorro es contra el
+ * precio del sistema en ese mercado, por la cantidad que pide la lista.
+ */
+function OfertasDeLaLista({ contenedor, lista, productos }: { contenedor: Contenedor; lista: ListaCompras; productos: Producto[] }) {
+  const [ofertas, setOfertas] = useState<Oferta[]>([]);
+
+  useEffect(() => {
+    // Si no se pueden traer, la cotización sigue: las ofertas son un extra.
+    contenedor.ofertas.vigentes().then(setOfertas, () => setOfertas([]));
+  }, [contenedor]);
+
+  const tocan = ofertasParaLista(lista.items, productos, ofertas);
+  if (tocan.length === 0) return null;
+  return (
+    <section className="ofertas-lista" aria-label="Ofertas para esta lista">
+      <h4 className="subseccion">Ofertas de caseros para su lista</h4>
+      <ul className="ofertas-lista__items">
+        {tocan.map(({ oferta, ahorro }) => (
+          <li key={oferta.id}>
+            <strong>{oferta.nombreProducto}</strong> a Bs {bs(oferta.monto)} por {oferta.presentacion} en{" "}
+            <a href={hrefMercado(oferta.codigoMercado)}>{oferta.nombreMercado}</a>
+            {oferta.numeroPuesto && <>, {tituloPuesto(oferta.numeroPuesto, oferta.nombrePuesto)}</>}.{" "}
+            {ahorro > 0 && (
+              <>
+                Con lo que pide su lista ahorra unos <strong>Bs {bs(ahorro)}</strong> frente al precio {oferta.procedenciaSistema}{" "}
+                de ese mercado.{" "}
+              </>
+            )}
+            <span className="tenue">Declarada por el vendedor · {textoVence(oferta.hasta)}.</span>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

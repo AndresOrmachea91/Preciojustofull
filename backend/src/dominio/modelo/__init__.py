@@ -8,6 +8,8 @@ from src.dominio.modelo.usuario import PERMISOS_POR_ROL, Permiso, Rol, Usuario
 from src.dominio.modelo.reporte import EstadoReporte, Reporte
 from src.dominio.modelo.presentacion import Presentacion
 from src.dominio.modelo.lista_compras import ItemLista, ListaCompras
+from src.dominio.modelo.puesto import Puesto
+from src.dominio.modelo.oferta import Confirmacion, EstadoOferta, Oferta
 from src.dominio.modelo.salud import DatosDeFuente, DatosSalud, EstadoRespaldo, UltimaRecoleccion
 
 __all__ = [
@@ -16,5 +18,6 @@ __all__ = [
     "PrecioConsolidado", "RangoPrecio", "Bloqueo", "Ruta",
     "Auditoria", "RegistroAuditado", "PERMISOS_POR_ROL", "Permiso", "Rol", "Usuario", "EstadoReporte", "Reporte", "Presentacion", "ItemLista", "ListaCompras",
     "DatosDeFuente", "DatosSalud", "EstadoRespaldo", "UltimaRecoleccion",
+    "Puesto", "Confirmacion", "EstadoOferta", "Oferta",
 ]
 

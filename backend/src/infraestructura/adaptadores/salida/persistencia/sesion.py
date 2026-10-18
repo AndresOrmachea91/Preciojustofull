@@ -9,7 +9,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from src.infraestructura.adaptadores.salida.persistencia.tablas import (
-    INDICE_CLAVE_NATURAL, NOMBRE_INDICE_CLAVE_NATURAL, metadata,
+    INDICE_CLAVE_NATURAL, NOMBRE_INDICE_CLAVE_NATURAL, NOMBRE_INDICE_CLAVE_NATURAL_ANTERIOR, metadata,
 )
 from src.infraestructura.adaptadores.salida.persistencia.auditable import COLUMNAS_AUDITORIA, como_actor
 from src.infraestructura.adaptadores.salida.persistencia.referencias import sincronizar_referencias
@@ -68,6 +68,7 @@ _COLUMNAS_AGREGADAS = {
         "revisa_a": "INTEGER NULL REFERENCES observacion_precio(id)",
         "ciudad": "VARCHAR(64) NULL",
         "informante": "VARCHAR(64) NULL",
+        "puesto": "VARCHAR(16) NULL",
     },
 }
 
@@ -107,6 +108,17 @@ _CORREO_UNICO_VIGENTE = (
     "CREATE UNIQUE INDEX IF NOT EXISTS uq_usuario_correo_vigente ON usuario (correo) WHERE NOT eliminado"
 )
 
+# Un número de puesto es único dentro de su mercado, entre los vigentes:
+# un puesto dado de baja libera su número. Y un vendedor tiene un solo puesto.
+_PUESTO_UNICO_VIGENTE = (
+    "CREATE UNIQUE INDEX IF NOT EXISTS uq_puesto_numero_vigente ON puesto (codigo_mercado, numero) "
+    "WHERE NOT eliminado"
+)
+_PUESTO_UNO_POR_VENDEDOR = (
+    "CREATE UNIQUE INDEX IF NOT EXISTS uq_puesto_vendedor_vigente ON puesto (id_vendedor) "
+    "WHERE NOT eliminado AND id_vendedor IS NOT NULL"
+)
+
 # Cambios que SQLite no sabe hacer con ALTER (soltar un NOT NULL). En
 # SQLite las tablas nuevas ya nacen bien desde create_all; en PostgreSQL
 # hace falta decirlo. Se ejecuta antes de los rellenos.
@@ -124,8 +136,10 @@ _AJUSTES_POR_DIALECTO = {
         # El correo era único en toda la tabla; ahora solo entre los vigentes.
         "ALTER TABLE usuario DROP CONSTRAINT IF EXISTS usuario_correo_key",
         _CORREO_UNICO_VIGENTE,
+        _PUESTO_UNICO_VIGENTE,
+        _PUESTO_UNO_POR_VENDEDOR,
     ],
-    "sqlite": [_CORREO_UNICO_VIGENTE],
+    "sqlite": [_CORREO_UNICO_VIGENTE, _PUESTO_UNICO_VIGENTE, _PUESTO_UNO_POR_VENDEDOR],
 }
 
 # Rellenos que se pueden hacer con honestidad sobre filas históricas. El
@@ -245,7 +259,29 @@ def crear_esquema(motor: Engine) -> None:
             if rellenadas:
                 log.info("Filas históricas completadas: %s", rellenadas)
     _migrar_a_catalogos(motor)
+    _actualizar_indice_clave_natural(motor)
     log.info("Esquema verificado")
+
+
+def _actualizar_indice_clave_natural(motor: Engine) -> None:
+    """
+    Si la base tiene el índice de la clave natural ANTERIOR (sin informante
+    ni puesto), se cambia por el nuevo. Es seguro hacerlo al arrancar: la
+    clave nueva es más fina, así que lo que era único antes lo sigue
+    siendo. Si no hay ninguno, no se crea acá (ver asegurar_indice_clave_natural).
+    """
+    # Se pregunta al catálogo de la base y no al inspector: el índice es de
+    # expresiones (coalesce) y no todos los dialectos lo reflejan.
+    catalogo = (
+        "SELECT 1 FROM pg_indexes WHERE indexname = :n" if motor.dialect.name == "postgresql"
+        else "SELECT 1 FROM sqlite_master WHERE type = 'index' AND name = :n"
+    )
+    with motor.begin() as conexion:
+        if conexion.execute(text(catalogo), {"n": NOMBRE_INDICE_CLAVE_NATURAL_ANTERIOR}).first() is None:
+            return
+        conexion.execute(text(INDICE_CLAVE_NATURAL))
+        conexion.execute(text(f"DROP INDEX IF EXISTS {NOMBRE_INDICE_CLAVE_NATURAL_ANTERIOR}"))
+    log.info("Índice de la clave natural actualizado a %s", NOMBRE_INDICE_CLAVE_NATURAL)
 
 
 def asegurar_indice_clave_natural(motor: Engine) -> None:
@@ -256,6 +292,7 @@ def asegurar_indice_clave_natural(motor: Engine) -> None:
     """
     with motor.begin() as conexion:
         conexion.execute(text(INDICE_CLAVE_NATURAL))
+        conexion.execute(text(f"DROP INDEX IF EXISTS {NOMBRE_INDICE_CLAVE_NATURAL_ANTERIOR}"))
     log.info("Índice %s verificado", NOMBRE_INDICE_CLAVE_NATURAL)
 
 

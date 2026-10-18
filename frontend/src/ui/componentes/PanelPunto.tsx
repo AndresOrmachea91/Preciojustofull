@@ -1,4 +1,5 @@
-import type { MarcadorMapa, Producto } from "@/dominio/modelo";
+import type { MarcadorMapa, Oferta, Producto, Usuario } from "@/dominio/modelo";
+import type { Contenedor } from "@/infraestructura/contenedor";
 import {
   esPrecioViejo,
   etiquetaNivel,
@@ -8,15 +9,22 @@ import {
   textoAntiguedad,
 } from "@/dominio/modelo";
 import { Confianza } from "@/ui/componentes/Confianza";
+import { Icono } from "@/ui/componentes/Iconos";
 import { Procedencia } from "@/ui/componentes/Procedencia";
+import { TarjetaOferta } from "@/ui/componentes/TarjetaOferta";
+import { hrefMercado } from "@/ui/hooks/useRuta";
 
 interface Props {
   readonly marcador: MarcadorMapa | null;
   readonly producto: Producto | null;
+  /** Ofertas vigentes de este producto en este lugar (C133). */
+  readonly ofertas?: readonly Oferta[];
+  readonly contenedor?: Contenedor;
+  readonly usuario?: Usuario | null;
 }
 
 /** Lo que se ve al hacer clic en un punto: quién es, y qué precio tiene y de dónde sale. */
-export function PanelPunto({ marcador, producto }: Props) {
+export function PanelPunto({ marcador, producto, ofertas = [], contenedor, usuario = null }: Props) {
   if (!marcador) {
     return (
       <aside className="panel panel--vacio">
@@ -36,6 +44,9 @@ export function PanelPunto({ marcador, producto }: Props) {
           {mercado.codigoPadre && <> · sector de {mercado.codigoPadre}</>}
         </p>
         <p className={`panel__nivel panel__nivel--${mercado.nivelPrecio}`}>{etiquetaNivel(mercado.nivelPrecio)}</p>
+        <a className="panel__entrar" href={hrefMercado(mercado.codigo)}>
+          Entrar al mercado: todos sus precios y puestos <Icono nombre="flecha" tamano={16} />
+        </a>
       </header>
 
       {precio ? (
@@ -76,6 +87,11 @@ export function PanelPunto({ marcador, producto }: Props) {
           </p>
         </section>
       )}
+
+      {contenedor &&
+        ofertas.map((o) => (
+          <TarjetaOferta key={o.id} oferta={o} contenedor={contenedor} usuario={usuario} conMercado={false} />
+        ))}
     </aside>
   );
 }

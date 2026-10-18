@@ -444,3 +444,143 @@ class SaludSalida(BaseModel):
     respaldo: RespaldoSalida | None
     cobertura_observada: float | None
     ventana_dias: int
+
+
+# --- puestos, ofertas y ficha del mercado (C133, C134) ---------------------------
+
+class PuestoEntrada(BaseModel):
+    numero: str = Field(min_length=1, max_length=16)
+    nombre: str = Field(default="", max_length=80)
+    rubros: list[str] = Field(default_factory=list, max_length=8)
+    referencia: str = Field(default="", max_length=160)
+
+
+class PuestoSalida(BaseModel):
+    id: int | None
+    codigo_mercado: str
+    numero: str
+    nombre: str
+    rubros: list[str]
+    referencia: str
+    # False si el número solo aparece en mediciones de campo.
+    registrado: bool = True
+
+
+class OfertaEntrada(BaseModel):
+    codigo_producto: str
+    monto: float = Field(gt=0)
+    presentacion: str
+    horas: Literal[24, 48, 72] = 48
+    nota: str = Field(default="", max_length=80)
+
+
+class OfertaSalida(BaseModel):
+    """Una oferta vigente con su comparación contra el precio del sistema."""
+    id: int
+    codigo_producto: str
+    nombre_producto: str
+    unidad_base: str
+    codigo_mercado: str
+    nombre_mercado: str
+    numero_puesto: str | None
+    nombre_puesto: str | None
+    monto: float
+    presentacion: str
+    precio_por_unidad_base: float
+    desde: datetime
+    hasta: datetime
+    nota: str
+    # Contra qué se mide el ahorro: el precio del sistema en ese mercado,
+    # sin la voz del casero, y si es observado o estimado.
+    precio_sistema: float
+    procedencia_sistema: Literal["observado", "estimado"]
+    ahorro_por_unidad: float
+    ahorro_relativo: float
+    confirmaron: int
+    desmintieron: int
+
+
+class MiOfertaSalida(BaseModel):
+    id: int
+    codigo_producto: str
+    nombre_producto: str
+    monto: float
+    presentacion: str
+    precio_por_unidad_base: float
+    desde: datetime
+    hasta: datetime
+    nota: str
+    estado: Literal["activa", "vencida", "en_revision", "retirada"]
+    confirmaron: int
+    desmintieron: int
+
+
+class OfertaEnRevisionSalida(BaseModel):
+    id: int
+    nombre_producto: str
+    nombre_mercado: str
+    numero_puesto: str | None
+    monto: float
+    presentacion: str
+    hasta: datetime
+    nota: str
+    confirmaron: int
+    desmintieron: int
+
+
+class ConfirmacionEntrada(BaseModel):
+    la_vio_asi: bool
+
+
+class ConfirmacionSalida(BaseModel):
+    confirmaron: int
+    desmintieron: int
+    pausada: bool
+
+
+class PrecioDeProductoSalida(BaseModel):
+    codigo_producto: str
+    nombre_producto: str
+    categoria: str
+    precio: PrecioSalida
+    ciudad: float | None
+    diferencia: float | None
+
+
+class PrecioDelPuestoSalida(BaseModel):
+    codigo_producto: str
+    nombre_producto: str
+    monto: float
+    unidad: str
+    precio_por_unidad_base: float
+    unidad_base: str
+    fecha: date | None
+    fuente: Literal["vendedor", "campo"]
+
+
+class PuestoEnFichaSalida(BaseModel):
+    puesto: PuestoSalida
+    precios: list[PrecioDelPuestoSalida]
+    ofertas: list[OfertaSalida]
+
+
+class FichaMercadoSalida(BaseModel):
+    mercado: MercadoSalida
+    padre: MercadoSalida | None
+    sectores: list[MercadoSalida]
+    # Cuánto se aparta este lugar de la ciudad según el campo; 1 = sin medir.
+    factor_mercado: float
+    precios: list[PrecioDeProductoSalida]
+    puestos: list[PuestoEnFichaSalida]
+    ofertas: list[OfertaSalida]
+    observados: int
+    estimados: int
+    productos_sin_precio: int
+    dato_mas_reciente: date | None
+
+
+class EntradaDirectorioSalida(BaseModel):
+    mercado: MercadoSalida
+    puestos: int
+    ofertas: int
+    sectores: int

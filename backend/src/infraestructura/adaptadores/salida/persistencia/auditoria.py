@@ -43,6 +43,16 @@ _COMO_SE_LEE: dict[str, tuple[str, str]] = {
         "fuente || ' · ' || codigo_producto || ' · ' || CAST(hechos_nuevos AS TEXT) || ' nuevos'",
     ),
     "intento_fuente": ("CAST(id AS TEXT)", "fuente || CASE WHEN exito = 1 THEN ' · respondió' ELSE ' · falló' END"),
+    "puesto": ("codigo_mercado || ' / ' || numero", "'puesto ' || numero || ' ' || nombre"),
+    "oferta": (
+        "CAST(id AS TEXT)",
+        "codigo_producto || ' en ' || codigo_mercado || ' · Bs ' || CAST(monto AS TEXT) || ' ' || presentacion "
+        "|| ' · ' || estado",
+    ),
+    "confirmacion_oferta": (
+        "CAST(id AS TEXT)",
+        "'oferta ' || CAST(id_oferta AS TEXT) || CASE WHEN la_vio_asi THEN ' · la vio así' ELSE ' · no estaba así' END",
+    ),
 }
 
 
