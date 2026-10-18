@@ -38,7 +38,7 @@ def rango_honesto(p: PrecioConsolidado, hoy: date) -> PrecioConsolidado:
     por_antiguedad = min(POR_SEMANA * dias / 7, TOPE_ANTIGUEDAD)
     motivos: list[str] = []
     if por_antiguedad >= 0.005:
-        motivos.append(f"El dato tiene {dias} días: +{por_antiguedad:.0%}")
+        motivos.append(f"El dato tiene {_edad(dias)}: +{por_antiguedad:.0%}")
     extra = por_antiguedad
     if p.es_estimado:
         extra += POR_ESTIMADO
@@ -53,6 +53,16 @@ def rango_honesto(p: PrecioConsolidado, hoy: date) -> PrecioConsolidado:
         antiguedad_dias=dias,
         motivos_rango=motivos,
     )
+
+
+def _edad(dias: int) -> str:
+    if dias >= 730:
+        return f"más de {dias // 365} años"
+    if dias >= 365:
+        return "más de un año"
+    if dias >= 60:
+        return f"unos {round(dias / 30)} meses"
+    return f"{dias} días"
 
 
 def empatan(a: RangoPrecio, b: RangoPrecio) -> bool:

@@ -233,6 +233,9 @@ export function textoAntiguedad(precio: Precio): string | null {
   if (d === null) return null;
   if (d === 0) return "hoy";
   if (d === 1) return "ayer";
+  if (d >= 730) return `hace más de ${Math.floor(d / 365)} años`;
+  if (d >= 365) return "hace más de un año";
+  if (d >= 60) return `hace unos ${Math.round(d / 30)} meses`;
   return `hace ${d} días`;
 }
 
