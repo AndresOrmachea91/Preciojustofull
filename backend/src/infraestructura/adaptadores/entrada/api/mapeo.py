@@ -22,6 +22,10 @@ def precio_a_salida(p: PrecioConsolidado) -> e.PrecioSalida:
         observaciones_usadas=p.observaciones_usadas,
         fecha_observacion_mas_reciente=p.fecha_observacion_mas_reciente,
         conflictos=p.conflictos,
+        voces=p.voces,
+        factor_mercado=p.factor_mercado,
+        antiguedad_dias=p.antiguedad_dias,
+        motivos_rango=p.motivos_rango,
     )
 
 
@@ -62,6 +66,7 @@ def canasta_a_salida(c: CostoCanastaEnMercado) -> e.CanastaSalida:
         costo_total=c.costo_total, productos_cubiertos=c.productos_cubiertos,
         productos_pedidos=c.productos_pedidos, cobertura=round(c.cobertura, 2),
         faltantes=c.faltantes, productos_estimados=c.productos_estimados, nivel_precio=c.nivel_precio,
+        costo_minimo=c.costo_minimo, costo_maximo=c.costo_maximo,
     )
 
 

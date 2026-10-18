@@ -141,6 +141,9 @@ class ObservacionTabla(Base, Auditable):
     evidencia = Column(String(512), nullable=True)
 
     reputacion_informante = Column(Float, nullable=False, default=1.0)
+    # Quién lo afirmó ("usuario:12"); NULL si no es una persona conocida.
+    # El motor junta por acá: una voz por informante.
+    informante = Column(String(64), nullable=True, index=True)
     # "punto_venta" si se midió en un local; "ciudad" si la fuente publica
     # un valor para toda la ciudad (SIIP). Lo segundo estima, no mide.
     ambito = Column(String(16), nullable=False, default="punto_venta")

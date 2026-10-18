@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+from datetime import date
+
 from src.aplicacion.casos_uso.precios.comparar_mercados import (
     CIUDAD_POR_DEFECTO, en_unidad_del_producto, precio_del_local,
 )
@@ -25,12 +28,14 @@ class ConsultarPrecioProducto:
         motor: MotorFusion,
         mercados: LectorMercados | None = None,
         ciudad: str = CIUDAD_POR_DEFECTO,
+        reloj: Callable[[], date] | None = None,
     ):
         self._productos = productos
         self._observaciones = observaciones
         self._motor = motor
         self._mercados = mercados
         self._ciudad = ciudad
+        self._reloj = reloj
 
     def ejecutar(self, codigo_producto: str, codigo_mercado: str) -> PrecioConsolidado:
         producto = self._productos.obtener(codigo_producto)
@@ -44,7 +49,8 @@ class ConsultarPrecioProducto:
             # publica el más reciente.
             return self._motor.consolidar_grupos(locales)[0]
         referencia = en_unidad_del_producto(self._observaciones.buscar(codigo_producto, ciudad=self._ciudad), producto)
-        precio = precio_del_local(self._motor, mercado, locales, referencia)
+        precio = precio_del_local(self._motor, mercado, locales, referencia,
+                                  self._reloj() if self._reloj else None)
         if precio is None:
             raise SinObservaciones(f"Sin mediciones ni referencia para {codigo_producto} en {codigo_mercado}")
         return precio

@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+from datetime import date
+
 from src.aplicacion.casos_uso.precios.comparar_mercados import (
     CIUDAD_POR_DEFECTO, en_unidad_del_producto, precio_del_local,
 )
@@ -36,6 +39,7 @@ class CalcularCanastaCasoUso:
         motor: MotorFusion,
         ciudad: str = CIUDAD_POR_DEFECTO,
         productos: LectorProductos | None = None,
+        reloj: Callable[[], date] | None = None,
     ):
         self._mercados = mercados
         self._observaciones = observaciones
@@ -45,6 +49,7 @@ class CalcularCanastaCasoUso:
         # pedida viene en esa unidad (kilos, unidades) y el precio tiene que
         # estar en la misma para poder multiplicarlos.
         self._productos = productos
+        self._reloj = reloj
 
     def ejecutar(
         self, items: list[ItemCanasta], zona: str | None = None
@@ -52,20 +57,24 @@ class CalcularCanastaCasoUso:
         # UNA consulta por producto, no una por producto y mercado.
         por_producto = {item.codigo_producto: self._separar(item.codigo_producto) for item in items}
 
+        hoy = self._reloj() if self._reloj else None
         resultado: list[CostoCanastaEnMercado] = []
         for mercado in self._mercados.listar(zona):
-            total = 0.0
+            total = minimo = maximo = 0.0
             cubiertos = 0
             estimados = 0
             faltantes: list[str] = []
 
             for item in items:
                 locales, referencia = por_producto[item.codigo_producto]
-                precio = precio_del_local(self._motor, mercado, locales.get(mercado.codigo, []), referencia)
+                precio = precio_del_local(self._motor, mercado, locales.get(mercado.codigo, []),
+                                          referencia, hoy)
                 if precio is None:
                     faltantes.append(item.codigo_producto)
                     continue
                 total += precio.rango.centro * item.cantidad
+                minimo += precio.rango.minimo * item.cantidad
+                maximo += precio.rango.maximo * item.cantidad
                 cubiertos += 1
                 estimados += precio.es_estimado
 
@@ -83,6 +92,8 @@ class CalcularCanastaCasoUso:
                     faltantes=faltantes,
                     productos_estimados=estimados,
                     nivel_precio=mercado.nivel_precio.value,
+                    costo_minimo=round(minimo, 2),
+                    costo_maximo=round(maximo, 2),
                 )
             )
 

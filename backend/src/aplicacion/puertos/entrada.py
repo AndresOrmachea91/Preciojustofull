@@ -42,6 +42,10 @@ class CostoCanastaEnMercado:
     productos_estimados: int = 0
     # mayorista o minorista: un total mayorista no compite con uno minorista.
     nivel_precio: str = "minorista"
+    # El rango del total (suma de los mínimos y de los máximos): con él se
+    # sabe si dos mercados empatan o si uno de verdad sale más barato.
+    costo_minimo: float = 0.0
+    costo_maximo: float = 0.0
 
     @property
     def cobertura(self) -> float:

@@ -151,6 +151,10 @@ class Observacion:
     # Código de ciudad ("la_paz") cuando el ámbito es CIUDAD. Campo propio:
     # no comparte columna con los puntos de venta.
     ciudad: str | None = None
+    # QUIÉN lo afirmó ("usuario:12"), cuando es una persona. Cinco reportes
+    # de la misma persona son una voz, no cinco: el motor junta por acá.
+    # None = no se sabe (datos de prensa, históricos): cada una cuenta sola.
+    informante: str | None = None
 
     def __post_init__(self):
         if self.ambito is Ambito.CIUDAD:

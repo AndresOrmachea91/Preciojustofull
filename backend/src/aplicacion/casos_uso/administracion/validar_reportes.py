@@ -58,6 +58,7 @@ class ValidarReportes:
             fecha_observacion=creado.date(),
             reputacion_informante=reputacion,
             evidencia=f"reporte:{reporte.id}",
+            informante=f"usuario:{reporte.id_autor}",
         )])
         return self._reportes.guardar(reporte)
 

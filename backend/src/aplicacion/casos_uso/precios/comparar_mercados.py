@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+from datetime import date
+
 from src.aplicacion.puertos.entrada import PrecioEnMercado
 from src.aplicacion.puertos.salida import (
     LectorMercados,
@@ -9,6 +12,7 @@ from src.aplicacion.puertos.salida import (
 from src.dominio.excepciones import ProductoNoEncontrado, SinObservaciones
 from src.dominio.modelo import Mercado, Observacion, PrecioConsolidado, Producto
 from src.dominio.servicio.motor_fusion import MotorFusion
+from src.dominio.servicio.rango_honesto import rango_honesto
 from src.dominio.valor import NivelPrecio
 
 CIUDAD_POR_DEFECTO = "la_paz"
@@ -30,6 +34,7 @@ def precio_del_local(
     mercado: Mercado,
     locales: list[Observacion],
     referencia_ciudad: list[Observacion],
+    hoy: date | None = None,
 ) -> PrecioConsolidado | None:
     """
     El precio de un local, con su procedencia:
@@ -37,7 +42,17 @@ def precio_del_local(
     - ESTIMADO desde la referencia de ciudad del mismo nivel y el
       factor_mercado, si nadie midió ahí todavía;
     - None si no hay ni lo uno ni lo otro. No se inventa.
+
+    Con `hoy`, el rango se ensancha por antigüedad y por ser estimado
+    (rango honesto); sin él, queda el rango que da el motor.
     """
+    precio = _precio_sin_ajustar(motor, mercado, locales, referencia_ciudad)
+    if precio is None or hoy is None:
+        return precio
+    return rango_honesto(precio, hoy)
+
+
+def _precio_sin_ajustar(motor, mercado, locales, referencia_ciudad) -> PrecioConsolidado | None:
     locales = [o for o in locales if o.nivel is mercado.nivel_precio]
     if locales:
         try:
@@ -66,12 +81,15 @@ class CompararMercadosCasoUso:
         observaciones: LectorObservaciones,
         motor: MotorFusion,
         ciudad: str = CIUDAD_POR_DEFECTO,
+        reloj: Callable[[], date] | None = None,
     ):
         self._productos = productos
         self._mercados = mercados
         self._observaciones = observaciones
         self._motor = motor
         self._ciudad = ciudad
+        # Con reloj, cada precio sale con su rango honesto (antigüedad).
+        self._reloj = reloj
 
     def ejecutar(self, codigo_producto: str, zona: str | None = None) -> list[PrecioEnMercado]:
         producto = self._productos.obtener(codigo_producto)
@@ -90,7 +108,8 @@ class CompararMercadosCasoUso:
         resultado: list[PrecioEnMercado] = []
         for mercado in self._mercados.listar(zona):
             locales = locales_por_mercado.get(mercado.codigo, [])
-            precio = precio_del_local(self._motor, mercado, locales, referencia)
+            precio = precio_del_local(self._motor, mercado, locales, referencia,
+                                      self._reloj() if self._reloj else None)
             if precio is None:
                 continue   # sin medición ni referencia: se omite, no se inventa
             resultado.append(

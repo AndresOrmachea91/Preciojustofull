@@ -67,6 +67,7 @@ _COLUMNAS_AGREGADAS = {
         "ultima_captura_en": "TIMESTAMP WITH TIME ZONE NULL",
         "revisa_a": "INTEGER NULL REFERENCES observacion_precio(id)",
         "ciudad": "VARCHAR(64) NULL",
+        "informante": "VARCHAR(64) NULL",
     },
 }
 
@@ -136,6 +137,20 @@ _AMBITO_POR_FUENTE = (
     "UPDATE observacion_precio SET ambito = 'ciudad' "
     "WHERE fuente IN ('siip_diario', 'siip_ipc') AND ambito <> 'ciudad'"
 )
+# Una voz por informante: quién afirmó cada observación histórica se lee
+# de su evidencia. El vendedor dejó "vendedor:ID"; el reporte aprobado,
+# "reporte:ID", cuyo autor está en reporte_precio. Lo que no trae
+# evidencia de una persona queda NULL: no se adivina.
+_INFORMANTE_VENDEDOR = (
+    "UPDATE observacion_precio SET informante = 'usuario:' || substr(evidencia, 10) "
+    "WHERE informante IS NULL AND fuente = 'vendedor' AND evidencia LIKE 'vendedor:%'"
+)
+_INFORMANTE_REPORTE = (
+    "UPDATE observacion_precio SET informante = ("
+    "SELECT 'usuario:' || CAST(r.id_autor AS VARCHAR) FROM reporte_precio r "
+    "WHERE 'reporte:' || CAST(r.id AS VARCHAR) = observacion_precio.evidencia) "
+    "WHERE informante IS NULL AND evidencia LIKE 'reporte:%'"
+)
 # El rol "recolector" pasó a llamarse "vendedor" (decisión del 8 de octubre).
 _ROL_RENOMBRADO = "UPDATE usuario SET rol = 'vendedor' WHERE rol = 'recolector'"
 
@@ -143,6 +158,8 @@ _RELLENOS_HISTORICOS = {
     "sqlite": [
         _ROL_RENOMBRADO,
         _AMBITO_POR_FUENTE,
+        _INFORMANTE_VENDEDOR,
+        _INFORMANTE_REPORTE,
         "UPDATE observacion_precio SET fecha_observacion = "
         "date(printf('%04d-%02d-%02d', anio, mes, dia)) "
         "WHERE fecha_observacion IS NULL AND mes IS NOT NULL AND dia IS NOT NULL",
@@ -150,6 +167,8 @@ _RELLENOS_HISTORICOS = {
     "postgresql": [
         _ROL_RENOMBRADO,
         _AMBITO_POR_FUENTE,
+        _INFORMANTE_VENDEDOR,
+        _INFORMANTE_REPORTE,
         "UPDATE observacion_precio SET fecha_observacion = make_date(anio, mes, dia) "
         "WHERE fecha_observacion IS NULL AND mes IS NOT NULL AND dia IS NOT NULL",
     ],

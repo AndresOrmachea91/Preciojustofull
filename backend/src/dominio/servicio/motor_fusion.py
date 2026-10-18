@@ -18,10 +18,12 @@ Dos reglas sostienen la honestidad del resultado:
 2. INDEPENDENCIA. Dos fuentes que dicen lo mismo porque una copia a la
    otra no son dos evidencias. Las observaciones se agrupan en clanes de
    derivación y cada clan aporta una sola evidencia. La confianza sube
-   con el número de clanes independientes, no de observaciones.
+   con el número de clanes independientes, no de observaciones. Lo mismo
+   con las personas: una voz por informante.
 """
 from __future__ import annotations
 import statistics as est
+from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
@@ -159,6 +161,8 @@ class MotorFusion:
                 f"Estimado desde la referencia de ciudad {referencia[0].ciudad} "
                 f"con factor {f:.2f}; no es una medición en {mercado.codigo}"
             ],
+            voces=ciudad.voces,
+            factor_mercado=f,
         )
 
     # -- comparabilidad ----------------------------------------------------
@@ -224,6 +228,7 @@ class MotorFusion:
             fecha_observacion_mas_reciente=self._fecha_mas_reciente(conservadas),
             calculado_en=datetime.now(timezone.utc),
             conflictos=conflictos,
+            voces=dict(Counter(o.fuente.value for o in evidencias)),
         )
 
     # -- independencia -----------------------------------------------------
@@ -241,17 +246,33 @@ class MotorFusion:
 
         Solo las fuentes de voz única forman clan. Cada reporte ciudadano,
         visita de campo o nota propia es una voz distinta y una evidencia
-        propia. Devuelve (representante, miembros) por clan, en orden de
-        aparición.
+        propia... salvo que venga de la MISMA persona: UNA VOZ POR
+        INFORMANTE. Cinco reportes de alguien son una evidencia, no cinco;
+        si no, una sola cuenta fabricaría confianza ALTA repitiendo su
+        precio. De esa persona vale lo último que dijo: un vendedor que
+        corrige su precio no se promedia con el de ayer.
+
+        Devuelve (representante, miembros) por clan, en orden de aparición.
         """
         clanes: dict[object, list[Observacion]] = {}
         for i, o in enumerate(obs):
-            clave = o.fuente.raiz if o.fuente.es_voz_unica else ("voz", i)
+            if o.fuente.es_voz_unica:
+                clave = o.fuente.raiz
+            elif o.informante:
+                clave = ("informante", o.informante)
+            else:
+                clave = ("voz", i)
             clanes.setdefault(clave, []).append(o)
         return [
-            (max(miembros, key=MotorFusion._confiabilidad), miembros)
-            for miembros in clanes.values()
+            (MotorFusion._representante(clave, miembros), miembros)
+            for clave, miembros in clanes.items()
         ]
+
+    @staticmethod
+    def _representante(clave: object, miembros: list[Observacion]) -> Observacion:
+        if isinstance(clave, tuple) and clave[0] == "informante":
+            return max(miembros, key=lambda o: (o.fecha_observacion or o.capturada_en.date(), o.capturada_en))
+        return max(miembros, key=MotorFusion._confiabilidad)
 
     @staticmethod
     def _confiabilidad(o: Observacion) -> float:

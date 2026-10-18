@@ -87,6 +87,7 @@ def _a_observacion(f: ObservacionTabla) -> Observacion:
         fecha_observacion=f.fecha_observacion,
         tipo_precio=TipoPrecio(f.tipo_precio or "desconocido"),
         evidencia=f.evidencia,
+        informante=f.informante,
     )
 
 
@@ -114,6 +115,7 @@ def _de_observacion(o: Observacion) -> dict:
         "tipo_precio": o.tipo_precio.value,
         "evidencia": o.evidencia,
         "reputacion_informante": o.reputacion_informante,
+        "informante": o.informante,
         "ambito": o.ambito.value,
         "capturada_en": o.capturada_en,
     }

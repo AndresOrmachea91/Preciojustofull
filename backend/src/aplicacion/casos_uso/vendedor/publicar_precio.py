@@ -76,6 +76,7 @@ class PublicarPrecioPropio:
             fecha_observacion=ahora.date(),
             tipo_precio=TipoPrecio.ANUNCIADO,
             evidencia=f"vendedor:{vendedor.id}",
+            informante=f"usuario:{vendedor.id}",
         )
         self._observaciones.guardar_varias([observacion])
         return observacion

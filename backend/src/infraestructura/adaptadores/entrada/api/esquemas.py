@@ -31,6 +31,12 @@ class PrecioSalida(BaseModel):
     observaciones_usadas: int = Field(ge=1)
     fecha_observacion_mas_reciente: date | None
     conflictos: list[str] = Field(default_factory=list)
+    # Procedencia en detalle: voces independientes por fuente, el factor
+    # del local si es estimado y por qué el rango es más ancho.
+    voces: dict[str, int] = Field(default_factory=dict)
+    factor_mercado: float | None = None
+    antiguedad_dias: int | None = None
+    motivos_rango: list[str] = Field(default_factory=list)
 
 
 class PrecioEnMercadoSalida(BaseModel):
@@ -96,6 +102,8 @@ class CanastaSalida(BaseModel):
     faltantes: list[str] = Field(default_factory=list)
     productos_estimados: int = 0
     nivel_precio: Literal["mayorista", "minorista"] = "minorista"
+    costo_minimo: float = 0.0
+    costo_maximo: float = 0.0
 
 
 class ReporteEntrada(BaseModel):

@@ -6,6 +6,7 @@ Cambiar de repositorios en memoria a PostgreSQL es cambiar estas líneas.
 Ningún caso de uso ni entidad del dominio se entera.
 """
 from __future__ import annotations
+from datetime import date, datetime, timedelta, timezone
 from functools import lru_cache
 
 import logging
@@ -52,6 +53,14 @@ from src.dominio.modelo import Rol
 from src.dominio.servicio.motor_fusion import MotorFusion
 
 log = logging.getLogger(__name__)
+
+# Bolivia no tiene horario de verano: UTC-4 todo el año. "Hoy" es el día
+# del mercado, no el del servidor (que corre en UTC).
+_BOLIVIA = timezone(timedelta(hours=-4))
+
+
+def hoy_en_bolivia() -> date:
+    return datetime.now(_BOLIVIA).date()
 
 
 @lru_cache
@@ -145,12 +154,12 @@ def obtener_observaciones():
 
 def caso_consultar_precio() -> ConsultarPrecioProducto:
     p, m, o = _repositorios()
-    return ConsultarPrecioProducto(p, o, obtener_motor(), mercados=m)
+    return ConsultarPrecioProducto(p, o, obtener_motor(), mercados=m, reloj=hoy_en_bolivia)
 
 
 def caso_comparar_mercados() -> CompararMercadosCasoUso:
     p, m, o = _repositorios()
-    return CompararMercadosCasoUso(p, m, o, obtener_motor())
+    return CompararMercadosCasoUso(p, m, o, obtener_motor(), reloj=hoy_en_bolivia)
 
 
 def caso_historial_precio() -> HistorialPrecio:
@@ -160,7 +169,7 @@ def caso_historial_precio() -> HistorialPrecio:
 
 def caso_calcular_canasta() -> CalcularCanastaCasoUso:
     p, m, o = _repositorios()
-    return CalcularCanastaCasoUso(m, o, obtener_motor(), productos=p)
+    return CalcularCanastaCasoUso(m, o, obtener_motor(), productos=p, reloj=hoy_en_bolivia)
 
 
 def caso_registrar_reporte() -> RegistrarReporteCiudadano:
