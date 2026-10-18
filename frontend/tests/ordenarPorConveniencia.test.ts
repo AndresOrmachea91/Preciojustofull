@@ -31,6 +31,7 @@ function hacer(
       observacionesUsadas: 1,
       fechaObservacionMasReciente: null,
       conflictos: [],
+      voces: {}, factorMercado: null, antiguedadDias: null, motivosRango: [],
     },
   };
 }

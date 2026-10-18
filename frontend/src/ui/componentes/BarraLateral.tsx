@@ -12,7 +12,11 @@ interface Seccion {
 
 /** Las secciones que ve cada rol. Mostrar u ocultar es comodidad: quien protege es la API. */
 export function seccionesDe(usuario: Usuario | null): Seccion[] {
-  const secciones: Seccion[] = [{ ruta: "precios", texto: "Precios", icono: "precios" }];
+  const secciones: Seccion[] = [
+    { ruta: "precios", texto: "Precios", icono: "precios" },
+    // Pública: cualquiera puede ver cuánto se equivoca el estimado.
+    { ruta: "confiabilidad", texto: "¿Qué tan confiable es?", icono: "confiabilidad" },
+  ];
   if (puede(usuario, "gestionar_listas")) {
     secciones.push({ ruta: "mi-cuenta", texto: "Mis listas y reportes", icono: "listas" });
   }

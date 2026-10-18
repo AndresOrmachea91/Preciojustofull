@@ -18,15 +18,19 @@ import { fechaCorta } from "@/ui/formato";
 import { Auditoria as VistaAuditoria } from "@/ui/paginas/administracion/Auditoria";
 import { CatalogoProductos } from "@/ui/paginas/administracion/CatalogoProductos";
 import { CatalogoPuntosVenta } from "@/ui/paginas/administracion/CatalogoPuntosVenta";
+import { PlanillaCampo } from "@/ui/paginas/administracion/PlanillaCampo";
 import { Referencias } from "@/ui/paginas/administracion/Referencias";
+import { SaludSistema } from "@/ui/paginas/administracion/SaludSistema";
 
-type Pestana = "usuarios" | "reportes" | "puntos" | "productos" | "auditoria" | "referencias";
+type Pestana = "usuarios" | "reportes" | "puntos" | "productos" | "campo" | "salud" | "auditoria" | "referencias";
 
 export function PaginaAdmin({ contenedor, usuario }: { contenedor: Contenedor; usuario: Usuario }) {
   const verUsuarios = puede(usuario, "gestionar_usuarios");
   const verReportes = puede(usuario, "validar_reportes");
   const verCatalogo = puede(usuario, "gestionar_catalogo");
   const verAuditoria = puede(usuario, "ver_auditoria");
+  const verCampo = puede(usuario, "importar_campo");
+  const verSalud = puede(usuario, "ver_salud");
   const [pestana, setPestana] = useState<Pestana>(verUsuarios ? "usuarios" : verReportes ? "reportes" : "puntos");
 
   const pestanas: { id: Pestana; texto: string; visible: boolean }[] = [
@@ -34,6 +38,8 @@ export function PaginaAdmin({ contenedor, usuario }: { contenedor: Contenedor; u
     { id: "puntos", texto: "Mercados y tiendas", visible: verCatalogo },
     { id: "productos", texto: "Productos", visible: verCatalogo },
     { id: "reportes", texto: "Reportes por revisar", visible: verReportes },
+    { id: "campo", texto: "Planilla de campo", visible: verCampo },
+    { id: "salud", texto: "Salud del sistema", visible: verSalud },
     { id: "auditoria", texto: "Auditoría", visible: verAuditoria },
     { id: "referencias", texto: "Roles y fuentes", visible: verAuditoria },
   ];
@@ -48,6 +54,8 @@ export function PaginaAdmin({ contenedor, usuario }: { contenedor: Contenedor; u
       {pestana === "puntos" && verCatalogo && <CatalogoPuntosVenta contenedor={contenedor} />}
       {pestana === "productos" && verCatalogo && <CatalogoProductos contenedor={contenedor} />}
       {pestana === "reportes" && verReportes && <Reportes contenedor={contenedor} />}
+      {pestana === "campo" && verCampo && <PlanillaCampo contenedor={contenedor} />}
+      {pestana === "salud" && verSalud && <SaludSistema contenedor={contenedor} />}
       {pestana === "auditoria" && verAuditoria && <VistaAuditoria contenedor={contenedor} />}
       {pestana === "referencias" && verAuditoria && <Referencias contenedor={contenedor} />}
     </section>

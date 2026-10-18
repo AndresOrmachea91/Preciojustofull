@@ -6,6 +6,9 @@
  * no sabe cuál está usando.
  */
 import type {
+  EvaluacionEstimador,
+  ResultadoImportacion,
+  SaludSistema,
   Coordenadas,
   HistorialPrecio,
   Referencias,
@@ -156,4 +159,15 @@ export interface ListasRepositorio {
 export interface PreciosVendedorRepositorio {
   misPrecios(): Promise<PrecioPublicado[]>;
   publicarPrecio(entrada: { codigoProducto: string; monto: number; presentacion: string }): Promise<void>;
+}
+
+/** Cuánto se equivoca el estimado frente a lo medido (backtest). Es público. */
+export interface ConfiabilidadRepositorio {
+  evaluacion(): Promise<EvaluacionEstimador>;
+}
+
+/** Lo que el ADMINISTRADOR opera: la planilla de campo y la salud del sistema. */
+export interface OperacionRepositorio {
+  importarCampo(csv: string, archivo: string, soloRevisar: boolean): Promise<ResultadoImportacion>;
+  salud(): Promise<SaludSistema>;
 }

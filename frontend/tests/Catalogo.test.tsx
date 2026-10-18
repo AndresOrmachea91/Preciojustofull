@@ -37,7 +37,7 @@ describe("presentaciones", () => {
     const porKilo: Precio = {
       codigoProducto: "arroz", codigoMercado: "rodriguez", periodo: "2026-10",
       rango: { minimo: 8, maximo: 9, centro: 8.5 }, unidad: "kg", confianza: "alto",
-      procedencia: "observado", observacionesUsadas: 3, fechaObservacionMasReciente: null, conflictos: [],
+      procedencia: "observado", observacionesUsadas: 3, fechaObservacionMasReciente: null, conflictos: [], voces: {}, factorMercado: null, antiguedadDias: null, motivosRango: [],
     };
     const porQuintal = precioEnPresentacion(porKilo, { codigo: "quintal", nombre: "Quintal", factor: 46 });
     expect(porQuintal.rango).toEqual({ minimo: 368, maximo: 414, centro: 391 });
@@ -49,7 +49,7 @@ describe("presentaciones", () => {
     const porUnidad = {
       codigoProducto: "limon", codigoMercado: "x", periodo: "2026-09",
       rango: { minimo: 0.7, maximo: 0.7, centro: 0.7 }, unidad: "u", confianza: "alto" as const,
-      procedencia: "estimado" as const, observacionesUsadas: 1, fechaObservacionMasReciente: null, conflictos: [],
+      procedencia: "estimado" as const, observacionesUsadas: 1, fechaObservacionMasReciente: null, conflictos: [], voces: {}, factorMercado: null, antiguedadDias: null, motivosRango: [],
     };
     const arroba = { codigo: "arroba", nombre: "Arroba", factor: 11.5 };
     expect(precioEnPresentacion(porUnidad, arroba)).toBe(porUnidad);

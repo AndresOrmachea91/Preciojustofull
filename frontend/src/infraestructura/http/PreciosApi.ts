@@ -37,6 +37,10 @@ interface PrecioDto {
   observaciones_usadas: number;
   fecha_observacion_mas_reciente: string | null;
   conflictos: string[];
+  voces?: Record<string, number>;
+  factor_mercado?: number | null;
+  antiguedad_dias?: number | null;
+  motivos_rango?: string[];
 }
 
 interface PrecioEnMercadoDto {
@@ -97,6 +101,8 @@ export function aCostoCanasta(d: CanastaDto): CostoCanasta {
     faltantes: d.faltantes ?? [],
     productosEstimados: d.productos_estimados ?? 0,
     nivelPrecio: d.nivel_precio ?? "minorista",
+    costoMinimo: d.costo_minimo ?? 0,
+    costoMaximo: d.costo_maximo ?? 0,
   };
 }
 
@@ -113,6 +119,8 @@ interface CanastaDto {
   faltantes: string[];
   productos_estimados?: number;
   nivel_precio?: NivelPrecio;
+  costo_minimo?: number;
+  costo_maximo?: number;
 }
 
 function aPrecio(d: PrecioDto): Precio {
@@ -127,6 +135,10 @@ function aPrecio(d: PrecioDto): Precio {
     observacionesUsadas: d.observaciones_usadas,
     fechaObservacionMasReciente: d.fecha_observacion_mas_reciente ?? null,
     conflictos: d.conflictos ?? [],
+    voces: d.voces ?? {},
+    factorMercado: d.factor_mercado ?? null,
+    antiguedadDias: d.antiguedad_dias ?? null,
+    motivosRango: d.motivos_rango ?? [],
   };
 }
 

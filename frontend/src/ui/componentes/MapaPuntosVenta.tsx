@@ -8,6 +8,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 import type { Coordenadas, MarcadorMapa, TipoPuntoVenta } from "@/dominio/modelo";
+import { esPrecioViejo } from "@/dominio/modelo";
 
 /** Centro del municipio de La Paz. */
 const CENTRO_LA_PAZ: [number, number] = [-16.505, -68.13];
@@ -77,8 +78,9 @@ export function MapaPuntosVenta({ marcadores, seleccionado, onSeleccionar, ubica
       const punto = L.circleMarker([mercado.latitud, mercado.longitud], {
         ...estiloDe(false),
         fillColor: COLOR_TIPO[mercado.tipo],
-        // Sin precio: el punto está, pero apagado. No se inventa nada.
-        fillOpacity: precio ? 0.9 : 0.35,
+        // Sin precio: el punto está, pero apagado. No se inventa nada. Con un
+        // dato de más de una semana, a media luz: se ve, pero avisa.
+        fillOpacity: !precio ? 0.35 : esPrecioViejo(precio) ? 0.55 : 0.9,
         // Un estimado se ve punteado; un observado, sólido.
         dashArray: precio?.procedencia === "estimado" ? "3 3" : undefined,
       });

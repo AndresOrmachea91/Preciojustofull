@@ -400,3 +400,47 @@ button, a, [role="option"] { -webkit-tap-highlight-color: transparent; }
 @media (hover: hover) and (pointer: fine) {
   .cercanos__punto:not([aria-pressed="true"]):hover { border-color: var(--tenue); }
 }
+
+/* --- procedencia y frescura (C125), empates (C128) y ahorro (C129) ----------- */
+/* Un dato de más de una semana se ve, pero apagado: puede haber cambiado. */
+.precio--viejo { opacity: 0.72; }
+.aviso-viejo { margin: 8px 0 0; font-size: 0.82rem; color: var(--ambar); }
+.panel__motivos { margin: 6px 0 0; font-size: 0.78rem; }
+.insignia--empate { background: var(--ambar-claro); color: var(--ambar); border: 1px solid var(--ambar); }
+.tarjeta__nota--empate { color: var(--ambar); }
+.ahorro--resumen p { margin: 0; }
+.ahorro--resumen p + p { margin-top: 6px; }
+
+.leyenda { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 18px; margin: -12px 0 24px; padding: 0; font-size: 0.82rem; color: var(--tenue); }
+.leyenda li { display: inline-flex; align-items: center; gap: 6px; }
+.leyenda__punto { width: 12px; height: 12px; border-radius: 50%; background: var(--jade); border: 1.5px solid var(--superficie); box-shadow: 0 0 0 1px var(--borde); }
+.leyenda__punto--estimado { background: transparent; border: 1.5px dashed var(--ambar); box-shadow: none; }
+.leyenda__punto--viejo { opacity: 0.55; }
+
+/* --- ¿qué tan confiable es? (C130) ---------------------------------------------- */
+.confiabilidad__intro { max-width: 70ch; }
+.cifras { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 16px 0; }
+.cifra { display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; }
+.cifra__valor { font-size: 1.8rem; font-weight: 650; color: var(--tinta); font-variant-numeric: tabular-nums; line-height: 1.2; }
+.cifra__nombre { font-size: 0.85rem; color: var(--tenue); }
+.confiabilidad__detalle { margin: 16px 0; }
+.confiabilidad__detalle summary { cursor: pointer; color: var(--jade); }
+.confiabilidad__fuera { color: var(--ambar); font-weight: 600; }
+
+/* --- administración: planilla de campo (C127) y salud (C132) --------------------- */
+.importacion { margin: 0 0 16px; padding: 12px 16px; border-radius: 10px; background: var(--superficie); border: 1px solid var(--borde); }
+.importacion__rechazos { margin: 6px 0 0; padding-left: 18px; font-size: 0.88rem; }
+.salud__cabecera { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; }
+.salud__cabecera .subseccion { margin: 0; }
+.salud__estado { padding: 2px 10px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; }
+.salud__estado--bien { background: var(--jade-claro); color: var(--jade); }
+.salud__estado--revisar { background: var(--peligro-claro); color: var(--peligro); }
+.salud__estado--sin_datos { background: var(--crema); color: var(--tenue); border: 1px solid var(--borde); }
+.salud__puntos { list-style: none; margin: 14px 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.salud__punto { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; }
+.salud__punto p { margin: 2px 0 0; }
+.salud__marca { flex: none; width: 10px; height: 10px; margin-top: 7px; border-radius: 50%; background: var(--tenue); }
+.salud__punto--bien .salud__marca { background: var(--jade); }
+.salud__punto--revisar { border-color: var(--peligro); }
+.salud__punto--revisar .salud__marca { background: var(--peligro); }
+.salud__etiqueta { color: var(--tenue); font-size: 0.85rem; }

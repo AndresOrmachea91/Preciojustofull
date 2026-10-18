@@ -10,6 +10,7 @@ import { PaginaAdmin } from "@/ui/paginas/administracion/PaginaAdmin";
 import { PaginaIngreso } from "@/ui/paginas/cuentas/PaginaIngreso";
 import { PaginaRecuperar } from "@/ui/paginas/cuentas/PaginaRecuperar";
 import { PaginaPrecios } from "@/ui/paginas/publico/PaginaPrecios";
+import { PaginaConfiabilidad } from "@/ui/paginas/publico/PaginaConfiabilidad";
 import { PaginaUsuario } from "@/ui/paginas/usuario/PaginaUsuario";
 import { PaginaVendedor } from "@/ui/paginas/vendedor/PaginaVendedor";
 
@@ -86,6 +87,8 @@ export default function App() {
           protegida(esAdministrador(usuario), "administrador", (u) => (
             <PaginaAdmin contenedor={contenedor} usuario={u} />
           ))}
+
+        {ruta === "confiabilidad" && <PaginaConfiabilidad contenedor={contenedor} />}
 
         {(ruta === "precios" || (cuenta && usuario)) && <PaginaPrecios contenedor={contenedor} />}
       </main>

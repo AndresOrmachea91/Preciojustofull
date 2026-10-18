@@ -72,6 +72,21 @@ const PRECIOS: Fila[] = [
   { producto: "arroz", mercado: "makro_centro", centro: 12.28, confianza: "medio", procedencia: "estimado", observaciones: 103, fecha: "2026-07-30" },
 ];
 
+const VOZ_POR_CONFIANZA: Record<Precio["confianza"], string> = {
+  verificado: "campo",
+  alto: "vendedor",
+  medio: "medios",
+  bajo: "ciudadano",
+};
+
+// Los datos de ejemplo son de mediados de septiembre: su antigüedad se mide
+// desde ese día, no desde hoy, para que el modo demo se vea igual siempre.
+const HOY_DE_LOS_DATOS = Date.parse("2026-09-15T12:00:00");
+
+function diasDesde(fecha: string): number {
+  return Math.max(0, Math.floor((HOY_DE_LOS_DATOS - Date.parse(`${fecha}T12:00:00`)) / 86_400_000));
+}
+
 function aPrecio(f: Fila): Precio {
   return {
     codigoProducto: f.producto,
@@ -88,6 +103,12 @@ function aPrecio(f: Fila): Precio {
     observacionesUsadas: f.observaciones,
     fechaObservacionMasReciente: f.fecha,
     conflictos: [],
+    // Quién lo dijo, a partir de la confianza: así el modo demo cuenta la
+    // procedencia igual que la API.
+    voces: f.procedencia === "estimado" ? { siip_ipc: 1 } : { [VOZ_POR_CONFIANZA[f.confianza]]: f.observaciones },
+    factorMercado: f.procedencia === "estimado" ? 1.05 : null,
+    antiguedadDias: f.fecha ? diasDesde(f.fecha) : null,
+    motivosRango: [],
   };
 }
 
@@ -192,6 +213,8 @@ export class PreciosMemoria
         faltantes,
         productosEstimados: estimados,
         nivelPrecio: mercado.nivelPrecio,
+        costoMinimo: Math.round(total * 0.92 * 100) / 100,
+        costoMaximo: Math.round(total * 1.08 * 100) / 100,
       });
     }
 

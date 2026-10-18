@@ -38,6 +38,14 @@ export interface Precio {
   /** Fecha de la observación más reciente que lo respalda; null si ninguna la trae. */
   readonly fechaObservacionMasReciente: string | null;
   readonly conflictos: readonly string[];
+  /** Voces INDEPENDIENTES por fuente: { vendedor: 1, ciudadano: 2 }. Una persona cuenta una vez. */
+  readonly voces: Readonly<Record<string, number>>;
+  /** Solo si es estimado: el factor del lugar que multiplicó el precio de la ciudad. */
+  readonly factorMercado: number | null;
+  /** Días desde el dato más reciente (null si el backend no lo calculó). */
+  readonly antiguedadDias: number | null;
+  /** Por qué el rango es más ancho de lo que da el desacuerdo entre fuentes. */
+  readonly motivosRango: readonly string[];
 }
 
 export interface Mercado {
@@ -94,6 +102,9 @@ export interface CostoCanasta {
   readonly productosEstimados: number;
   /** Un total mayorista no compite con uno de consumidor final. */
   readonly nivelPrecio: NivelPrecio;
+  /** El rango del total: suma de los mínimos y de los máximos. 0 si no se conoce. */
+  readonly costoMinimo: number;
+  readonly costoMaximo: number;
 }
 
 /**
@@ -139,16 +150,107 @@ export function etiquetaProcedencia(procedencia: Procedencia): string {
  * el usuario tiene que saber para decidir cuánto creerle.
  */
 export function explicacionProcedencia(precio: Precio, mercado?: Mercado): string {
-  const n = precio.observacionesUsadas;
-  const respaldo = `${n} ${n === 1 ? "observación" : "observaciones"} de la fuente oficial`;
+  const lugar = mercado ? `en ${mercado.nombre}` : "en este lugar";
   if (precio.procedencia === "estimado") {
-    const lugar = mercado ? `en ${mercado.nombre}` : "en este lugar";
+    const factor = precio.factorMercado;
+    const nombre = mercado?.nombre ?? "este lugar";
+    const ajuste =
+      factor === null || Math.abs(factor - 1) < 0.005
+        ? ""
+        : `, con un ajuste de ${factor > 1 ? "+" : "−"}${Math.round(Math.abs(factor - 1) * 100)} % porque ${nombre} ` +
+          `suele estar ${factor > 1 ? "más caro" : "más barato"} que el promedio de la ciudad`;
+    const n = precio.observacionesUsadas;
     return (
-      `Estimado a partir del precio de referencia de la ciudad (${respaldo}). ` +
+      `Calculado desde ${referenciaDeCiudad(precio.voces)} (${mesLegible(precio.periodo)}; ` +
+      `${n} ${n === 1 ? "observación" : "observaciones"} de la fuente oficial)${ajuste}. ` +
       `Todavía nadie verificó este precio ${lugar}.`
     );
   }
-  return `Medido en este lugar: ${n} ${n === 1 ? "observación" : "observaciones"}.`;
+  const cuando = precio.fechaObservacionMasReciente ? `Visto el ${fechaDiaMes(precio.fechaObservacionMasReciente)}` : "Visto";
+  return `${cuando} por ${quienesHablan(precio.voces) || textoObservaciones(precio.observacionesUsadas)}.`;
+}
+
+/** Cada fuente dicha como la diría una persona, en singular y plural. */
+const NOMBRE_DE_FUENTE: Record<string, readonly [string, string]> = {
+  vendedor: ["un vendedor del puesto", "vendedores"],
+  ciudadano: ["un comprador", "compradores"],
+  campo: ["una medición de campo", "mediciones de campo"],
+  medios: ["un medio de prensa", "medios de prensa"],
+  prensa: ["la prensa (copia del SIIP)", "la prensa (copia del SIIP)"],
+  siip_ipc: ["el SIIP (precio al consumidor de la ciudad)", "el SIIP (precio al consumidor de la ciudad)"],
+  siip_diario: ["el SIIP (precio mayorista de la ciudad)", "el SIIP (precio mayorista de la ciudad)"],
+};
+
+/** De qué referencia de ciudad sale un estimado. */
+function referenciaDeCiudad(voces: Readonly<Record<string, number>>): string {
+  if (voces.siip_diario) return "el precio mayorista de la ciudad (SIIP)";
+  if (voces.siip_ipc) return "el precio al consumidor de la ciudad (SIIP)";
+  return "la referencia oficial de la ciudad";
+}
+
+/** "un vendedor del puesto y 2 compradores". Vacío si no hay voces. */
+export function quienesHablan(voces: Readonly<Record<string, number>>): string {
+  const partes = Object.entries(voces)
+    .filter(([, n]) => n > 0)
+    .sort(([, a], [, b]) => b - a)
+    .map(([fuente, n]) => {
+      const [uno, varios] = NOMBRE_DE_FUENTE[fuente] ?? [fuente, fuente];
+      return n === 1 || uno === varios ? uno : `${n} ${varios}`;
+    });
+  if (partes.length <= 1) return partes[0] ?? "";
+  return `${partes.slice(0, -1).join(", ")} y ${partes[partes.length - 1]}`;
+}
+
+function textoObservaciones(n: number): string {
+  return `${n} ${n === 1 ? "observación" : "observaciones"}`;
+}
+
+const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+
+/** "2026-09" o "2026-09-15" → "septiembre de 2026". */
+export function mesLegible(periodo: string): string {
+  const [anio, mes] = periodo.split("-").map(Number);
+  return mes ? `${MESES[mes - 1]} de ${anio}` : String(anio);
+}
+
+/** "2026-10-12" → "12/10". */
+export function fechaDiaMes(fecha: string): string {
+  const [, mes, dia] = fecha.split("-");
+  return `${dia}/${mes}`;
+}
+
+/** Días después de los cuales un precio se muestra atenuado: puede haber cambiado. */
+export const DIAS_PRECIO_RECIENTE = 7;
+
+/** Un precio observado de más de una semana: se muestra, pero avisando. */
+export function esPrecioViejo(precio: Precio): boolean {
+  return precio.antiguedadDias !== null && precio.antiguedadDias > DIAS_PRECIO_RECIENTE;
+}
+
+/** "hoy", "ayer", "hace 9 días". Null si no se sabe. */
+export function textoAntiguedad(precio: Precio): string | null {
+  const d = precio.antiguedadDias;
+  if (d === null) return null;
+  if (d === 0) return "hoy";
+  if (d === 1) return "ayer";
+  return `hace ${d} días`;
+}
+
+/**
+ * Dos precios EMPATAN cuando la diferencia es menor que la incertidumbre:
+ * el centro de uno cae dentro del rango del otro. Es la misma regla que
+ * el backend (dominio/servicio/rango_honesto.py). Decir que uno "gana"
+ * por 20 centavos con un margen de 1 Bs sería inventar un ganador.
+ */
+export function empatan(a: RangoPrecio, b: RangoPrecio): boolean {
+  const conRango = (r: RangoPrecio) => r.maximo > r.minimo;
+  if (!conRango(a) && !conRango(b)) return false;
+  return (a.minimo <= b.centro && b.centro <= a.maximo) || (b.minimo <= a.centro && a.centro <= b.maximo);
+}
+
+/** El rango de una lista cotizada en un lugar. */
+export function rangoDeCosto(c: CostoCanasta): RangoPrecio {
+  return { minimo: c.costoMinimo, maximo: c.costoMaximo, centro: c.costoTotal };
 }
 
 // --- cuentas y sesiones --------------------------------------------------
@@ -162,7 +264,9 @@ export type Permiso =
   | "gestionar_usuarios"
   | "gestionar_catalogo"
   | "validar_reportes"
-  | "ver_auditoria";
+  | "ver_auditoria"
+  | "importar_campo"
+  | "ver_salud";
 
 export const ROLES: readonly Rol[] = ["usuario", "vendedor", "administrador"];
 
@@ -466,4 +570,90 @@ export function variacionPorcentual(puntos: readonly PuntoHistorial[], nivel: Ni
   const serie = puntos.filter((p) => p.nivel === nivel);
   if (serie.length < 2 || serie[0].precio === 0) return null;
   return Math.round(((serie[serie.length - 1].precio - serie[0].precio) / serie[0].precio) * 1000) / 10;
+}
+
+
+// --- confiabilidad del estimado (backtest) ------------------------------------
+
+export interface CasoEvaluado {
+  readonly nombreProducto: string;
+  readonly nombreMercado: string;
+  readonly periodo: string;
+  readonly observado: number;
+  readonly estimado: number;
+  readonly estimadoMinimo: number;
+  readonly estimadoMaximo: number;
+  readonly sinFactor: number;
+  /** Error relativo con signo: positivo si el estimado se pasó. */
+  readonly error: number;
+  readonly dentroDelRango: boolean;
+}
+
+export interface ResumenEvaluacionProducto {
+  readonly codigoProducto: string;
+  readonly nombreProducto: string;
+  readonly casos: number;
+  readonly errorMedio: number;
+  readonly cobertura: number;
+}
+
+/** Cuánto se equivoca el estimado frente a los precios que sí se midieron. */
+export interface EvaluacionEstimador {
+  readonly casos: number;
+  readonly errorMedio: number | null;
+  readonly sesgo: number | null;
+  readonly cobertura: number | null;
+  readonly errorMedioSinFactor: number | null;
+  readonly elFactorAyuda: boolean | null;
+  readonly mercados: number;
+  readonly productos: number;
+  readonly porProducto: readonly ResumenEvaluacionProducto[];
+  readonly detalle: readonly CasoEvaluado[];
+  readonly calculadoEn: string;
+}
+
+/** 0.084 → "8,4 %". */
+export function porcentaje(valor: number, decimales = 1): string {
+  return `${(valor * 100).toFixed(decimales).replace(".", ",")} %`;
+}
+
+/** Cómo leer el sesgo en una frase: si el estimado tiende a quedarse corto o a pasarse. */
+export function lecturaDelSesgo(sesgo: number): string {
+  if (Math.abs(sesgo) < 0.01) return "no tiende ni a quedarse corto ni a pasarse";
+  return sesgo < 0 ? `tiende a quedarse corto (${porcentaje(Math.abs(sesgo))} por debajo)` : `tiende a pasarse (${porcentaje(sesgo)} por encima)`;
+}
+
+// --- administración: campo y salud ---------------------------------------------
+
+export interface ResultadoImportacion {
+  readonly leidas: number;
+  readonly validas: number;
+  readonly guardadas: number;
+  readonly soloRevisar: boolean;
+  readonly rechazadas: readonly { readonly fila: number; readonly motivo: string }[];
+}
+
+export type EstadoSalud = "bien" | "revisar" | "sin_datos";
+
+export interface SaludSistema {
+  readonly estadoGeneral: EstadoSalud;
+  readonly puntos: readonly { readonly nombre: string; readonly estado: EstadoSalud; readonly detalle: string }[];
+  readonly fuentes: readonly { readonly fuente: string; readonly observaciones: number; readonly ultimaCaptura: string | null }[];
+  readonly recolecciones: readonly {
+    readonly fuente: string;
+    readonly ocurridoEn: string;
+    readonly exito: boolean;
+    readonly detalle: string | null;
+    readonly hechosNuevos24h: number;
+  }[];
+  readonly respaldo: {
+    readonly fecha: string | null;
+    readonly archivo: string | null;
+    readonly tamanoBytes: number | null;
+    readonly verificado: boolean;
+    readonly filasObservaciones: number | null;
+    readonly detalle: string | null;
+  } | null;
+  readonly coberturaObservada: number | null;
+  readonly ventanaDias: number;
 }

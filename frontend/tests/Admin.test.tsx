@@ -39,6 +39,20 @@ describe("administración", () => {
     expect(screen.queryByRole("button", { name: "Salir" })).toBeNull();
   });
 
+  it("el administrador ve la salud del sistema y la planilla de campo", async () => {
+    render(<App />);
+    await ingresar(ADMIN_DEMO.correo, ADMIN_DEMO.contrasena);
+    await screen.findByRole("table");
+
+    fireEvent.click(screen.getByRole("tab", { name: "Salud del sistema" }));
+    expect(await screen.findByRole("heading", { name: "Salud del sistema" })).toBeDefined();
+    expect(screen.getByText("Respaldo de la base")).toBeDefined();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Planilla de campo" }));
+    expect(screen.getByRole("link", { name: "Descargar la plantilla" }).getAttribute("download")).toBe("plantilla_campo.csv");
+    expect(screen.getByRole("button", { name: "Revisar sin guardar" })).toHaveProperty("disabled", true);
+  });
+
   it("el administrador ingresa, cambia un rol y aprueba un reporte", async () => {
     render(<App />);
     await ingresar(ADMIN_DEMO.correo, ADMIN_DEMO.contrasena);

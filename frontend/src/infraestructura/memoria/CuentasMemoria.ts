@@ -38,6 +38,8 @@ const PERMISOS: Record<Rol, Permiso[]> = {
     "reportar_precio",
     "validar_reportes",
     "ver_auditoria",
+    "importar_campo",
+    "ver_salud",
   ],
 };
 

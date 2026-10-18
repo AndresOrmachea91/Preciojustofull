@@ -129,11 +129,7 @@ function Cotizacion({ contenedor, lista, productos }: { contenedor: Contenedor; 
 
   return (
     <div className="cotizacion" aria-label="Dónde conviene comprar esta lista">
-      {minoristas.ahorro > 0 && (
-        <p className="ahorro">
-          Entre el lugar más barato y el más caro hay <strong>Bs {minoristas.ahorro.toFixed(2)}</strong> de diferencia.
-        </p>
-      )}
+      <ResumenAhorro resultado={minoristas} />
       <Ranking costos={minoristas.opciones.slice(0, 5)} nombre={nombre} />
       {mayoristas.length > 0 && (
         <>
@@ -290,5 +286,39 @@ function FormularioLista({
         </button>
       </div>
     </form>
+  );
+}
+
+/**
+ * La frase que importa: cuánto se ahorra y dónde (C129). Si el más barato
+ * no se distingue de otros con el margen de error, se dice que empatan en
+ * vez de inventar un ganador; y se avisa cuántos precios son estimados.
+ */
+function ResumenAhorro({ resultado }: { resultado: CotizacionLista["minoristas"] }) {
+  const { masBarato: mejor, masCaro, ahorro, empatanConElMejor } = resultado;
+  if (!mejor || !masCaro || ahorro <= 0) return null;
+  const empatados = [mejor, ...empatanConElMejor].map((c) => c.nombreMercado);
+  const estimados = mejor.productosEstimados;
+  return (
+    <div className="ahorro ahorro--resumen">
+      {empatanConElMejor.length === 0 ? (
+        <p>
+          Ahorra <strong>Bs {ahorro.toFixed(2)}</strong> yendo a <strong>{mejor.nombreMercado}</strong> (Bs{" "}
+          {mejor.costoTotal.toFixed(2)}) en vez de {masCaro.nombreMercado} (Bs {masCaro.costoTotal.toFixed(2)}).
+        </p>
+      ) : (
+        <p>
+          <strong>{empatados.join(", ")}</strong> empatan: la diferencia entre ellos es menor que el margen de error.
+          Cualquiera de ellos ahorra hasta <strong>Bs {ahorro.toFixed(2)}</strong> frente a {masCaro.nombreMercado}.
+        </p>
+      )}
+      {estimados > 0 && (
+        <p className="tenue">
+          {estimados === mejor.productosCubiertos
+            ? "Todos los precios de ese lugar son estimados: tómelo como una guía para comparar, no como una cuenta exacta."
+            : `${estimados} de ${mejor.productosCubiertos} precios de ese lugar son estimados.`}
+        </p>
+      )}
+    </div>
   );
 }

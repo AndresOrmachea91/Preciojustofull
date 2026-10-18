@@ -28,6 +28,15 @@ const PRODUCTOS = [
 ];
 
 describe("barra lateral", () => {
+  it("la página de confiabilidad es pública y explica qué se compara", async () => {
+    render(<App />);
+    const secciones = await screen.findByRole("navigation", { name: "Secciones" });
+    fireEvent.click(within(secciones).getByRole("link", { name: "¿Qué tan confiable es?" }));
+    expect(await screen.findByRole("heading", { name: "¿Qué tan confiable es el estimado?" })).toBeDefined();
+    // En el modo demo no hay mediciones de campo: lo dice, no inventa un error.
+    expect(await screen.findByText(/Todavía no hay precios medidos/)).toBeDefined();
+  });
+
   it("sin sesión ofrece ingresar y crear cuenta, cada una con su formulario", async () => {
     render(<App />);
     const cuenta = await screen.findByRole("navigation", { name: "Cuenta" });

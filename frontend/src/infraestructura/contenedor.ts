@@ -20,13 +20,17 @@ import { RecuperarContrasena } from "@/aplicacion/casosUso/cuentas/recuperarCont
 import { CercaDeMi } from "@/aplicacion/casosUso/publico/cercaDeMi";
 import { VerHistorial } from "@/aplicacion/casosUso/publico/verHistorial";
 import { VerMapa } from "@/aplicacion/casosUso/publico/verMapa";
+import { VerConfiabilidad } from "@/aplicacion/casosUso/publico/verConfiabilidad";
+import { OperarSistema } from "@/aplicacion/casosUso/administracion/operarSistema";
 import type {
   AdministracionRepositorio,
   AlmacenSesion,
   AuditoriaRepositorio,
   CatalogoAdminRepositorio,
   CatalogoRepositorio,
+  ConfiabilidadRepositorio,
   HistorialRepositorio,
+  OperacionRepositorio,
   ListasRepositorio,
   RecuperacionRepositorio,
   MisReportesRepositorio,
@@ -39,10 +43,12 @@ import { AlmacenSesionLocal, AlmacenSesionMemoria } from "@/infraestructura/alma
 import { CatalogoAdminApi } from "@/infraestructura/http/CatalogoAdminApi";
 import { ClienteHttp } from "@/infraestructura/http/clienteHttp";
 import { CuentasApi } from "@/infraestructura/http/CuentasApi";
+import { OperacionApi } from "@/infraestructura/http/OperacionApi";
 import { PreciosApi } from "@/infraestructura/http/PreciosApi";
 import { UsuarioApi } from "@/infraestructura/http/UsuarioApi";
 import { VendedorApi } from "@/infraestructura/http/VendedorApi";
 import { CuentasMemoria } from "@/infraestructura/memoria/CuentasMemoria";
+import { OperacionMemoria } from "@/infraestructura/memoria/OperacionMemoria";
 import { PreciosMemoria } from "@/infraestructura/memoria/PreciosMemoria";
 import { ListasMemoria, PreciosVendedorMemoria } from "@/infraestructura/memoria/UsuarioMemoria";
 import { UbicacionNavegador } from "@/infraestructura/ubicacion/ubicacionNavegador";
@@ -62,6 +68,8 @@ export interface Contenedor {
   readonly listas: ListasDeCompras;
   readonly reportarPrecio: ReportarPrecio;
   readonly miPuesto: MiPuesto;
+  readonly verConfiabilidad: VerConfiabilidad;
+  readonly operarSistema: OperarSistema;
 }
 
 export function crearContenedor(origen?: string, almacen?: AlmacenSesion): Contenedor {
@@ -75,6 +83,7 @@ export function crearContenedor(origen?: string, almacen?: AlmacenSesion): Conte
   let misReportes: MisReportesRepositorio;
   let listas: ListasRepositorio;
   let preciosVendedor: PreciosVendedorRepositorio;
+  let operacion: ConfiabilidadRepositorio & OperacionRepositorio;
 
   if (modo === "http") {
     const almacenSesion = almacen ?? new AlmacenSesionLocal();
@@ -92,6 +101,7 @@ export function crearContenedor(origen?: string, almacen?: AlmacenSesion): Conte
     misReportes = usuario;
     listas = usuario;
     preciosVendedor = new VendedorApi(http);
+    operacion = new OperacionApi(http);
     almacen = almacenSesion;
   } else {
     const memoria = new PreciosMemoria();
@@ -107,6 +117,7 @@ export function crearContenedor(origen?: string, almacen?: AlmacenSesion): Conte
     misReportes = cuentasMemoria;
     listas = new ListasMemoria(almacen, memoria, memoria);
     preciosVendedor = new PreciosVendedorMemoria(almacen, memoria);
+    operacion = new OperacionMemoria();
   }
 
   return {
@@ -125,5 +136,7 @@ export function crearContenedor(origen?: string, almacen?: AlmacenSesion): Conte
     listas: new ListasDeCompras(listas),
     reportarPrecio: new ReportarPrecio(reportes, misReportes),
     miPuesto: new MiPuesto(preciosVendedor),
+    verConfiabilidad: new VerConfiabilidad(operacion),
+    operarSistema: new OperarSistema(operacion),
   };
 }

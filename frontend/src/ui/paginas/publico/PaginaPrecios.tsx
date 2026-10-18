@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 
 import type { Producto } from "@/dominio/modelo";
-import { precioEnPresentacion, presentacionBase, textoDistancia, unidadDePresentacion } from "@/dominio/modelo";
+import {
+  empatan,
+  esPrecioViejo,
+  precioEnPresentacion,
+  presentacionBase,
+  textoDistancia,
+  unidadDePresentacion,
+} from "@/dominio/modelo";
 import { ahorroPosible } from "@/dominio/servicio/ordenarPorConveniencia";
 import type { Contenedor } from "@/infraestructura/contenedor";
 import { GraficoHistorial } from "@/ui/componentes/GraficoHistorial";
@@ -204,15 +211,18 @@ export function PaginaPrecios({ contenedor }: { contenedor: Contenedor }) {
       )}
 
       {mapa.datos && (
-        <div className="mapa-y-panel">
-          <MapaPuntosVenta
-            marcadores={marcadores}
-            seleccionado={seleccionado}
-            onSeleccionar={setSeleccionado}
-            ubicacion={cercania.ubicacion}
-          />
-          <PanelPunto marcador={marcadorSeleccionado} producto={productoActual} />
-        </div>
+        <>
+          <div className="mapa-y-panel">
+            <MapaPuntosVenta
+              marcadores={marcadores}
+              seleccionado={seleccionado}
+              onSeleccionar={setSeleccionado}
+              ubicacion={cercania.ubicacion}
+            />
+            <PanelPunto marcador={marcadorSeleccionado} producto={productoActual} />
+          </div>
+          <LeyendaMapa />
+        </>
       )}
 
       {historial.datos && historial.datos.puntos.length > 0 && (
@@ -254,15 +264,25 @@ export function PaginaPrecios({ contenedor }: { contenedor: Contenedor }) {
             </p>
           )}
           <div className="lista">
-            {minoristas.map((item, i) => (
-              // "Más conveniente" solo si se midió ahí: entre estimaciones
-              // iguales no hay nada que destacar.
-              <TarjetaMercado
-                key={item.mercado.codigo}
-                item={item}
-                destacado={i === 0 && item.precio.procedencia === "observado"}
-              />
-            ))}
+            {minoristas.map((item, i) => {
+              // Con quién no se puede distinguir este precio: la diferencia es
+              // menor que la incertidumbre. Entre empatados no se destaca a nadie.
+              const empataCon = minoristas
+                .filter((otro, j) => j !== i && (i === 0 || j === 0) && empatan(item.precio.rango, otro.precio.rango))
+                .map((otro) => otro.mercado.nombre);
+              return (
+                <TarjetaMercado
+                  key={item.mercado.codigo}
+                  item={item}
+                  // "Más conveniente" solo si se midió ahí, es reciente y gana
+                  // de verdad: entre estimaciones o empates no hay a quién destacar.
+                  destacado={
+                    i === 0 && item.precio.procedencia === "observado" && !esPrecioViejo(item.precio) && empataCon.length === 0
+                  }
+                  empataCon={empataCon}
+                />
+              );
+            })}
           </div>
 
           {mayoristas.length > 0 && (
@@ -282,5 +302,22 @@ export function PaginaPrecios({ contenedor }: { contenedor: Contenedor }) {
         </>
       )}
     </>
+  );
+}
+
+/** Cómo leer el mapa: qué es un punto lleno, uno hueco y uno atenuado. */
+function LeyendaMapa() {
+  return (
+    <ul className="leyenda" aria-label="Cómo leer el mapa">
+      <li>
+        <span className="leyenda__punto leyenda__punto--observado" aria-hidden="true" /> Observado: alguien lo midió ahí
+      </li>
+      <li>
+        <span className="leyenda__punto leyenda__punto--estimado" aria-hidden="true" /> Estimado desde el precio de la ciudad
+      </li>
+      <li>
+        <span className="leyenda__punto leyenda__punto--viejo" aria-hidden="true" /> Atenuado: el dato tiene más de una semana
+      </li>
+    </ul>
   );
 }

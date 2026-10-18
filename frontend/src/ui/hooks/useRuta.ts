@@ -6,9 +6,11 @@ import { useCallback, useEffect, useState } from "react";
  * index.html) y no suman una dependencia.
  */
 export type Ruta =
-  | "precios" | "ingresar" | "registrarse" | "recuperar" | "restablecer" | "mi-cuenta" | "mi-puesto" | "admin";
+  | "precios" | "confiabilidad" | "ingresar" | "registrarse" | "recuperar" | "restablecer" | "mi-cuenta" | "mi-puesto" | "admin";
 
-const RUTAS: readonly Ruta[] = ["ingresar", "registrarse", "recuperar", "restablecer", "mi-cuenta", "mi-puesto", "admin"];
+const RUTAS: readonly Ruta[] = [
+  "confiabilidad", "ingresar", "registrarse", "recuperar", "restablecer", "mi-cuenta", "mi-puesto", "admin",
+];
 
 /** El enlace de una ruta, para usar en <a href>. */
 export function hrefDe(ruta: Ruta): string {

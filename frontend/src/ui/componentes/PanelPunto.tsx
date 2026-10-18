@@ -1,5 +1,12 @@
 import type { MarcadorMapa, Producto } from "@/dominio/modelo";
-import { etiquetaNivel, etiquetaTipo, explicacionProcedencia, publicaRango } from "@/dominio/modelo";
+import {
+  esPrecioViejo,
+  etiquetaNivel,
+  etiquetaTipo,
+  explicacionProcedencia,
+  publicaRango,
+  textoAntiguedad,
+} from "@/dominio/modelo";
 import { Confianza } from "@/ui/componentes/Confianza";
 import { Procedencia } from "@/ui/componentes/Procedencia";
 
@@ -32,7 +39,9 @@ export function PanelPunto({ marcador, producto }: Props) {
       </header>
 
       {precio ? (
-        <section className={`panel__precio panel__precio--${precio.procedencia}`}>
+        <section
+          className={`panel__precio panel__precio--${precio.procedencia}${esPrecioViejo(precio) ? " precio--viejo" : ""}`}
+        >
           <Procedencia valor={precio.procedencia} />
           <p className="panel__monto">
             {producto?.nombre ?? precio.codigoProducto}:{" "}
@@ -44,6 +53,12 @@ export function PanelPunto({ marcador, producto }: Props) {
             <span className="tenue"> por {precio.unidad}</span>
           </p>
           <p className="panel__explicacion">{explicacionProcedencia(precio, mercado)}</p>
+          {esPrecioViejo(precio) && (
+            <p className="aviso-viejo">El dato es de {textoAntiguedad(precio)}: el precio pudo cambiar.</p>
+          )}
+          {precio.motivosRango.length > 0 && (
+            <p className="tenue panel__motivos">Rango más ancho: {precio.motivosRango.join("; ")}.</p>
+          )}
           <p className="panel__pie">
             <Confianza nivel={precio.confianza} />
             <span className="tenue">
