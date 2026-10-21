@@ -107,8 +107,24 @@ def salud():
 
 # Va al FINAL, después de las rutas: montado en "/" se queda con todo lo
 # que no reclamó la API, que es exactamente lo que tiene que servir.
+class InterfazSinCacheViejo(StaticFiles):
+    """
+    index.html se vuelve a pedir siempre (no-cache): si no, después de una
+    actualización el navegador sigue abriendo la versión anterior. Los
+    archivos de assets/ llevan un hash en el nombre y sí se guardan un año.
+    """
+
+    async def get_response(self, path, scope):
+        respuesta = await super().get_response(path, scope)
+        if path.startswith("assets/"):
+            respuesta.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        else:
+            respuesta.headers["Cache-Control"] = "no-cache"
+        return respuesta
+
+
 if INTERFAZ.is_dir():
-    app.mount("/", StaticFiles(directory=INTERFAZ, html=True), name="interfaz")
+    app.mount("/", InterfazSinCacheViejo(directory=INTERFAZ, html=True), name="interfaz")
     log.info("Interfaz servida desde %s", INTERFAZ)
 else:
     log.info("Sin interfaz construida en %s: solo API", INTERFAZ)

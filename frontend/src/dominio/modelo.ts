@@ -901,3 +901,81 @@ export function filtrarDirectorio(
 export function nombreCategoria(codigo: string): string {
   return CATEGORIAS.find((c) => c.codigo === codigo)?.nombre ?? codigo;
 }
+
+// --- qué medir primero y cuánto se mueve cada precio (A4230, A5020) -------------
+
+/** Cuánto se movió el precio de la ciudad de un mes a otro. */
+export interface VariacionDeProducto {
+  readonly producto: Producto;
+  /** Cambio mensual típico: 0.04 = suele moverse 4 % de un mes al siguiente. */
+  readonly cambioMensual: number;
+  readonly mayorSubida: number;
+  readonly mayorBajada: number;
+  readonly meses: number;
+  readonly nivel: NivelPrecio;
+}
+
+export interface PrioridadDeProducto {
+  readonly producto: Producto;
+  readonly puntaje: number;
+  readonly lugaresSinDato: number;
+  readonly lugaresConDatoViejo: number;
+  readonly lugaresAlDia: number;
+  readonly cambioMensual: number | null;
+  readonly anchoRelativo: number | null;
+  readonly motivos: readonly string[];
+}
+
+export interface LugarPorVisitar {
+  readonly mercado: Mercado;
+  readonly productosAlDia: number;
+  readonly productosTotal: number;
+}
+
+/** Recolección adaptativa: qué medir primero y dónde, en vez de medir todo por igual. */
+export interface PlanDeVerificacion {
+  readonly fecha: string;
+  readonly productos: readonly PrioridadDeProducto[];
+  readonly lugares: readonly LugarPorVisitar[];
+  readonly variaciones: readonly VariacionDeProducto[];
+}
+
+/**
+ * Lugares con exactamente el mismo precio, juntos. Cuando todo sale del
+ * mismo boletín de la ciudad, 88 tarjetas iguales no dicen nada que una
+ * sola no diga: se muestra una vez, con los nombres. Lo observado no se
+ * junta nunca: cada medición en un lugar merece su propia tarjeta.
+ */
+export interface GrupoDePrecio {
+  readonly clave: string;
+  readonly items: readonly PrecioEnMercado[];
+}
+
+export function agruparPorPrecio(items: readonly PrecioEnMercado[]): GrupoDePrecio[] {
+  const grupos: GrupoDePrecio[] = [];
+  const porClave = new Map<string, PrecioEnMercado[]>();
+  for (const item of items) {
+    const { precio, mercado } = item;
+    if (precio.procedencia === "observado") {
+      grupos.push({ clave: mercado.codigo, items: [item] });
+      continue;
+    }
+    const clave = [
+      publicaRango(mercado.tipo) ? "rango" : "unico",
+      precio.unidad,
+      precio.rango.minimo.toFixed(2),
+      precio.rango.maximo.toFixed(2),
+      precio.confianza,
+      esPrecioViejo(precio),
+    ].join("|");
+    const existente = porClave.get(clave);
+    if (existente) {
+      existente.push(item);
+    } else {
+      const nuevo = [item];
+      porClave.set(clave, nuevo);
+      grupos.push({ clave, items: nuevo });
+    }
+  }
+  return grupos;
+}

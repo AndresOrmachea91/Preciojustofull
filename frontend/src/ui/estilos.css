@@ -107,7 +107,9 @@ body {
 .panel__pie { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 0; flex-wrap: wrap; }
 
 /* --- procedencia: se distingue de un vistazo ----------------------------- */
-.procedencia { font-size: 0.78rem; padding: 3px 9px; border-radius: 999px; font-weight: 600; white-space: nowrap; }
+.procedencia { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; padding: 3px 9px; border-radius: 999px; font-weight: 600; white-space: nowrap; }
+.procedencia__punto { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
+.procedencia--estimado .procedencia__punto { background: transparent; border: 1.5px dashed currentColor; }
 .procedencia--observado { background: var(--jade); color: var(--sobre-tinta); }
 .procedencia--estimado { background: var(--ambar-claro); color: var(--ambar); border: 1px dashed var(--ambar); }
 .tarjeta--estimado { border-style: dashed; }
@@ -403,7 +405,10 @@ button, a, [role="option"] { -webkit-tap-highlight-color: transparent; }
 
 /* --- procedencia y frescura (C125), empates (C128) y ahorro (C129) ----------- */
 /* Un dato de más de una semana se ve, pero apagado: puede haber cambiado. */
+/* En una tarjeta se apaga solo el número, no el nombre del lugar. */
 .precio--viejo { opacity: 0.72; }
+.tarjeta.precio--viejo { opacity: 1; }
+.tarjeta.precio--viejo .tarjeta__precio { opacity: 0.65; }
 .aviso-viejo { margin: 8px 0 0; font-size: 0.82rem; color: var(--ambar); }
 .panel__motivos { margin: 6px 0 0; font-size: 0.78rem; }
 .insignia--empate { background: var(--ambar-claro); color: var(--ambar); border: 1px solid var(--ambar); }
@@ -465,7 +470,7 @@ button, a, [role="option"] { -webkit-tap-highlight-color: transparent; }
 .barra__buscar--suelta { display: block; width: 100%; max-width: 440px; margin: 0 0 16px; }
 
 .ofertas { display: flex; flex-direction: column; gap: 12px; }
-.oferta { background: var(--superficie); border: 1px solid var(--oro-borde); border-left-width: 4px; border-radius: 12px; padding: 14px 16px; }
+.oferta { background: var(--superficie); border: 1px solid var(--oro-borde); border-radius: 12px; padding: 14px 16px; box-shadow: 0 1px 0 var(--oro-claro); }
 .panel .oferta { margin-top: 12px; padding: 12px 14px; }
 .oferta__cabeza { display: flex; align-items: flex-start; gap: 12px; }
 .oferta__sello { display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: 9px; background: var(--oro-claro); color: var(--oro); }
@@ -548,3 +553,84 @@ button, a, [role="option"] { -webkit-tap-highlight-color: transparent; }
 .puesto__precios li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 10px; padding-bottom: 6px; border-bottom: 1px dashed var(--borde); }
 .puesto__precios li .tenue:last-child { grid-column: 1 / -1; font-size: 0.78rem; }
 .puesto .oferta { margin-top: 10px; }
+
+/* --- limpieza (20 oct): superficies del navegador, panel del mapa y listas --- */
+/* Lo que el navegador dibuja por su cuenta también lleva la paleta. */
+::selection { background: var(--jade-claro); color: var(--tinta); }
+html { accent-color: var(--jade); caret-color: var(--jade); scrollbar-color: var(--borde) transparent; }
+.tarjeta__precio, .panel__monto, .cifra__valor, .tabla td { font-variant-numeric: tabular-nums; }
+a { text-underline-offset: 0.18em; }
+
+/* El panel acompaña al mapa: misma altura, y si el contenido es largo se desplaza adentro. */
+.mapa-y-panel { align-items: start; }
+.panel { max-height: 460px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+.panel > * { margin-top: 0; margin-bottom: 0; }
+@media (max-width: 700px) { .panel { max-height: none; } }
+.panel__precio { margin-top: 0; }
+.panel__fila { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.panel__monto { margin: 6px 0 4px; font-size: 1.45rem; line-height: 1.25; }
+.panel__a { font-weight: 400; color: var(--tenue); font-size: 1rem; }
+.panel__subtitulo { margin-top: -8px !important; }
+.panel__entrar { margin-top: auto; padding-top: 4px; }
+
+.medidor { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 10px; background: var(--crema); }
+.medidor__barra { height: 8px; border-radius: 999px; background: var(--ambar-claro); border: 1px dashed var(--ambar); overflow: hidden; }
+.medidor__lleno { display: block; height: 100%; background: var(--jade); border-radius: inherit; min-width: 0; }
+.medidor__texto { margin: 0; font-size: 0.86rem; }
+.panel__pasos { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem; color: var(--texto); }
+.panel__pasos li::marker { color: var(--jade); font-weight: 700; }
+.panel__ofertas { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; padding: 10px 12px; border-radius: 10px; background: var(--oro-claro); color: var(--oro); font-size: 0.86rem; }
+.panel__ofertas a { color: var(--jade); font-weight: 600; }
+
+/* "¿Lo vio aquí? Diga a cuánto" (confirmar un precio en un toque). */
+.decir { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border: 1px solid var(--borde); border-radius: 10px; }
+.decir__pregunta { font-weight: 600; font-size: 0.92rem; color: var(--tinta); }
+.decir__fila { display: flex; gap: 8px; flex-wrap: wrap; }
+.decir__caja {
+  flex: 1 1 180px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 1px solid var(--borde);
+  border-radius: 8px; background: var(--superficie);
+}
+.decir__caja:focus-within { border-color: var(--jade); box-shadow: 0 0 0 3px var(--jade-claro); }
+.decir__caja input { width: 5.5em; min-width: 0; border: 0; outline: 0; background: none; padding: 8px 0; font: inherit; font-weight: 600; color: var(--texto); font-variant-numeric: tabular-nums; }
+.decir__ayuda { margin: 0; }
+.decir--invitacion, .decir--hecho { display: block; margin: 0; font-size: 0.88rem; }
+.decir--invitacion a { color: var(--jade); font-weight: 600; }
+.decir--hecho { background: var(--jade-claro); border-color: transparent; color: var(--tinta); }
+
+/* Lugares con el mismo precio: una tarjeta, con sus nombres a un clic. */
+.lista__nota { margin: 0 0 10px; }
+.tarjeta--grupo .tarjeta__precio { margin-bottom: 4px; }
+.tarjeta__lugares { margin-top: 6px; }
+.tarjeta__lugares summary { cursor: pointer; color: var(--jade); font-size: 0.88rem; font-weight: 600; width: fit-content; }
+.lugares { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.lugares a {
+  display: inline-block; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--borde); background: var(--crema);
+  color: var(--texto); font-size: 0.8rem; text-decoration: none;
+}
+@media (hover: hover) and (pointer: fine) { .lugares a:hover { border-color: var(--jade); color: var(--jade); } }
+
+/* ¿Qué tan confiable es?: cobertura, lo que falta medir y cuánto se mueve cada precio (A4230, A5020). */
+.confiabilidad__cobertura { max-width: 70ch; padding: 12px 16px; border-radius: 10px; background: var(--superficie); border: 1px solid var(--borde); }
+.confiabilidad__texto { max-width: 70ch; margin-top: 0; }
+.confiabilidad__plan { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 8px 32px; margin-top: 8px; }
+.barras { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.barras__fila { display: grid; grid-template-columns: minmax(110px, 9.5em) minmax(0, 1fr) auto; align-items: center; gap: 10px; font-size: 0.88rem; }
+.barras__nombre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.barras__pista { height: 10px; border-radius: 999px; background: var(--crema); border: 1px solid var(--borde); overflow: hidden; }
+.barras__barra { display: block; height: 100%; background: var(--serie-minorista); border-radius: inherit; }
+.barras__valor { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+.pendientes { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; counter-reset: pendiente; }
+.pendientes__fila { counter-increment: pendiente; position: relative; padding: 10px 0 10px 32px; border-bottom: 1px dashed var(--borde); }
+.pendientes__fila::before {
+  content: counter(pendiente); position: absolute; left: 0; top: 11px; display: grid; place-items: center; width: 22px; height: 22px;
+  border-radius: 7px; background: var(--ambar-claro); color: var(--ambar); font-size: 0.75rem; font-weight: 700;
+}
+.pendientes__cabeza { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 10px; }
+.pendientes__motivos { margin: 2px 0 0; font-size: 0.82rem; color: var(--tenue); }
+
+/* La próxima ronda sugerida (administrador). */
+.ronda { margin-bottom: 28px; padding: 16px 18px; border-radius: 12px; background: var(--superficie); border: 1px solid var(--borde); }
+.ronda .subseccion { margin-top: 0; }
+.ronda__columnas { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px 24px; }
+.ronda__titulo { margin: 8px 0 4px; font-size: 0.85rem; color: var(--tinta); }
+.ronda__lista { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; }

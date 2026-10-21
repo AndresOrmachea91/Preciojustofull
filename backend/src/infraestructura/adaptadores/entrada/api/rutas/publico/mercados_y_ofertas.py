@@ -5,16 +5,17 @@ no piden sesión.
     GET /api/v1/mercados/directorio        cada lugar con sus puestos y ofertas
     GET /api/v1/mercados/{codigo}/ficha    precios, puestos y ofertas de un lugar
     GET /api/v1/ofertas                    ofertas vigentes, de mayor a menor ahorro real
+    GET /api/v1/verificaciones             qué conviene medir primero y cuánto varía cada producto
 """
 from fastapi import APIRouter, Depends, Query
 
 from src.infraestructura.adaptadores.entrada.api import esquemas as e
 from src.infraestructura.adaptadores.entrada.api.cache_fichas import recordar
 from src.infraestructura.adaptadores.entrada.api.dependencias import (
-    caso_directorio_mercados, caso_ficha_mercado, caso_ofertas_vigentes,
+    caso_directorio_mercados, caso_ficha_mercado, caso_ofertas_vigentes, caso_priorizar_verificaciones,
 )
 from src.infraestructura.adaptadores.entrada.api.mapeo import (
-    entrada_directorio_a_salida, ficha_a_salida, oferta_a_salida,
+    entrada_directorio_a_salida, ficha_a_salida, oferta_a_salida, plan_verificacion_a_salida,
 )
 
 router = APIRouter(tags=["mercados y ofertas"])
@@ -39,3 +40,13 @@ def ofertas(mercado: str | None = Query(default=None), producto: str | None = Qu
     sistema (sin la voz del casero). Primero el mayor ahorro relativo.
     """
     return [oferta_a_salida(v) for v in caso.ejecutar(mercado, producto)]
+
+
+@router.get("/verificaciones", response_model=e.PlanVerificacionSalida)
+def verificaciones(caso=Depends(caso_priorizar_verificaciones)):
+    """
+    Recolección adaptativa (A4230): qué productos y lugares conviene medir
+    primero, y cuánto se mueve cada precio de un mes a otro (A5020). Es
+    público a propósito: muestra dónde el sistema todavía estima.
+    """
+    return recordar("verificaciones", lambda: plan_verificacion_a_salida(caso.ejecutar()))

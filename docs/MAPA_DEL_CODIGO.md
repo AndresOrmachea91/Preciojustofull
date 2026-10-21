@@ -193,6 +193,9 @@ En el frontend:
 | Ofertas dentro de la lista (C133) | `ofertasParaLista` en `dominio/modelo.ts`; `OfertasDeLaLista` en `ui/paginas/usuario/MisListas.tsx` |
 | Entrar a un mercado (C134) | `aplicacion/casos_uso/precios/ficha_mercado.py` (ficha y directorio); rutas `GET /mercados/directorio`, `GET /mercados/{codigo}/ficha` (caché en `api/cache_fichas.py`); web: `ui/paginas/publico/PaginaMercados.tsx`, `PaginaMercado.tsx`; anillo dorado y «Entrar al mercado» en `MapaPuntosVenta.tsx` y `PanelPunto.tsx` |
 | Planilla de campo con puesto (A4200) | columna `puesto` en `importar_campo.py`; `Observacion.puesto` y clave natural v2 (`tablas.py`, `sesion.py`) |
+| Qué medir primero (A4230) y cuánto varía cada producto (A5020) | `aplicacion/casos_uso/precios/priorizar_verificaciones.py`; ruta `GET /verificaciones`; web: `ui/componentes/PlanVerificacion.tsx` en `PaginaConfiabilidad.tsx`, «Próxima ronda sugerida» en `PlanillaCampo.tsx` (`planillaDeLaRonda` en `operarSistema.ts`) |
+| Limpieza de la web (C135) | `agruparPorPrecio` en `dominio/modelo.ts` y `ListaDePrecios` en `PaginaPrecios.tsx`; resumen y «¿Lo vio aquí? Diga a cuánto» en `ui/componentes/PanelPunto.tsx`; `InterfazSinCacheViejo` en `api/main.py`; `public/favicon.svg` |
+| Base de datos explicada (C136) | `docs/BASE_DE_DATOS.md`; índice `ix_observacion_precio_informante` en `sesion.py` |
 
 ## Rutas de la API
 

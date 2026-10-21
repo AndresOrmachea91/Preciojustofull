@@ -8,7 +8,8 @@ import { etiquetaProcedencia } from "@/dominio/modelo";
 export function Procedencia({ valor }: { valor: TipoProcedencia }) {
   return (
     <span className={`procedencia procedencia--${valor}`} data-procedencia={valor}>
-      {valor === "observado" ? "●" : "◌"} {etiquetaProcedencia(valor)}
+      <span className="procedencia__punto" aria-hidden="true" />
+      {etiquetaProcedencia(valor)}
     </span>
   );
 }

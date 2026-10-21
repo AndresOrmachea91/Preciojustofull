@@ -70,7 +70,7 @@ describe("App sobre React 19", () => {
     const estimadas = tarjetas.filter((t) => t.getAttribute("data-procedencia") === "estimado");
     expect(estimadas.length).toBe(2);   // Ketal y Makro: nadie midió ahí
     expect(estimadas[0].textContent).toContain("Todavía nadie verificó este precio");
-    // El resumen de honestidad cuenta lo mismo que el mapa.
-    expect(screen.getByLabelText("De dónde salen estos precios").textContent).toContain("2");
+    // El resumen al lado del mapa cuenta lo mismo: de 6 lugares, 2 sin medir.
+    expect(screen.getByLabelText("4 de 6 lugares con precio medido")).toBeDefined();
   });
 });

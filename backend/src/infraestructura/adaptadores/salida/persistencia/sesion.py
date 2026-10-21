@@ -119,6 +119,12 @@ _PUESTO_UNO_POR_VENDEDOR = (
     "WHERE NOT eliminado AND id_vendedor IS NOT NULL"
 )
 
+# informante se agregó con ALTER: el índice que declara la tabla solo nace
+# con create_all en una base nueva, así que en una que ya existía se crea acá.
+_INDICE_INFORMANTE = (
+    "CREATE INDEX IF NOT EXISTS ix_observacion_precio_informante ON observacion_precio (informante)"
+)
+
 # Cambios que SQLite no sabe hacer con ALTER (soltar un NOT NULL). En
 # SQLite las tablas nuevas ya nacen bien desde create_all; en PostgreSQL
 # hace falta decirlo. Se ejecuta antes de los rellenos.
@@ -138,8 +144,9 @@ _AJUSTES_POR_DIALECTO = {
         _CORREO_UNICO_VIGENTE,
         _PUESTO_UNICO_VIGENTE,
         _PUESTO_UNO_POR_VENDEDOR,
+        _INDICE_INFORMANTE,
     ],
-    "sqlite": [_CORREO_UNICO_VIGENTE, _PUESTO_UNICO_VIGENTE, _PUESTO_UNO_POR_VENDEDOR],
+    "sqlite": [_CORREO_UNICO_VIGENTE, _PUESTO_UNICO_VIGENTE, _PUESTO_UNO_POR_VENDEDOR, _INDICE_INFORMANTE],
 }
 
 # Rellenos que se pueden hacer con honestidad sobre filas históricas. El

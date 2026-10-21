@@ -64,12 +64,6 @@ export function TarjetaMercado({ item, destacado = false, empataCon = [] }: Prop
           ganador claro.
         </p>
       )}
-
-      {rango && (
-        <p className="tarjeta__nota">
-          En mercados grandes el precio varía entre puestos, por eso se publica un rango.
-        </p>
-      )}
     </article>
   );
 }

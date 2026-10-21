@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 
-import type { Oferta, Producto, Usuario } from "@/dominio/modelo";
+import type { Oferta, PrecioEnMercado, Producto, Usuario } from "@/dominio/modelo";
 import {
+  agruparPorPrecio,
   empatan,
   esPrecioViejo,
   precioEnPresentacion,
   presentacionBase,
+  publicaRango,
   textoDistancia,
   unidadDePresentacion,
 } from "@/dominio/modelo";
@@ -14,13 +16,15 @@ import type { Contenedor } from "@/infraestructura/contenedor";
 import { GraficoHistorial } from "@/ui/componentes/GraficoHistorial";
 import { Icono } from "@/ui/componentes/Iconos";
 import { MapaPuntosVenta } from "@/ui/componentes/MapaPuntosVenta";
-import { PanelPunto } from "@/ui/componentes/PanelPunto";
+import { PanelPunto, type ResumenDelMapa } from "@/ui/componentes/PanelPunto";
+import { Procedencia } from "@/ui/componentes/Procedencia";
 import { SelectorProducto } from "@/ui/componentes/SelectorProducto";
 import { TarjetaMercado } from "@/ui/componentes/TarjetaMercado";
 import { useCercania } from "@/ui/hooks/useCercania";
 import { useComparativa } from "@/ui/hooks/useComparativa";
 import { useHistorial } from "@/ui/hooks/useHistorial";
 import { useMapa } from "@/ui/hooks/useMapa";
+import { hrefMercado } from "@/ui/hooks/useRuta";
 
 // Con qué producto abre la pantalla: uno que tenga precio en los 88 puntos.
 // Si el catálogo no lo trae, se usa el primero.
@@ -89,6 +93,19 @@ export function PaginaPrecios({ contenedor, usuario = null }: { contenedor: Cont
   const presentacionesUtiles =
     productoActual?.presentaciones.filter((p) => !unidadDelPrecio || unidadDePresentacion(p.codigo) === unidadDelPrecio) ??
     [];
+
+  const resumen: ResumenDelMapa | null = mapa.datos
+    ? {
+        ...mapa.datos.resumen,
+        // La referencia que se muestra antes de elegir un punto: un mercado estimado, que es la ciudad con su ajuste.
+        referencia:
+          (
+            marcadores.find((m) => m.precio?.procedencia === "estimado" && m.mercado.tipo === "mercado") ??
+            marcadores.find((m) => m.precio)
+          )?.precio ?? null,
+        ofertas: ofertas.length,
+      }
+    : null;
 
   const opciones = comparativa.datos?.opciones.map(escalar) ?? [];
   const minoristas = opciones.filter((o) => o.mercado.nivelPrecio === "minorista");
@@ -190,36 +207,6 @@ export function PaginaPrecios({ contenedor, usuario = null }: { contenedor: Cont
         </section>
       )}
 
-      {mapa.datos && (
-        <section className="honestidad" aria-label="De dónde salen estos precios">
-          <p>
-            <strong>{mapa.datos.resumen.estimados}</strong> puntos con precio{" "}
-            <span className="procedencia procedencia--estimado">◌ estimado</span> desde el precio de
-            referencia de la ciudad, <strong>{mapa.datos.resumen.observados}</strong> con precio{" "}
-            <span className="procedencia procedencia--observado">● observado</span> en el lugar
-            {mapa.datos.resumen.sinDatos > 0 && (
-              <>
-                , y <strong>{mapa.datos.resumen.sinDatos}</strong> sin precio para este producto
-              </>
-            )}
-            .
-          </p>
-          {ofertas.length > 0 && (
-            <p className="honestidad__oferta">
-              Hoy {ofertas.length === 1 ? "hay una oferta" : `hay ${ofertas.length} ofertas`} de caseros para este
-              producto (anillo dorado en el mapa). <a href="#/ofertas">Ver todas las ofertas</a>
-            </p>
-          )}
-          {mapa.datos.resumen.observados === 0 && mapa.datos.resumen.estimados > 0 && (
-            <p className="honestidad__aviso">
-              Todavía nadie verificó este precio en ningún mercado concreto: todos son estimaciones a
-              partir del boletín oficial de la ciudad. Cuando haya mediciones en campo, van a aparecer
-              como observadas.
-            </p>
-          )}
-        </section>
-      )}
-
       {(mapa.cargando || comparativa.cargando) && <p className="estado">Consultando precios…</p>}
 
       {(mapa.error || comparativa.error) && (
@@ -244,6 +231,8 @@ export function PaginaPrecios({ contenedor, usuario = null }: { contenedor: Cont
             <PanelPunto
               marcador={marcadorSeleccionado}
               producto={productoActual}
+              presentacion={presentacion}
+              resumen={resumen}
               ofertas={ofertas.filter((o) => o.codigoMercado === seleccionado)}
               contenedor={contenedor}
               usuario={usuario}
@@ -291,27 +280,12 @@ export function PaginaPrecios({ contenedor, usuario = null }: { contenedor: Cont
               <strong>Bs {ahorroPosible(minoristas).toFixed(2)}</strong> de diferencia.
             </p>
           )}
-          <div className="lista">
-            {minoristas.map((item, i) => {
-              // Con quién no se puede distinguir este precio: la diferencia es
-              // menor que la incertidumbre. Entre empatados no se destaca a nadie.
-              const empataCon = minoristas
-                .filter((otro, j) => j !== i && (i === 0 || j === 0) && empatan(item.precio.rango, otro.precio.rango))
-                .map((otro) => otro.mercado.nombre);
-              return (
-                <TarjetaMercado
-                  key={item.mercado.codigo}
-                  item={item}
-                  // "Más conveniente" solo si se midió ahí, es reciente y gana
-                  // de verdad: entre estimaciones o empates no hay a quién destacar.
-                  destacado={
-                    i === 0 && item.precio.procedencia === "observado" && !esPrecioViejo(item.precio) && empataCon.length === 0
-                  }
-                  empataCon={empataCon}
-                />
-              );
-            })}
-          </div>
+          {minoristas.some((o) => publicaRango(o.mercado.tipo)) && (
+            <p className="tenue lista__nota">
+              En los mercados el precio cambia de un puesto a otro: por eso se muestra un rango y no un solo número.
+            </p>
+          )}
+          <ListaDePrecios items={minoristas} conDestacado />
 
           {mayoristas.length > 0 && (
             <>
@@ -320,16 +294,95 @@ export function PaginaPrecios({ contenedor, usuario = null }: { contenedor: Cont
                 Es otro nivel de la cadena: se compra por bulto, para revender. No compite con los de
                 arriba.
               </p>
-              <div className="lista">
-                {mayoristas.map((item) => (
-                  <TarjetaMercado key={item.mercado.codigo} item={item} />
-                ))}
-              </div>
+              <ListaDePrecios items={mayoristas} />
             </>
           )}
         </>
       )}
     </>
+  );
+}
+
+/**
+ * Los lugares de una lista de precios. Los que tienen exactamente el mismo
+ * precio estimado van juntos en una sola tarjeta: 88 tarjetas idénticas no
+ * dicen más que una. Lo medido en un lugar siempre va aparte.
+ */
+function ListaDePrecios({ items, conDestacado = false }: { items: readonly PrecioEnMercado[]; conDestacado?: boolean }) {
+  // Con quién no se puede distinguir cada precio: la diferencia es menor que
+  // la incertidumbre. Entre empatados no se destaca a nadie.
+  const empates = new Map<string, string[]>();
+  items.forEach((item, i) => {
+    empates.set(
+      item.mercado.codigo,
+      items
+        .filter((otro, j) => j !== i && (i === 0 || j === 0) && empatan(item.precio.rango, otro.precio.rango))
+        .map((otro) => otro.mercado.nombre),
+    );
+  });
+  return (
+    <div className="lista">
+      {agruparPorPrecio(items).map((grupo) => {
+        const [primero] = grupo.items;
+        if (grupo.items.length > 1) return <TarjetaGrupo key={grupo.clave} items={grupo.items} />;
+        const empataCon = empates.get(primero.mercado.codigo) ?? [];
+        return (
+          <TarjetaMercado
+            key={grupo.clave}
+            item={primero}
+            // "Más conveniente" solo si se midió ahí, es reciente y gana de
+            // verdad: entre estimaciones o empates no hay a quién destacar.
+            destacado={
+              conDestacado &&
+              primero === items[0] &&
+              primero.precio.procedencia === "observado" &&
+              !esPrecioViejo(primero.precio) &&
+              empataCon.length === 0
+            }
+            empataCon={grupo.items.length === 1 && primero.precio.procedencia === "observado" ? empataCon : []}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+/** Varios lugares con el mismo precio estimado, en una sola tarjeta con sus nombres. */
+function TarjetaGrupo({ items }: { items: readonly PrecioEnMercado[] }) {
+  const { precio, mercado } = items[0];
+  const rango = publicaRango(mercado.tipo);
+  return (
+    <article className={`tarjeta tarjeta--estimado tarjeta--grupo${esPrecioViejo(precio) ? " precio--viejo" : ""}`}>
+      <header className="tarjeta__cabecera">
+        <div>
+          <h3 className="tarjeta__nombre">{items.length} lugares con el mismo precio</h3>
+          <p className="tarjeta__zona">
+            Nadie lo midió en ninguno de ellos: todos salen del precio de la ciudad.
+          </p>
+        </div>
+        <Procedencia valor="estimado" />
+      </header>
+      <p className="tarjeta__precio">
+        {rango ? (
+          <>
+            Bs {precio.rango.minimo.toFixed(2)} <span className="tenue">a</span> {precio.rango.maximo.toFixed(2)}
+          </>
+        ) : (
+          <>Bs {precio.rango.centro.toFixed(2)}</>
+        )}
+        <span className="tarjeta__unidad"> por {precio.unidad}</span>
+      </p>
+      <details className="tarjeta__lugares">
+        <summary>Ver los {items.length} lugares</summary>
+        <ul className="lugares">
+          {items.map((x) => (
+            <li key={x.mercado.codigo}>
+              <a href={hrefMercado(x.mercado.codigo)}>{x.mercado.nombre}</a>
+            </li>
+          ))}
+        </ul>
+      </details>
+    </article>
   );
 }
 

@@ -216,3 +216,29 @@ def entrada_directorio_a_salida(x) -> e.EntradaDirectorioSalida:
     return e.EntradaDirectorioSalida(
         mercado=mercado_a_salida(x.mercado), puestos=x.puestos, ofertas=x.ofertas, sectores=x.sectores,
     )
+
+
+def plan_verificacion_a_salida(plan) -> e.PlanVerificacionSalida:
+    return e.PlanVerificacionSalida(
+        fecha=plan.fecha,
+        productos=[
+            e.PrioridadProductoSalida(
+                producto=producto_a_salida(p.producto), puntaje=p.puntaje, lugares_sin_dato=p.lugares_sin_dato,
+                lugares_con_dato_viejo=p.lugares_con_dato_viejo, lugares_al_dia=p.lugares_al_dia,
+                cambio_mensual=p.cambio_mensual, ancho_relativo=p.ancho_relativo, motivos=p.motivos,
+            )
+            for p in plan.productos
+        ],
+        lugares=[
+            e.LugarPorVisitarSalida(mercado=mercado_a_salida(x.mercado), productos_al_dia=x.productos_al_dia,
+                                    productos_total=x.productos_total)
+            for x in plan.lugares
+        ],
+        variaciones=[
+            e.VariacionProductoSalida(
+                producto=producto_a_salida(v.producto), cambio_mensual=v.cambio_mensual,
+                mayor_subida=v.mayor_subida, mayor_bajada=v.mayor_bajada, meses=v.meses, nivel=v.nivel,
+            )
+            for v in plan.variaciones
+        ],
+    )

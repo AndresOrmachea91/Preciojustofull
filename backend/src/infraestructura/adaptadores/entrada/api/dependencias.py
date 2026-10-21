@@ -58,6 +58,7 @@ from src.aplicacion.casos_uso.vendedor.mi_puesto import MiPuestoCasoUso
 from src.aplicacion.casos_uso.vendedor.ofertas import OfertasDelCasero
 from src.aplicacion.casos_uso.precios.ofertas_vigentes import VerOfertasVigentes
 from src.aplicacion.casos_uso.precios.ficha_mercado import DirectorioMercados, FichaMercado
+from src.aplicacion.casos_uso.precios.priorizar_verificaciones import PriorizarVerificaciones
 from src.aplicacion.casos_uso.usuario.confirmar_oferta import ConfirmarOferta
 from src.aplicacion.casos_uso.administracion.revisar_ofertas import RevisarOfertas
 from src.infraestructura.adaptadores.salida.memoria.puestos_y_ofertas import OfertasEnMemoria, PuestosEnMemoria
@@ -275,6 +276,11 @@ def caso_ficha_mercado() -> FichaMercado:
     p, m, o = _repositorios()
     return FichaMercado(p, m, o, obtener_motor(), _puestos_y_ofertas()[0], caso_ofertas_vigentes(),
                         reloj=hoy_en_bolivia)
+
+
+def caso_priorizar_verificaciones() -> PriorizarVerificaciones:
+    p, m, o = _repositorios()
+    return PriorizarVerificaciones(p, m, o, obtener_motor(), reloj=hoy_en_bolivia)
 
 
 def caso_directorio_mercados() -> DirectorioMercados:

@@ -4,6 +4,7 @@ from typing import Literal
 from fastapi import APIRouter, Depends
 
 from src.infraestructura.adaptadores.entrada.api import esquemas as e
+from src.infraestructura.adaptadores.entrada.api.cache_fichas import olvidar
 from src.infraestructura.adaptadores.entrada.api.dependencias import caso_validar_reportes
 from src.infraestructura.adaptadores.entrada.api.mapeo import reporte_a_salida
 from src.infraestructura.adaptadores.entrada.api.seguridad import usuario_actual
@@ -21,7 +22,10 @@ def listar(estado: Literal["pendiente", "aprobado", "rechazado", "todos"] = "pen
 
 @router.post("/{id_reporte}/aprobar", response_model=e.ReporteRevisionSalida)
 def aprobar(id_reporte: int, actor=Depends(usuario_actual), caso=Depends(caso_validar_reportes)):
-    return reporte_a_salida(caso.aprobar(actor, id_reporte))
+    aprobado = reporte_a_salida(caso.aprobar(actor, id_reporte))
+    # El reporte aprobado ya es una observación: las fichas guardadas quedan viejas.
+    olvidar()
+    return aprobado
 
 
 @router.post("/{id_reporte}/rechazar", response_model=e.ReporteRevisionSalida)

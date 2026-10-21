@@ -1,4 +1,4 @@
-import type { ResultadoImportacion, SaludSistema } from "@/dominio/modelo";
+import { presentacionBase, type PlanDeVerificacion, type ResultadoImportacion, type SaludSistema } from "@/dominio/modelo";
 import type { OperacionRepositorio } from "@/aplicacion/puertos";
 
 /** Las columnas de la planilla de campo, en el orden de la plantilla. Las 5 primeras son obligatorias. */
@@ -16,6 +16,26 @@ export const PLANTILLA_CAMPO = [
   "2026-10-18;rodriguez;tomate;60;arroba;;;ana;pagado;22",
   "",
 ].join("\n");
+
+/**
+ * La planilla de la próxima ronda (A4230): los productos que más conviene
+ * medir en los lugares menos cubiertos, con el monto en blanco para llenarlo
+ * en el mercado. Se importa con la misma planilla de campo.
+ */
+export function planillaDeLaRonda(
+  plan: PlanDeVerificacion,
+  { productos = 10, lugares = 6, fecha }: { productos?: number; lugares?: number; fecha: string },
+): string {
+  const filas = [COLUMNAS_CAMPO.join(";")];
+  const elegidos = plan.productos.filter((p) => p.puntaje > 0).slice(0, productos);
+  for (const lugar of plan.lugares.slice(0, lugares)) {
+    for (const p of elegidos) {
+      const presentacion = presentacionBase(p.producto).codigo;
+      filas.push([fecha, lugar.mercado.codigo, p.producto.codigo, "", presentacion, "", "", "", "cotizado", ""].join(";"));
+    }
+  }
+  return `${filas.join("\n")}\n`;
+}
 
 const LIMITE_BYTES = 2_000_000;
 

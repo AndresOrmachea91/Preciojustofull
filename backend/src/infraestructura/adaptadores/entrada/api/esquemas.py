@@ -584,3 +584,38 @@ class EntradaDirectorioSalida(BaseModel):
     puestos: int
     ofertas: int
     sectores: int
+
+
+# --- qué medir primero y cuánto varía cada producto (A4230, A5020) ----------------
+
+class VariacionProductoSalida(BaseModel):
+    producto: ProductoSalida
+    cambio_mensual: float
+    mayor_subida: float
+    mayor_bajada: float
+    meses: int
+    nivel: str
+
+
+class PrioridadProductoSalida(BaseModel):
+    producto: ProductoSalida
+    puntaje: float
+    lugares_sin_dato: int
+    lugares_con_dato_viejo: int
+    lugares_al_dia: int
+    cambio_mensual: float | None
+    ancho_relativo: float | None
+    motivos: list[str]
+
+
+class LugarPorVisitarSalida(BaseModel):
+    mercado: MercadoSalida
+    productos_al_dia: int
+    productos_total: int
+
+
+class PlanVerificacionSalida(BaseModel):
+    fecha: date
+    productos: list[PrioridadProductoSalida]
+    lugares: list[LugarPorVisitarSalida]
+    variaciones: list[VariacionProductoSalida]

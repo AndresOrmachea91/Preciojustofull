@@ -35,6 +35,7 @@ import type {
   ReporteEnRevision,
   Rol,
   Usuario,
+  PlanDeVerificacion,
 } from "@/dominio/modelo";
 
 export interface PrecioRepositorio {
@@ -185,6 +186,8 @@ export interface OperacionRepositorio {
 export interface MercadosRepositorio {
   directorio(): Promise<EntradaDirectorio[]>;
   ficha(codigoMercado: string): Promise<FichaMercado>;
+  /** Qué conviene medir primero y cuánto se mueve cada precio (A4230, A5020). */
+  verificaciones(): Promise<PlanDeVerificacion>;
 }
 
 /** Las ofertas vigentes (públicas) y el "¿Lo viste así?" de quien tiene sesión. */

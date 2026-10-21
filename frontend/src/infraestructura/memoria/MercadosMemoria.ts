@@ -8,6 +8,7 @@ import type {
   AlmacenSesion,
   CatalogoRepositorio,
   DatosPuesto,
+  HistorialRepositorio,
   MercadosRepositorio,
   NuevaOferta,
   OfertasRepositorio,
@@ -22,6 +23,9 @@ import {
   type MiOferta,
   type Oferta,
   type OfertaEnRevision,
+  type PlanDeVerificacion,
+  type PrioridadDeProducto,
+  type VariacionDeProducto,
   type PrecioDeProducto,
   type PrecioDelPuesto,
   type Puesto,
@@ -74,7 +78,7 @@ export class MercadosMemoria
   constructor(
     private readonly almacen: AlmacenSesion,
     private readonly catalogo: CatalogoRepositorio,
-    private readonly precios: PrecioRepositorio,
+    private readonly precios: PrecioRepositorio & HistorialRepositorio,
     private readonly ahora: () => number = () => Date.now(),
   ) {
     const t = this.ahora();
@@ -95,6 +99,59 @@ export class MercadosMemoria
       ofertas: vigentes.filter((o) => o.codigoMercado === m.codigo).length,
       sectores: mercados.filter((x) => x.codigoPadre === m.codigo).length,
     }));
+  }
+
+  /**
+   * La misma regla que el backend, más corta: incertidumbre (cuánto se mueve
+   * el precio de la ciudad + ancho del rango) por la parte de lugares sin
+   * un dato medido.
+   */
+  async verificaciones(): Promise<PlanDeVerificacion> {
+    const mercados = (await this.catalogo.mercados()).filter((m) => m.nivelPrecio === "minorista");
+    const productos = await this.catalogo.productos();
+    const prioridades: PrioridadDeProducto[] = [];
+    const variaciones: VariacionDeProducto[] = [];
+    const alDia = new Map<string, number>();
+    for (const producto of productos) {
+      const serie = (await this.precios.historial(producto.codigo)).puntos.filter((x) => x.nivel === "minorista");
+      const cambios = serie.slice(1).map((x, i) => x.precio / serie[i].precio - 1);
+      const cambio = cambios.length >= 2 ? cambios.reduce((s, c) => s + Math.abs(c), 0) / cambios.length : null;
+      if (cambio !== null) {
+        variaciones.push({
+          producto,
+          cambioMensual: Math.round(cambio * 10_000) / 10_000,
+          mayorSubida: Math.max(0, ...cambios),
+          mayorBajada: Math.min(0, ...cambios),
+          meses: serie.length,
+          nivel: "minorista",
+        });
+      }
+      const precios = (await this.precios.compararMercados(producto.codigo)).filter((x) => x.mercado.nivelPrecio === "minorista");
+      const medidos = precios.filter((x) => x.precio.procedencia === "observado");
+      for (const x of medidos) alDia.set(x.mercado.codigo, (alDia.get(x.mercado.codigo) ?? 0) + 1);
+      const referencia = precios[0]?.precio.rango;
+      const ancho = referencia && referencia.centro ? (referencia.maximo - referencia.minimo) / referencia.centro : null;
+      const sinDato = mercados.length - medidos.length;
+      const faltante = mercados.length ? sinDato / mercados.length : 0;
+      prioridades.push({
+        producto,
+        puntaje: Math.round(((cambio ?? 0) + (ancho ?? 0)) * faltante * 10_000) / 10_000,
+        lugaresSinDato: sinDato,
+        lugaresConDatoViejo: 0,
+        lugaresAlDia: medidos.length,
+        cambioMensual: cambio,
+        anchoRelativo: ancho,
+        motivos: medidos.length === 0 ? ["nadie lo midió todavía en ningún lugar"] : [`sin medir en ${sinDato} de ${mercados.length} lugares`],
+      });
+    }
+    return {
+      fecha: new Date(this.ahora()).toISOString().slice(0, 10),
+      productos: prioridades.sort((a, b) => b.puntaje - a.puntaje || a.producto.nombre.localeCompare(b.producto.nombre)),
+      lugares: mercados
+        .map((m) => ({ mercado: m, productosAlDia: alDia.get(m.codigo) ?? 0, productosTotal: productos.length }))
+        .sort((a, b) => a.productosAlDia - b.productosAlDia || a.mercado.nombre.localeCompare(b.mercado.nombre)),
+      variaciones: variaciones.sort((a, b) => b.cambioMensual - a.cambioMensual),
+    };
   }
 
   async ficha(codigoMercado: string): Promise<FichaMercado> {

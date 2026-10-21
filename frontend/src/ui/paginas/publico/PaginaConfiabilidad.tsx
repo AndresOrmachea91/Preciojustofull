@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 
-import { lecturaDelSesgo, porcentaje, type EvaluacionEstimador } from "@/dominio/modelo";
+import { lecturaDelSesgo, porcentaje, type EvaluacionEstimador, type PlanDeVerificacion } from "@/dominio/modelo";
 import type { Contenedor } from "@/infraestructura/contenedor";
 import { MensajeError, textoDeError } from "@/ui/componentes/Mensajes";
+import { QueFaltaMedir, VariacionPorProducto } from "@/ui/componentes/PlanVerificacion";
 import { fechaCorta } from "@/ui/formato";
 
 /**
@@ -16,9 +17,17 @@ export function PaginaConfiabilidad({ contenedor }: { contenedor: Contenedor }) 
   const [ev, setEv] = useState<EvaluacionEstimador | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Qué falta medir y cuánto se mueve cada precio (A4230, A5020): sale aparte,
+  // así un fallo de una parte no deja en blanco la otra.
+  const [plan, setPlan] = useState<PlanDeVerificacion | null>(null);
+
   useEffect(() => {
     contenedor.verConfiabilidad.ejecutar().then(setEv, (e) => setError(textoDeError(e)));
+    contenedor.mercados.verificaciones().then(setPlan, () => setPlan(null));
   }, [contenedor]);
+
+  const medidos = plan ? plan.productos.reduce((s, p) => s + p.lugaresAlDia, 0) : 0;
+  const posibles = plan ? plan.productos.length * plan.lugares.length : 0;
 
   return (
     <section aria-labelledby="titulo-confiabilidad" className="confiabilidad">
@@ -31,6 +40,14 @@ export function PaginaConfiabilidad({ contenedor }: { contenedor: Contenedor }) 
         precio que alguien <strong>sí midió</strong>, se calcula lo que el sistema habría estimado sin mirarlo, y se
         comparan los dos.
       </p>
+
+      {plan && posibles > 0 && (
+        <p className="confiabilidad__cobertura">
+          Hoy <strong>{medidos > 0 && medidos / posibles < 0.01 ? "menos del 1 %" : porcentaje(medidos / posibles, 0)}</strong> de los precios del mapa salen de una medición en el
+          lugar ({medidos} de {posibles} combinaciones de producto y lugar). El resto es estimado, y eso se muestra en
+          cada precio.
+        </p>
+      )}
 
       <MensajeError texto={error} />
       {!ev && !error && <p className="estado">Calculando…</p>}
@@ -148,6 +165,13 @@ export function PaginaConfiabilidad({ contenedor }: { contenedor: Contenedor }) 
             anteriores; las mediciones nuevas son la prueba fuera de muestra.
           </p>
         </>
+      )}
+
+      {plan && (
+        <div className="confiabilidad__plan">
+          <QueFaltaMedir plan={plan} />
+          <VariacionPorProducto plan={plan} />
+        </div>
       )}
     </section>
   );

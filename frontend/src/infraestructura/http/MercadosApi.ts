@@ -9,12 +9,43 @@ import type {
   FichaMercado,
   Oferta,
   OfertaEnRevision,
+  PlanDeVerificacion,
   Puesto,
   ResultadoConfirmacion,
   UnidadBase,
 } from "@/dominio/modelo";
 import type { ClienteHttp } from "@/infraestructura/http/clienteHttp";
-import { aMercado, aPrecio, type MercadoDto, type PrecioDto } from "@/infraestructura/http/PreciosApi";
+import {
+  aMercado,
+  aPrecio,
+  aProducto,
+  type MercadoDto,
+  type PrecioDto,
+  type ProductoDto,
+} from "@/infraestructura/http/PreciosApi";
+
+interface PlanDto {
+  fecha: string;
+  productos: {
+    producto: ProductoDto;
+    puntaje: number;
+    lugares_sin_dato: number;
+    lugares_con_dato_viejo: number;
+    lugares_al_dia: number;
+    cambio_mensual: number | null;
+    ancho_relativo: number | null;
+    motivos: string[];
+  }[];
+  lugares: { mercado: MercadoDto; productos_al_dia: number; productos_total: number }[];
+  variaciones: {
+    producto: ProductoDto;
+    cambio_mensual: number;
+    mayor_subida: number;
+    mayor_bajada: number;
+    meses: number;
+    nivel: "minorista" | "mayorista";
+  }[];
+}
 
 export interface PuestoDto {
   id: number | null;
@@ -186,6 +217,36 @@ export class MercadosApi implements MercadosRepositorio, OfertasRepositorio, Rev
 
   async ficha(codigoMercado: string): Promise<FichaMercado> {
     return aFicha(await this.http.get<FichaDto>(`/mercados/${encodeURIComponent(codigoMercado)}/ficha`));
+  }
+
+  async verificaciones(): Promise<PlanDeVerificacion> {
+    const d = await this.http.get<PlanDto>("/verificaciones");
+    return {
+      fecha: d.fecha,
+      productos: d.productos.map((p) => ({
+        producto: aProducto(p.producto),
+        puntaje: p.puntaje,
+        lugaresSinDato: p.lugares_sin_dato,
+        lugaresConDatoViejo: p.lugares_con_dato_viejo,
+        lugaresAlDia: p.lugares_al_dia,
+        cambioMensual: p.cambio_mensual,
+        anchoRelativo: p.ancho_relativo,
+        motivos: p.motivos,
+      })),
+      lugares: d.lugares.map((x) => ({
+        mercado: aMercado(x.mercado),
+        productosAlDia: x.productos_al_dia,
+        productosTotal: x.productos_total,
+      })),
+      variaciones: d.variaciones.map((v) => ({
+        producto: aProducto(v.producto),
+        cambioMensual: v.cambio_mensual,
+        mayorSubida: v.mayor_subida,
+        mayorBajada: v.mayor_bajada,
+        meses: v.meses,
+        nivel: v.nivel,
+      })),
+    };
   }
 
   async vigentes(filtro?: { mercado?: string; producto?: string }): Promise<Oferta[]> {
