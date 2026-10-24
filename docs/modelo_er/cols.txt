@@ -1,0 +1,202 @@
+confirmacion_oferta|id|integer|NO|1
+confirmacion_oferta|id_oferta|integer|NO|2
+confirmacion_oferta|id_usuario|integer|NO|3
+confirmacion_oferta|la_vio_asi|boolean|NO|4
+confirmacion_oferta|creado_en|timestamp with time zone|NO|5
+confirmacion_oferta|creado_por|character varying|NO|6
+confirmacion_oferta|modificado_en|timestamp with time zone|YES|7
+confirmacion_oferta|modificado_por|character varying|YES|8
+confirmacion_oferta|eliminado|boolean|NO|9
+corrida_fuente|id|integer|NO|1
+corrida_fuente|fuente|character varying|NO|2
+corrida_fuente|codigo_producto|character varying|NO|3
+corrida_fuente|hechos_vistos|integer|NO|4
+corrida_fuente|hechos_nuevos|integer|NO|5
+corrida_fuente|ocurrido_en|timestamp with time zone|NO|6
+corrida_fuente|creado_en|timestamp with time zone|NO|7
+corrida_fuente|creado_por|character varying|NO|8
+corrida_fuente|modificado_en|timestamp with time zone|YES|9
+corrida_fuente|modificado_por|character varying|YES|10
+corrida_fuente|eliminado|boolean|NO|11
+fuente|codigo|character varying|NO|1
+fuente|nombre|character varying|NO|2
+fuente|descripcion|character varying|NO|3
+fuente|confianza_base|character varying|NO|4
+fuente|deriva_de|character varying|YES|5
+fuente|automatica|boolean|NO|6
+fuente|url|character varying|YES|7
+fuente|creado_en|timestamp with time zone|NO|8
+fuente|creado_por|character varying|NO|9
+fuente|modificado_en|timestamp with time zone|YES|10
+fuente|modificado_por|character varying|YES|11
+fuente|eliminado|boolean|NO|12
+intento_fuente|id|integer|NO|1
+intento_fuente|fuente|character varying|NO|2
+intento_fuente|url|character varying|YES|3
+intento_fuente|exito|integer|NO|4
+intento_fuente|duracion_ms|integer|YES|5
+intento_fuente|detalle|character varying|YES|6
+intento_fuente|ocurrido_en|timestamp with time zone|NO|7
+intento_fuente|creado_en|timestamp with time zone|NO|8
+intento_fuente|creado_por|character varying|NO|9
+intento_fuente|modificado_en|timestamp with time zone|YES|10
+intento_fuente|modificado_por|character varying|YES|11
+intento_fuente|eliminado|boolean|NO|12
+item_lista_compras|id|integer|NO|1
+item_lista_compras|id_lista|integer|NO|2
+item_lista_compras|codigo_producto|character varying|NO|3
+item_lista_compras|cantidad|double precision|NO|4
+item_lista_compras|presentacion|character varying|NO|5
+item_lista_compras|creado_en|timestamp with time zone|NO|6
+item_lista_compras|creado_por|character varying|NO|7
+item_lista_compras|modificado_en|timestamp with time zone|YES|8
+item_lista_compras|modificado_por|character varying|YES|9
+item_lista_compras|eliminado|boolean|NO|10
+lista_compras|id|integer|NO|1
+lista_compras|id_usuario|integer|NO|2
+lista_compras|nombre|character varying|NO|3
+lista_compras|creado_en|timestamp with time zone|NO|4
+lista_compras|creado_por|character varying|NO|5
+lista_compras|modificado_en|timestamp with time zone|YES|6
+lista_compras|modificado_por|character varying|YES|7
+lista_compras|eliminado|boolean|NO|8
+mercado|codigo|character varying|NO|1
+mercado|nombre|character varying|NO|2
+mercado|tipo|character varying|NO|3
+mercado|zona|character varying|NO|4
+mercado|latitud|double precision|YES|5
+mercado|longitud|double precision|YES|6
+mercado|factor_mercado|double precision|NO|7
+mercado|macrodistrito|character varying|NO|8
+mercado|codigo_padre|character varying|YES|9
+mercado|creado_en|timestamp with time zone|NO|10
+mercado|creado_por|character varying|NO|11
+mercado|modificado_en|timestamp with time zone|YES|12
+mercado|modificado_por|character varying|YES|13
+mercado|eliminado|boolean|NO|14
+observacion_precio|id|integer|NO|1
+observacion_precio|fuente|character varying|NO|2
+observacion_precio|nivel|character varying|NO|3
+observacion_precio|codigo_producto|character varying|NO|4
+observacion_precio|codigo_mercado|character varying|YES|5
+observacion_precio|anio|integer|NO|6
+observacion_precio|mes|integer|YES|7
+observacion_precio|dia|integer|YES|8
+observacion_precio|precio_monto|double precision|NO|9
+observacion_precio|unidad_texto|character varying|NO|10
+observacion_precio|precio_canonico|double precision|YES|11
+observacion_precio|unidad_canonica|character varying|YES|12
+observacion_precio|reputacion_informante|double precision|NO|13
+observacion_precio|capturada_en|timestamp with time zone|NO|14
+observacion_precio|ambito|character varying|NO|15
+observacion_precio|cantidad|double precision|NO|16
+observacion_precio|variedad|character varying|NO|17
+observacion_precio|fecha_observacion|date|YES|18
+observacion_precio|tipo_precio|character varying|NO|19
+observacion_precio|evidencia|character varying|YES|20
+observacion_precio|ultima_captura_en|timestamp with time zone|YES|21
+observacion_precio|revisa_a|integer|YES|22
+observacion_precio|ciudad|character varying|YES|23
+observacion_precio|creado_en|timestamp with time zone|NO|24
+observacion_precio|creado_por|character varying|NO|25
+observacion_precio|modificado_en|timestamp with time zone|YES|26
+observacion_precio|modificado_por|character varying|YES|27
+observacion_precio|eliminado|boolean|NO|28
+observacion_precio|informante|character varying|YES|29
+observacion_precio|puesto|character varying|YES|30
+oferta|id|integer|NO|1
+oferta|id_vendedor|integer|NO|2
+oferta|codigo_mercado|character varying|NO|3
+oferta|numero_puesto|character varying|YES|4
+oferta|codigo_producto|character varying|NO|5
+oferta|monto|double precision|NO|6
+oferta|presentacion|character varying|NO|7
+oferta|precio_por_unidad_base|double precision|NO|8
+oferta|desde|timestamp with time zone|NO|9
+oferta|hasta|timestamp with time zone|NO|10
+oferta|nota|character varying|NO|11
+oferta|estado|character varying|NO|12
+oferta|creado_en|timestamp with time zone|NO|13
+oferta|creado_por|character varying|NO|14
+oferta|modificado_en|timestamp with time zone|YES|15
+oferta|modificado_por|character varying|YES|16
+oferta|eliminado|boolean|NO|17
+permiso|codigo|character varying|NO|1
+permiso|descripcion|character varying|NO|2
+permiso|creado_en|timestamp with time zone|NO|3
+permiso|creado_por|character varying|NO|4
+permiso|modificado_en|timestamp with time zone|YES|5
+permiso|modificado_por|character varying|YES|6
+permiso|eliminado|boolean|NO|7
+producto|codigo|character varying|NO|1
+producto|nombre|character varying|NO|2
+producto|categoria|character varying|NO|3
+producto|dias_conservacion|integer|NO|4
+producto|zona_origen|character varying|YES|5
+producto|unidad_base|character varying|NO|6
+producto|creado_en|timestamp with time zone|NO|7
+producto|creado_por|character varying|NO|8
+producto|modificado_en|timestamp with time zone|YES|9
+producto|modificado_por|character varying|YES|10
+producto|eliminado|boolean|NO|11
+producto|presentaciones|character varying|YES|12
+puesto|id|integer|NO|1
+puesto|codigo_mercado|character varying|NO|2
+puesto|numero|character varying|NO|3
+puesto|nombre|character varying|NO|4
+puesto|rubros|character varying|NO|5
+puesto|referencia|character varying|NO|6
+puesto|id_vendedor|integer|YES|7
+puesto|creado_en|timestamp with time zone|NO|8
+puesto|creado_por|character varying|NO|9
+puesto|modificado_en|timestamp with time zone|YES|10
+puesto|modificado_por|character varying|YES|11
+puesto|eliminado|boolean|NO|12
+reporte_precio|id|integer|NO|1
+reporte_precio|codigo_producto|character varying|NO|2
+reporte_precio|codigo_mercado|character varying|NO|3
+reporte_precio|monto|double precision|NO|4
+reporte_precio|unidad|character varying|NO|5
+reporte_precio|id_autor|integer|NO|6
+reporte_precio|creado_en|timestamp with time zone|NO|7
+reporte_precio|estado|character varying|NO|8
+reporte_precio|id_revisor|integer|YES|9
+reporte_precio|revisado_en|timestamp with time zone|YES|10
+reporte_precio|motivo_rechazo|character varying|YES|11
+reporte_precio|creado_por|character varying|NO|12
+reporte_precio|modificado_en|timestamp with time zone|YES|13
+reporte_precio|modificado_por|character varying|YES|14
+reporte_precio|eliminado|boolean|NO|15
+rol|codigo|character varying|NO|1
+rol|nombre|character varying|NO|2
+rol|descripcion|character varying|NO|3
+rol|creado_en|timestamp with time zone|NO|4
+rol|creado_por|character varying|NO|5
+rol|modificado_en|timestamp with time zone|YES|6
+rol|modificado_por|character varying|YES|7
+rol|eliminado|boolean|NO|8
+rol_permiso|codigo_rol|character varying|NO|1
+rol_permiso|codigo_permiso|character varying|NO|2
+rol_permiso|creado_en|timestamp with time zone|NO|3
+rol_permiso|creado_por|character varying|NO|4
+rol_permiso|modificado_en|timestamp with time zone|YES|5
+rol_permiso|modificado_por|character varying|YES|6
+rol_permiso|eliminado|boolean|NO|7
+usuario|id|integer|NO|1
+usuario|correo|character varying|NO|2
+usuario|nombre|character varying|NO|3
+usuario|rol|character varying|NO|4
+usuario|hash_contrasena|character varying|NO|5
+usuario|activo|boolean|NO|6
+usuario|creado_en|timestamp with time zone|NO|7
+usuario|creado_por|character varying|NO|9
+usuario|modificado_en|timestamp with time zone|YES|10
+usuario|modificado_por|character varying|YES|11
+usuario|eliminado|boolean|NO|12
+vendedor|id_usuario|integer|NO|1
+vendedor|codigo_punto_venta|character varying|YES|2
+vendedor|creado_en|timestamp with time zone|NO|3
+vendedor|creado_por|character varying|NO|4
+vendedor|modificado_en|timestamp with time zone|YES|5
+vendedor|modificado_por|character varying|YES|6
+vendedor|eliminado|boolean|NO|7
