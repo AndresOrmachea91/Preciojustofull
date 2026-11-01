@@ -1,9 +1,12 @@
 """
 Alta de cuentas.
 
-El registro público SIEMPRE crea un usuario común: nadie se nombra vendedor
-ni administrador a sí mismo. Las otras cuentas las crea un administrador,
-o el sistema desde la consola del servidor.
+El registro público crea un usuario común o, si la persona dice que vende,
+un vendedor (decisión 27): el casero se registra solo, elige su mercado y su
+puesto, y lo que publique sale marcado como "declarado por el vendedor" (el
+motor de fusión lo pesa así y el administrador lo puede retirar). Nadie se
+nombra administrador a sí mismo: esas cuentas las crea otro administrador o
+la consola del servidor.
 """
 from __future__ import annotations
 
@@ -21,8 +24,8 @@ class RegistrarUsuario:
         self._usuarios = usuarios
         self._cifrador = cifrador
 
-    def registrarse(self, correo: str, nombre: str, contrasena: str) -> Usuario:
-        return self._crear(correo, nombre, contrasena, Rol.USUARIO)
+    def registrarse(self, correo: str, nombre: str, contrasena: str, quiere_vender: bool = False) -> Usuario:
+        return self._crear(correo, nombre, contrasena, Rol.VENDEDOR if quiere_vender else Rol.USUARIO)
 
     def crear(self, actor: Usuario, correo: str, nombre: str, contrasena: str, rol: Rol) -> Usuario:
         exigir(actor, Permiso.GESTIONAR_USUARIOS)

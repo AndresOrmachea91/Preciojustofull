@@ -19,7 +19,8 @@ def registrarse(cuerpo: e.RegistroEntrada, peticion: Request, caso=Depends(caso_
     contar("registro:ip", ip_de(peticion))
     # En la auditoría, la cuenta queda "creada por autoregistro".
     with como_actor("autoregistro"):
-        return usuario_a_salida(caso.registrarse(cuerpo.correo, cuerpo.nombre, cuerpo.contrasena))
+        return usuario_a_salida(caso.registrarse(cuerpo.correo, cuerpo.nombre, cuerpo.contrasena,
+                                                 cuerpo.quiere_vender))
 
 
 @router.post("/ingresar", response_model=e.SesionSalida)

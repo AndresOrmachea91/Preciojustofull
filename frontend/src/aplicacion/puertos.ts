@@ -76,6 +76,8 @@ export interface NuevaCuenta {
   correo: string;
   nombre: string;
   contrasena: string;
+  /** Tiene un puesto o una distribuidora: la cuenta nace como vendedor (decisión 27). */
+  quiereVender?: boolean;
 }
 
 export interface SesionRepositorio {

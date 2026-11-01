@@ -23,6 +23,7 @@ export function PaginaIngreso({
 }) {
   const [correo, setCorreo] = useState("");
   const [nombre, setNombre] = useState("");
+  const [quiereVender, setQuiereVender] = useState(false);
   const [contrasena, setContrasena] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
@@ -35,7 +36,7 @@ export function PaginaIngreso({
       const usuario =
         modo === "ingresar"
           ? await sesion.ingresar(correo, contrasena)
-          : await sesion.registrarse({ correo, nombre, contrasena });
+          : await sesion.registrarse({ correo, nombre, contrasena, quiereVender });
       alIngresar(usuario);
     } catch (e) {
       setError(textoDeError(e));
@@ -88,6 +89,16 @@ export function PaginaIngreso({
           />
           {modo === "registrarse" && <small className="tenue">Al menos 8 caracteres, con letras y números.</small>}
         </label>
+
+        {modo === "registrarse" && (
+          <label className="casilla casilla--destacada">
+            <input type="checkbox" checked={quiereVender} onChange={(e) => setQuiereVender(e.target.checked)} />
+            <span>
+              <strong>Quiero vender</strong>
+              <small className="tenue">Tengo un puesto en un mercado o una distribuidora y quiero aparecer en el mapa.</small>
+            </span>
+          </label>
+        )}
 
         <MensajeError texto={error} />
 

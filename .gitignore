@@ -32,3 +32,6 @@ respaldos/
 
 # Secretos del servidor de producción
 docker/.env.produccion
+
+# Fotos de los puestos subidas en desarrollo (C137)
+backend/datos/fotos/

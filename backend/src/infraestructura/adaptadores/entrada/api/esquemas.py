@@ -237,6 +237,8 @@ class RegistroEntrada(BaseModel):
     correo: str = Field(max_length=255)
     nombre: str = Field(default="", max_length=255)
     contrasena: str = Field(min_length=1, max_length=128)
+    # El casero se registra solo como vendedor (decisión 27). Nunca administrador.
+    quiere_vender: bool = False
 
 
 class CrearUsuarioEntrada(RegistroEntrada):

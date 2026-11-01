@@ -178,7 +178,7 @@ export class CuentasMemoria
   }
 
   async registrarse(cuenta: NuevaCuenta): Promise<Usuario> {
-    return this.alta(cuenta, "usuario");
+    return this.alta(cuenta, cuenta.quiereVender ? "vendedor" : "usuario");
   }
 
   private alta(cuenta: NuevaCuenta, rol: Rol): Usuario {

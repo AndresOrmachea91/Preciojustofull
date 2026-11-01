@@ -705,3 +705,6 @@ a { text-underline-offset: 0.18em; }
 .ventana__agotado > span:first-child, .ventana__agotado .ventana__monto { color: var(--tenue); text-decoration: line-through; text-decoration-color: var(--borde); }
 .ventana__entrar { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--jade); text-decoration: none; }
 .ventana__entrar:hover { text-decoration: underline; }
+.casilla--destacada { align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--borde); background: var(--jade-claro); }
+.casilla--destacada input { margin-top: 4px; }
+.casilla--destacada > span { display: flex; flex-direction: column; gap: 2px; }

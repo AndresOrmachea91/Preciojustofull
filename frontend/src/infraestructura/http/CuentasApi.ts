@@ -138,7 +138,8 @@ export class CuentasApi
   }
 
   async registrarse(cuenta: NuevaCuenta): Promise<Usuario> {
-    return aUsuario(await this.http.post<UsuarioDto>("/auth/registro", cuenta));
+    const { quiereVender, ...resto } = cuenta;
+    return aUsuario(await this.http.post<UsuarioDto>("/auth/registro", { ...resto, quiere_vender: quiereVender ?? false }));
   }
 
   async yo(): Promise<Usuario> {

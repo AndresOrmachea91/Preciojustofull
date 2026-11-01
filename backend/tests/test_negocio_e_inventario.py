@@ -242,3 +242,17 @@ def test_la_api_no_sirve_rutas_raras_como_foto():
     cliente = TestClient(app)
     assert cliente.get("/api/v1/fotos/..%2F..%2F.env").status_code == 404
     assert cliente.get("/api/v1/fotos/noexiste.jpg").status_code == 404
+
+
+def test_el_casero_se_registra_solo_como_vendedor_pero_nunca_como_administrador():
+    cliente = TestClient(app)
+    r = cliente.post("/api/v1/auth/registro", json={
+        "correo": "casera.nueva@correo.bo", "nombre": "Casera", "contrasena": "puesto1234", "quiere_vender": True})
+    assert r.status_code == 201 and r.json()["rol"] == "vendedor"
+    r = cliente.post("/api/v1/auth/registro", json={
+        "correo": "vecina.nueva@correo.bo", "nombre": "Vecina", "contrasena": "vecina1234"})
+    assert r.status_code == 201 and r.json()["rol"] == "usuario"
+    # Un campo "rol" en el registro público no sirve para nada.
+    r = cliente.post("/api/v1/auth/registro", json={
+        "correo": "pillo@correo.bo", "nombre": "X", "contrasena": "pillo12345", "rol": "administrador"})
+    assert r.status_code == 201 and r.json()["rol"] == "usuario"
