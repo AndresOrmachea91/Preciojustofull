@@ -1,0 +1,21 @@
+{
+  "name": "PrecioJusto Bolivia",
+  "short_name": "PrecioJusto",
+  "description": "Precios de los mercados de La Paz con su procedencia, y el puesto del casero desde el celular.",
+  "lang": "es-BO",
+  "start_url": "/#/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eef3f0",
+  "theme_color": "#0e3b32",
+  "icons": [
+    { "src": "/icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Mi puesto", "url": "/#/mi-puesto", "icons": [{ "src": "/icono-192.png", "sizes": "192x192" }] },
+    { "name": "Precios", "url": "/#/", "icons": [{ "src": "/icono-192.png", "sizes": "192x192" }] }
+  ]
+}

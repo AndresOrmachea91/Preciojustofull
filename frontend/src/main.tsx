@@ -12,3 +12,11 @@ createRoot(contenedor).render(
     <App />
   </StrictMode>,
 );
+
+// Se puede instalar en el celular como una app (C137). Solo en la versión
+// construida: en desarrollo un service worker guardaría archivos viejos.
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    void navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+  });
+}
