@@ -20,6 +20,7 @@ import { PanelPunto, type ResumenDelMapa } from "@/ui/componentes/PanelPunto";
 import { Procedencia } from "@/ui/componentes/Procedencia";
 import { SelectorProducto } from "@/ui/componentes/SelectorProducto";
 import { TarjetaMercado } from "@/ui/componentes/TarjetaMercado";
+import { VentanaMercado } from "@/ui/componentes/VentanaMercado";
 import { useCercania } from "@/ui/hooks/useCercania";
 import { useComparativa } from "@/ui/hooks/useComparativa";
 import { useHistorial } from "@/ui/hooks/useHistorial";
@@ -227,6 +228,17 @@ export function PaginaPrecios({ contenedor, usuario = null }: { contenedor: Cont
               onSeleccionar={setSeleccionado}
               ubicacion={cercania.ubicacion}
               conOferta={conOferta}
+              ventana={(codigo, alCambiarTamano) => {
+                const marcador = marcadores.find((m) => m.mercado.codigo === codigo);
+                return marcador ? (
+                  <VentanaMercado
+                    contenedor={contenedor}
+                    marcador={marcador}
+                    producto={productoActual}
+                    alCambiarTamano={alCambiarTamano}
+                  />
+                ) : null;
+              }}
             />
             <PanelPunto
               marcador={marcadorSeleccionado}

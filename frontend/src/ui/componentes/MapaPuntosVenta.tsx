@@ -3,7 +3,8 @@
  * componente recibe los marcadores YA resueltos por el caso de uso VerMapa
  * y solo los pinta. No sabe de HTTP ni de repositorios.
  */
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -47,11 +48,23 @@ interface Props {
   readonly ubicacion?: Coordenadas | null;
   /** Códigos de los lugares con una oferta vigente del casero para este producto. */
   readonly conOferta?: ReadonlySet<string>;
+  /**
+   * Lo que se muestra en la ventana que se abre sobre el punto elegido (C137):
+   * sus puestos y precios. Recibe con qué avisar que cambió de tamaño.
+   */
+  readonly ventana?: (codigo: string, alCambiarTamano: () => void) => ReactNode;
 }
 
 const NINGUNO: ReadonlySet<string> = new Set();
 
-export function MapaPuntosVenta({ marcadores, seleccionado, onSeleccionar, ubicacion = null, conOferta = NINGUNO }: Props) {
+export function MapaPuntosVenta({
+  marcadores,
+  seleccionado,
+  onSeleccionar,
+  ubicacion = null,
+  conOferta = NINGUNO,
+  ventana,
+}: Props) {
   const contenedor = useRef<HTMLDivElement>(null);
   const mapa = useRef<L.Map | null>(null);
   const capa = useRef<L.LayerGroup | null>(null);
@@ -131,13 +144,40 @@ export function MapaPuntosVenta({ marcadores, seleccionado, onSeleccionar, ubica
     mapa.current.setView([ubicacion.latitud, ubicacion.longitud], 15);
   }, [ubicacion]);
 
+  // La ventana del punto elegido: un popup de Leaflet cuyo contenido dibuja
+  // React (createPortal), así puede cargar datos y usar los componentes de siempre.
+  const [nodoVentana, setNodoVentana] = useState<HTMLDivElement | null>(null);
+  const popup = useRef<L.Popup | null>(null);
+  const conVentana = ventana !== undefined;
+  useEffect(() => {
+    popup.current?.remove();
+    popup.current = null;
+    setNodoVentana(null);
+    const punto = seleccionado ? puntos.current.get(seleccionado) : undefined;
+    if (!conVentana || !mapa.current || !punto) return;
+    const nodo = document.createElement("div");
+    popup.current = L.popup({ maxWidth: 320, minWidth: 250, className: "ventana-mapa", autoPanPadding: [16, 16] })
+      .setLatLng(punto.getLatLng())
+      .setContent(nodo)
+      .openOn(mapa.current);
+    setNodoVentana(nodo);
+    return () => {
+      popup.current?.remove();
+      popup.current = null;
+    };
+  }, [seleccionado, marcadores, conVentana]);
+  const acomodar = useCallback(() => popup.current?.update(), []);
+
   return (
-    <div
-      ref={contenedor}
-      className="mapa"
-      role="region"
-      aria-label="Mapa de puntos de venta de La Paz"
-      data-marcadores={marcadores.length}
-    />
+    <>
+      <div
+        ref={contenedor}
+        className="mapa"
+        role="region"
+        aria-label="Mapa de puntos de venta de La Paz"
+        data-marcadores={marcadores.length}
+      />
+      {nodoVentana && seleccionado && ventana && createPortal(ventana(seleccionado, acomodar), nodoVentana)}
+    </>
   );
 }

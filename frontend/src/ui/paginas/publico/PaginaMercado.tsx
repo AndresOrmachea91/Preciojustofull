@@ -10,7 +10,9 @@ import {
   sinTildes,
   textoAntiguedad,
   textoDiferenciaCiudad,
-  tituloPuesto,
+  textoDisponibilidad,
+  nombreDelPuesto,
+  type ArticuloInventario,
   type FichaMercado,
   type PrecioDeProducto,
   type PuestoEnFicha,
@@ -260,33 +262,64 @@ function TablaPrecios({ ficha }: { ficha: FichaMercado }) {
 }
 
 function Puestos({ ficha, contenedor, usuario }: { ficha: FichaMercado; contenedor: Contenedor; usuario: Usuario | null }) {
+  // El inventario de cada puesto (C137): lo que tiene hoy, con su disponibilidad.
+  const [inventarios, setInventarios] = useState<Map<string, readonly ArticuloInventario[]>>(new Map());
+  useEffect(() => {
+    let vigente = true;
+    contenedor.mercados.puestos(ficha.mercado.codigo).then(
+      (d) => vigente && setInventarios(new Map(d.puestos.map((x) => [`${x.puesto.codigoMercado}:${x.puesto.numero}`, x.articulos]))),
+      () => undefined,
+    );
+    return () => {
+      vigente = false;
+    };
+  }, [contenedor, ficha.mercado.codigo]);
+
   if (ficha.puestos.length === 0) {
     return (
       <p className="estado">
-        Todavía no hay puestos registrados en este lugar. Si usted vende acá, pida su cuenta de vendedor y registre su
-        puesto desde «Mi puesto»: sus precios y ofertas van a aparecer con su número.
+        Todavía no hay puestos registrados en este lugar. Si usted vende aquí, cree su cuenta de vendedor y registre su
+        puesto desde «Mi puesto»: su foto, sus precios y sus ofertas van a aparecer en el mapa.
       </p>
     );
   }
   return (
     <div className="puestos">
       {ficha.puestos.map((p) => (
-        <TarjetaPuesto key={p.puesto.numero} item={p} contenedor={contenedor} usuario={usuario} />
+        <TarjetaPuesto
+          key={p.puesto.numero}
+          item={p}
+          articulos={inventarios.get(`${p.puesto.codigoMercado}:${p.puesto.numero}`) ?? []}
+          contenedor={contenedor}
+          usuario={usuario}
+        />
       ))}
     </div>
   );
 }
 
-function TarjetaPuesto({ item, contenedor, usuario }: { item: PuestoEnFicha; contenedor: Contenedor; usuario: Usuario | null }) {
+function TarjetaPuesto({
+  item,
+  articulos,
+  contenedor,
+  usuario,
+}: {
+  item: PuestoEnFicha;
+  articulos: readonly ArticuloInventario[];
+  contenedor: Contenedor;
+  usuario: Usuario | null;
+}) {
   const { puesto, precios, ofertas } = item;
+  const titulo = nombreDelPuesto(puesto);
   return (
-    <article className="puesto" aria-label={tituloPuesto(puesto.numero, puesto.nombre)}>
+    <article className="puesto" aria-label={titulo}>
+      {puesto.foto && <img className="puesto__foto" src={puesto.foto} alt={`Foto de ${titulo}`} loading="lazy" />}
       <header className="puesto__cabeza">
         <span className="puesto__numero" aria-hidden="true">
-          {puesto.numero}
+          {puesto.esLocal ? <Icono nombre="caja" tamano={20} /> : puesto.numero}
         </span>
         <div>
-          <h3 className="puesto__nombre">{tituloPuesto(puesto.numero, puesto.nombre)}</h3>
+          <h3 className="puesto__nombre">{titulo}</h3>
           {puesto.referencia && <p className="tenue">{puesto.referencia}</p>}
           {!puesto.registrado && <p className="tenue">Visto en el levantamiento de campo; el casero todavía no lo registró.</p>}
         </div>
@@ -300,7 +333,28 @@ function TarjetaPuesto({ item, contenedor, usuario }: { item: PuestoEnFicha; con
           ))}
         </p>
       )}
-      {precios.length > 0 && (
+      {articulos.length > 0 && (
+        <ul className="puesto__precios" aria-label={`Lo que tiene hoy ${titulo}`}>
+          {articulos.map((a) => (
+            <li key={a.codigoProducto} className={a.disponibilidad === "agotado" ? "puesto__agotado" : undefined}>
+              <span>{a.nombreProducto}</span>
+              <span className="tabla__numero">
+                Bs {bs(a.monto)} <span className="tenue">por {a.presentacion}</span>
+              </span>
+              <span className="tenue">
+                declarado por el casero
+                {a.disponibilidad !== "hay" && (
+                  <>
+                    {" · "}
+                    <span className={`disponible disponible--${a.disponibilidad}`}>{textoDisponibilidad(a.disponibilidad)}</span>
+                  </>
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {articulos.length === 0 && precios.length > 0 && (
         <ul className="puesto__precios">
           {precios.map((p) => (
             <li key={p.codigoProducto}>
@@ -316,7 +370,9 @@ function TarjetaPuesto({ item, contenedor, usuario }: { item: PuestoEnFicha; con
           ))}
         </ul>
       )}
-      {precios.length === 0 && ofertas.length === 0 && <p className="tenue">Sin precios publicados todavía.</p>}
+      {articulos.length === 0 && precios.length === 0 && ofertas.length === 0 && (
+        <p className="tenue">Sin precios publicados todavía.</p>
+      )}
       {ofertas.map((o) => (
         <TarjetaOferta key={o.id} oferta={o} contenedor={contenedor} usuario={usuario} conMercado={false} />
       ))}

@@ -1,13 +1,15 @@
 /** Adaptador HTTP de lo que hace el VENDEDOR: /api/v1/vendedor/precios, /puesto y /ofertas. */
 import type {
+  DatosDistribuidora,
   DatosPuesto,
   NuevaOferta,
+  NuevoArticulo,
   OfertasVendedorRepositorio,
   PreciosVendedorRepositorio,
 } from "@/aplicacion/puertos";
-import type { MiOferta, PrecioPublicado, Puesto, UnidadBase } from "@/dominio/modelo";
+import type { ArticuloInventario, MiOferta, PrecioPublicado, Puesto, UnidadBase } from "@/dominio/modelo";
 import type { ClienteHttp } from "@/infraestructura/http/clienteHttp";
-import { aPuesto, type PuestoDto } from "@/infraestructura/http/MercadosApi";
+import { aArticulo, aPuesto, type ArticuloDto, type PuestoDto } from "@/infraestructura/http/MercadosApi";
 
 interface PrecioPublicadoDto {
   codigo_producto: string;
@@ -64,7 +66,35 @@ export class VendedorApi implements PreciosVendedorRepositorio, OfertasVendedorR
   }
 
   async guardarMiPuesto(datos: DatosPuesto): Promise<Puesto> {
-    return aPuesto(await this.http.put<PuestoDto>("/vendedor/puesto", datos));
+    const { codigoMercado, ...resto } = datos;
+    return aPuesto(await this.http.put<PuestoDto>("/vendedor/puesto", { ...resto, codigo_mercado: codigoMercado }));
+  }
+
+  async registrarDistribuidora(datos: DatosDistribuidora): Promise<Puesto> {
+    return aPuesto(await this.http.put<PuestoDto>("/vendedor/distribuidora", datos));
+  }
+
+  async ponerFoto(imagen: string): Promise<Puesto> {
+    return aPuesto(await this.http.put<PuestoDto>("/vendedor/puesto/foto", { imagen }));
+  }
+
+  async inventario(): Promise<ArticuloInventario[]> {
+    return (await this.http.get<ArticuloDto[]>("/vendedor/inventario")).map(aArticulo);
+  }
+
+  async guardarArticulo(a: NuevoArticulo): Promise<ArticuloInventario> {
+    return aArticulo(
+      await this.http.put<ArticuloDto>("/vendedor/inventario", {
+        codigo_producto: a.codigoProducto,
+        monto: a.monto,
+        presentacion: a.presentacion,
+        disponibilidad: a.disponibilidad,
+      }),
+    );
+  }
+
+  async quitarArticulo(codigoProducto: string): Promise<void> {
+    await this.http.delete(`/vendedor/inventario/${encodeURIComponent(codigoProducto)}`);
   }
 
   async misOfertas(): Promise<MiOferta[]> {

@@ -634,3 +634,74 @@ a { text-underline-offset: 0.18em; }
 .ronda__columnas { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px 24px; }
 .ronda__titulo { margin: 8px 0 4px; font-size: 0.85rem; color: var(--tinta); }
 .ronda__lista { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; }
+
+/* --- negocio del casero, inventario y ventana del mapa (C137) ------------------- */
+.visualmente-oculto { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.negocio { display: flex; flex-direction: column; gap: 16px; }
+.segmentado--ancho { display: flex; width: 100%; }
+.segmentado--ancho .segmentado__opcion { flex: 1; }
+.segmentado--chico .segmentado__opcion { padding: 6px 10px; font-size: 0.82rem; }
+
+.foto-puesto { display: flex; gap: 14px; align-items: center; padding: 14px; border-radius: 12px; background: var(--superficie); border: 1px solid var(--borde); }
+.foto-puesto__marco { flex: none; width: 104px; height: 104px; border-radius: 12px; overflow: hidden; background: var(--jade-claro); display: grid; place-items: center; }
+.foto-puesto__imagen { width: 100%; height: 100%; object-fit: cover; display: block; }
+.foto-puesto__vacia { color: var(--jade); }
+.foto-puesto__texto { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.foto-puesto__boton { position: relative; align-self: flex-start; cursor: pointer; }
+.foto-puesto__boton:focus-within { outline: 2px solid var(--jade); outline-offset: 2px; }
+
+.inventario { display: flex; flex-direction: column; gap: 14px; }
+.inventario__lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.articulo { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px; border-radius: 12px; background: var(--superficie); border: 1px solid var(--borde); }
+.articulo--agotado { background: var(--crema); }
+.articulo--agotado .articulo__nombre, .articulo--agotado .articulo__precio { color: var(--tenue); }
+.articulo__cabeza { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.articulo__nombre { font-size: 1rem; color: var(--tinta); }
+.articulo__precio {
+  border: 1px dashed var(--borde); background: none; border-radius: 8px; padding: 6px 10px; font: inherit; font-weight: 650;
+  font-size: 1.05rem; color: var(--tinta); cursor: pointer; font-variant-numeric: tabular-nums;
+}
+.articulo__precio:focus-visible { outline: 2px solid var(--jade); outline-offset: 2px; }
+.articulo__precio-form { display: flex; align-items: center; gap: 6px; }
+.articulo__precio-form input { width: 6em; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--jade); background: var(--superficie); color: var(--texto); font: inherit; font-weight: 600; }
+.articulo__pie { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.articulo__quitar { font-size: 0.82rem; color: var(--tenue); }
+.segmentado__opcion.disponibilidad--poco[aria-pressed="true"] { background: var(--ambar); color: var(--sobre-tinta); }
+.segmentado__opcion.disponibilidad--agotado[aria-pressed="true"] { background: var(--peligro); color: var(--sobre-peligro); }
+.disponible { font-size: 0.72rem; padding: 1px 7px; border-radius: 999px; white-space: nowrap; font-weight: 600; }
+.disponible--poco { background: var(--ambar-claro); color: var(--ambar); }
+.disponible--agotado { background: var(--peligro-claro); color: var(--peligro); }
+@media (hover: hover) and (pointer: fine) { .articulo__precio:hover { border-color: var(--jade); } }
+@media (pointer: coarse) { .articulo__precio, .segmentado--chico .segmentado__opcion { min-height: 44px; } }
+
+/* La foto del puesto en la ficha del mercado. */
+.puesto__foto { display: block; width: calc(100% + 32px); height: 140px; margin: -14px -16px 12px; object-fit: cover; border-radius: 12px 12px 0 0; }
+.puesto__agotado > span:first-child { color: var(--tenue); text-decoration: line-through; text-decoration-color: var(--borde); }
+
+/* La ventana que se abre sobre un mercado en el mapa. Leaflet pone el marco; acá va el contenido. */
+.ventana-mapa .leaflet-popup-content-wrapper { border-radius: 12px; background: var(--superficie); color: var(--texto); box-shadow: 0 10px 28px var(--sombra); }
+.ventana-mapa .leaflet-popup-tip { background: var(--superficie); }
+.ventana-mapa .leaflet-popup-content { margin: 12px 14px; font: inherit; font-size: 0.86rem; line-height: 1.4; }
+.ventana-mapa a.leaflet-popup-close-button { color: var(--tenue); top: 6px; right: 6px; }
+.ventana { display: flex; flex-direction: column; gap: 10px; }
+.ventana__cabeza { display: flex; flex-direction: column; gap: 1px; padding-right: 16px; }
+.ventana__nombre { font-size: 1rem; color: var(--tinta); }
+.ventana__precio { margin: 0; display: grid; grid-template-columns: 1fr auto; gap: 0 8px; padding: 8px 10px; border-radius: 8px; background: var(--jade-claro); }
+.ventana__precio--estimado { background: var(--ambar-claro); }
+.ventana__precio > .tenue { grid-column: 1 / -1; font-size: 0.75rem; }
+.ventana__precio strong { font-variant-numeric: tabular-nums; color: var(--tinta); }
+.ventana__estado { margin: 0; }
+.ventana__estado a { color: var(--jade); font-weight: 600; }
+.ventana__puestos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.ventana__puesto { display: flex; gap: 10px; align-items: flex-start; padding-top: 8px; border-top: 1px solid var(--borde); }
+.ventana__foto { flex: none; width: 48px; height: 48px; border-radius: 9px; object-fit: cover; background: var(--jade-claro); }
+.ventana__foto--vacia { display: grid; place-items: center; color: var(--jade); font-weight: 700; font-size: 0.8rem; }
+.ventana__detalle { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.ventana__detalle > strong { color: var(--tinta); }
+.ventana__articulos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.ventana__articulos li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; }
+.ventana__articulos li > span:first-child { flex: 1; min-width: 0; }
+.ventana__monto { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ventana__agotado > span:first-child, .ventana__agotado .ventana__monto { color: var(--tenue); text-decoration: line-through; text-decoration-color: var(--borde); }
+.ventana__entrar { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--jade); text-decoration: none; }
+.ventana__entrar:hover { text-decoration: underline; }

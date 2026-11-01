@@ -214,8 +214,9 @@ describe("el casero y sus ofertas", () => {
   it("registra su puesto con número, nombre y rubros", async () => {
     render(<App />);
     await ingresar("vendedora@preciojusto.bo", "puesto1234");
-    fireEvent.click(await screen.findByRole("tab", { name: "Datos del puesto" }));
-    const form = await screen.findByRole("form", { name: "Datos del puesto" });
+    fireEvent.click(await screen.findByRole("tab", { name: "Mi negocio" }));
+    const form = await screen.findByRole("form", { name: "Mi negocio" });
+    expect((within(form).getByLabelText("Mercado") as HTMLSelectElement).value).toBe("rodriguez");
     expect((within(form).getByLabelText("Número del puesto") as HTMLInputElement).value).toBe("14");
     fireEvent.change(within(form).getByLabelText("Nombre (opcional)"), { target: { value: "Verduras Rosa" } });
     fireEvent.click(within(form).getByLabelText("Tubérculo"));

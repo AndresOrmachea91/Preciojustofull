@@ -77,6 +77,7 @@ describe("vendedor", () => {
   it("entra directo a su puesto, publica un precio y lo ve con su equivalencia por kilo", async () => {
     await ingresar("vendedora@preciojusto.bo", "puesto1234");
     expect(await screen.findByRole("heading", { name: /Mi puesto/ })).toBeDefined();
+    fireEvent.click(screen.getByRole("tab", { name: "Precios publicados" }));
 
     const form = screen.getByRole("form", { name: "Publicar un precio" });
     await elegirProducto("Papa holandesa", "Producto", form);

@@ -5,6 +5,9 @@
  */
 import type { MercadosRepositorio, OfertasRepositorio, RevisionOfertasRepositorio } from "@/aplicacion/puertos";
 import type {
+  ArticuloInventario,
+  Disponibilidad,
+  PuestosDeMercado,
   EntradaDirectorio,
   FichaMercado,
   Oferta,
@@ -55,6 +58,39 @@ export interface PuestoDto {
   rubros: string[];
   referencia: string;
   registrado?: boolean;
+  foto?: string | null;
+  es_local?: boolean;
+}
+
+export interface ArticuloDto {
+  codigo_producto: string;
+  nombre_producto: string;
+  categoria: string;
+  monto: number;
+  presentacion: string;
+  precio_por_unidad_base: number;
+  unidad_base: UnidadBase;
+  disponibilidad: Disponibilidad;
+  actualizado_en: string | null;
+}
+
+interface PuestosDelMercadoDto {
+  mercado: MercadoDto;
+  puestos: { puesto: PuestoDto; articulos: ArticuloDto[]; total: number }[];
+}
+
+export function aArticulo(d: ArticuloDto): ArticuloInventario {
+  return {
+    codigoProducto: d.codigo_producto,
+    nombreProducto: d.nombre_producto,
+    categoria: d.categoria,
+    monto: d.monto,
+    presentacion: d.presentacion,
+    precioPorUnidadBase: d.precio_por_unidad_base,
+    unidadBase: d.unidad_base,
+    disponibilidad: d.disponibilidad,
+    actualizadoEn: d.actualizado_en,
+  };
 }
 
 export interface OfertaDto {
@@ -143,6 +179,8 @@ export function aPuesto(d: PuestoDto): Puesto {
     rubros: d.rubros,
     referencia: d.referencia,
     registrado: d.registrado ?? true,
+    foto: d.foto ?? null,
+    esLocal: d.es_local ?? false,
   };
 }
 
@@ -217,6 +255,17 @@ export class MercadosApi implements MercadosRepositorio, OfertasRepositorio, Rev
 
   async ficha(codigoMercado: string): Promise<FichaMercado> {
     return aFicha(await this.http.get<FichaDto>(`/mercados/${encodeURIComponent(codigoMercado)}/ficha`));
+  }
+
+  async puestos(codigoMercado: string, filtro?: { producto?: string; articulos?: number }): Promise<PuestosDeMercado> {
+    const d = await this.http.get<PuestosDelMercadoDto>(`/mercados/${encodeURIComponent(codigoMercado)}/puestos`, {
+      producto: filtro?.producto,
+      articulos: filtro?.articulos !== undefined ? String(filtro.articulos) : undefined,
+    });
+    return {
+      mercado: aMercado(d.mercado),
+      puestos: d.puestos.map((x) => ({ puesto: aPuesto(x.puesto), articulos: x.articulos.map(aArticulo), total: x.total })),
+    };
   }
 
   async verificaciones(): Promise<PlanDeVerificacion> {

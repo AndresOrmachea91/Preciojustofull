@@ -8,7 +8,7 @@ import type { ReactNode } from "react";
 export type NombreIcono =
   | "precios" | "listas" | "puesto" | "admin" | "ingresar" | "registrarse"
   | "salir" | "buscar" | "elegido" | "menu" | "ubicacion" | "confiabilidad" | "salud" | "planilla"
-  | "mercado" | "oferta" | "flecha";
+  | "mercado" | "oferta" | "flecha" | "camara" | "caja";
 
 const TRAZOS: Record<NombreIcono, ReactNode> = {
   // Etiqueta de precio
@@ -106,6 +106,20 @@ const TRAZOS: Record<NombreIcono, ReactNode> = {
   ),
   flecha: <path d="M5 12h14M13 6l6 6-6 6" />,
   // Alfiler de mapa
+  // Cámara: la foto del puesto
+  camara: (
+    <>
+      <path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" />
+      <circle cx="12" cy="13" r="3.5" />
+    </>
+  ),
+  // Caja: el inventario del puesto
+  caja: (
+    <>
+      <path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z" />
+      <path d="M3 7.5 12 12l9-4.5M12 12v9" />
+    </>
+  ),
   ubicacion: (
     <>
       <path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z" />

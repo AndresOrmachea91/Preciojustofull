@@ -7,8 +7,10 @@
 import type {
   AlmacenSesion,
   CatalogoRepositorio,
+  DatosDistribuidora,
   DatosPuesto,
   HistorialRepositorio,
+  NuevoArticulo,
   MercadosRepositorio,
   NuevaOferta,
   OfertasRepositorio,
@@ -18,6 +20,8 @@ import type {
 } from "@/aplicacion/puertos";
 import {
   MAXIMO_OFERTAS_ACTIVAS,
+  type ArticuloInventario,
+  type PuestosDeMercado,
   type EntradaDirectorio,
   type FichaMercado,
   type MiOferta,
@@ -56,10 +60,24 @@ const MERCADO_DE_LA_DEMO = "rodriguez";
 // La vendedora de la demo (Rosa, id 2) tiene el 14 del Rodríguez; el 22 lo
 // registró el administrador y todavía no tiene dueño.
 const PUESTOS: (Puesto & { idVendedor: number | null })[] = [
-  { id: 1, codigoMercado: "rodriguez", numero: "14", nombre: "Verduras Doña Rosa", rubros: ["hortaliza", "fruta"], referencia: "Pasillo de verduras, frente a la puerta 2", registrado: true, idVendedor: 2 },
-  { id: 2, codigoMercado: "rodriguez", numero: "22", nombre: "Papas del Norte", rubros: ["tuberculo"], referencia: "", registrado: true, idVendedor: null },
-  { id: 3, codigoMercado: "lanza", numero: "3", nombre: "Abarrotes Mary", rubros: ["abarrote"], referencia: "Planta baja, entrada por la Figueroa", registrado: true, idVendedor: 98 },
+  { id: 1, codigoMercado: "rodriguez", numero: "14", nombre: "Verduras Doña Rosa", rubros: ["hortaliza", "fruta"], referencia: "Pasillo de verduras, frente a la puerta 2", registrado: true, foto: null, esLocal: false, idVendedor: 2 },
+  { id: 2, codigoMercado: "rodriguez", numero: "22", nombre: "Papas del Norte", rubros: ["tuberculo"], referencia: "", registrado: true, foto: null, esLocal: false, idVendedor: null },
+  { id: 3, codigoMercado: "lanza", numero: "3", nombre: "Abarrotes Mary", rubros: ["abarrote"], referencia: "Planta baja, entrada por la Figueroa", registrado: true, foto: null, esLocal: false, idVendedor: 98 },
 ];
+
+// Lo que tiene cada puesto de la demo (por id de puesto): no todos venden lo mismo.
+type ArticuloGuardado = { codigoProducto: string; monto: number; presentacion: string; factor: number; disponibilidad: ArticuloInventario["disponibilidad"] };
+const INVENTARIO: Record<number, ArticuloGuardado[]> = {
+  1: [
+    { codigoProducto: "tomate", monto: 13, presentacion: "kilo", factor: 1, disponibilidad: "hay" },
+    { codigoProducto: "papa", monto: 85, presentacion: "arroba", factor: 11.5, disponibilidad: "poco" },
+  ],
+  2: [{ codigoProducto: "papa", monto: 80, presentacion: "arroba", factor: 11.5, disponibilidad: "hay" }],
+  3: [
+    { codigoProducto: "arroz", monto: 8.2, presentacion: "kilo", factor: 1, disponibilidad: "hay" },
+    { codigoProducto: "papa", monto: 84, presentacion: "arroba", factor: 11.5, disponibilidad: "agotado" },
+  ],
+};
 
 // Lo último que se supo en algunos puestos (campo y lo que declaró el casero).
 const PRECIOS_DE_PUESTO: (PrecioDelPuesto & { codigoMercado: string; numero: string })[] = [
@@ -70,9 +88,12 @@ const PRECIOS_DE_PUESTO: (PrecioDelPuesto & { codigoMercado: string; numero: str
 export class MercadosMemoria
   implements MercadosRepositorio, OfertasRepositorio, OfertasVendedorRepositorio, RevisionOfertasRepositorio
 {
-  private readonly puestos = PUESTOS.map((p) => ({ ...p }));
+  private readonly registro = PUESTOS.map((p) => ({ ...p }));
   private readonly ofertas: OfertaGuardada[];
   private readonly confirmaciones = new Map<string, boolean>();
+  private readonly inventarios = new Map<number, ArticuloGuardado[]>(
+    Object.entries(INVENTARIO).map(([id, lista]) => [Number(id), lista.map((a) => ({ ...a }))]),
+  );
   private siguiente = 3;
 
   constructor(
@@ -95,10 +116,36 @@ export class MercadosMemoria
     const vigentes = await this.vigentes();
     return mercados.map((m) => ({
       mercado: m,
-      puestos: this.puestos.filter((p) => p.codigoMercado === m.codigo).length,
+      puestos: this.registro.filter((p) => p.codigoMercado === m.codigo).length,
       ofertas: vigentes.filter((o) => o.codigoMercado === m.codigo).length,
       sectores: mercados.filter((x) => x.codigoPadre === m.codigo).length,
     }));
+  }
+
+  /** Los puestos del mercado con su inventario: primero los que tienen el producto buscado. */
+  async puestos(codigoMercado: string, filtro?: { producto?: string; articulos?: number }): Promise<PuestosDeMercado> {
+    const mercados = await this.catalogo.mercados();
+    const mercado = mercados.find((m) => m.codigo === codigoMercado);
+    if (!mercado) throw new Error(`No existe el mercado ${codigoMercado}`);
+    const codigos = [codigoMercado, ...mercados.filter((m) => m.codigoPadre === codigoMercado).map((m) => m.codigo)];
+    const buscado = filtro?.producto;
+    const puestos = await Promise.all(
+      this.registro
+        .filter((p) => codigos.includes(p.codigoMercado))
+        .map(async ({ idVendedor, ...puesto }) => {
+          const todos = (await this.articulos(puesto.id ?? 0)).sort(
+            (a, b) =>
+              Number(a.codigoProducto !== buscado) - Number(b.codigoProducto !== buscado) ||
+              Number(a.disponibilidad === "agotado") - Number(b.disponibilidad === "agotado") ||
+              a.nombreProducto.localeCompare(b.nombreProducto),
+          );
+          const tiene = todos.some((a) => a.codigoProducto === buscado && a.disponibilidad !== "agotado");
+          const articulos = filtro?.articulos ? todos.slice(0, filtro.articulos) : todos;
+          return { puesto, articulos, total: todos.length, tiene, atendido: idVendedor !== null };
+        }),
+    );
+    puestos.sort((a, b) => Number(b.tiene) - Number(a.tiene) || Number(b.atendido) - Number(a.atendido));
+    return { mercado, puestos: puestos.map(({ puesto, articulos, total }) => ({ puesto, articulos, total })) };
   }
 
   /**
@@ -184,7 +231,7 @@ export class MercadosMemoria
       sectores: mercados.filter((m) => m.codigoPadre === codigoMercado),
       factorMercado: 1,
       precios,
-      puestos: this.puestos
+      puestos: this.registro
         .filter((p) => p.codigoMercado === codigoMercado)
         .map(({ idVendedor: _, ...puesto }) => ({
           puesto,
@@ -233,7 +280,7 @@ export class MercadosMemoria
 
   async miPuesto(): Promise<Puesto | null> {
     const yo = this.sesion();
-    const suyo = this.puestos.find((p) => p.idVendedor === yo);
+    const suyo = this.registro.find((p) => p.idVendedor === yo);
     if (!suyo) return null;
     const { idVendedor: _, ...puesto } = suyo;
     return puesto;
@@ -242,17 +289,89 @@ export class MercadosMemoria
   async guardarMiPuesto(datos: DatosPuesto): Promise<Puesto> {
     const yo = this.sesion();
     const numero = datos.numero.trim().toUpperCase();
-    const mercado = MERCADO_DE_LA_DEMO;
-    const ocupado = this.puestos.find((p) => p.codigoMercado === mercado && p.numero === numero);
+    const mercado = datos.codigoMercado ?? this.registro.find((p) => p.idVendedor === yo)?.codigoMercado ?? MERCADO_DE_LA_DEMO;
+    const ocupado = this.registro.find((p) => p.codigoMercado === mercado && p.numero === numero);
     if (ocupado && ocupado.idVendedor !== null && ocupado.idVendedor !== yo) {
       throw new Error(`Ya existe un puesto en este mercado con el código ${numero}`);
     }
-    const suyo = this.puestos.find((p) => p.idVendedor === yo) ?? ocupado;
-    const nuevo = { id: suyo?.id ?? this.puestos.length + 1, codigoMercado: mercado, numero, nombre: datos.nombre, rubros: datos.rubros, referencia: datos.referencia, registrado: true, idVendedor: yo };
+    const suyo = this.registro.find((p) => p.idVendedor === yo) ?? ocupado;
+    const nuevo = { id: suyo?.id ?? this.registro.length + 1, codigoMercado: mercado, numero, nombre: datos.nombre, rubros: datos.rubros, referencia: datos.referencia, registrado: true, foto: suyo?.foto ?? null, esLocal: false, idVendedor: yo };
     if (suyo) Object.assign(suyo, nuevo);
-    else this.puestos.push(nuevo);
+    else this.registro.push(nuevo);
     const { idVendedor: _, ...puesto } = nuevo;
     return puesto;
+  }
+
+  async registrarDistribuidora(datos: DatosDistribuidora): Promise<Puesto> {
+    const yo = this.sesion();
+    if (!datos.nombre.trim()) throw new Error("La distribuidora necesita un nombre");
+    const codigo = `dist_${datos.nombre.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_")}`;
+    const suyo = this.registro.find((p) => p.idVendedor === yo);
+    const nuevo = { id: suyo?.id ?? this.registro.length + 1, codigoMercado: codigo, numero: "LOCAL", nombre: datos.nombre.trim(), rubros: datos.rubros, referencia: datos.referencia, registrado: true, foto: suyo?.foto ?? null, esLocal: true, idVendedor: yo };
+    if (suyo) Object.assign(suyo, nuevo);
+    else this.registro.push(nuevo);
+    const { idVendedor: _, ...puesto } = nuevo;
+    return puesto;
+  }
+
+  async ponerFoto(imagen: string): Promise<Puesto> {
+    const suyo = this.registro.find((p) => p.idVendedor === this.sesion());
+    if (!suyo) throw new Error("Primero registre su puesto; después la foto");
+    // En la demo la foto se guarda tal cual (data URL): no hay servidor de archivos.
+    suyo.foto = imagen;
+    const { idVendedor: _, ...puesto } = suyo;
+    return puesto;
+  }
+
+  async inventario(): Promise<ArticuloInventario[]> {
+    const suyo = this.registro.find((p) => p.idVendedor === this.sesion());
+    if (!suyo) throw new Error("Primero registre su puesto: el inventario es de su puesto");
+    return this.articulos(suyo.id ?? 0);
+  }
+
+  async guardarArticulo(a: NuevoArticulo): Promise<ArticuloInventario> {
+    const suyo = this.registro.find((p) => p.idVendedor === this.sesion());
+    if (!suyo) throw new Error("Primero registre su puesto: el inventario es de su puesto");
+    if (!(a.monto > 0)) throw new Error("El precio tiene que ser mayor a cero");
+    const producto = (await this.catalogo.productos()).find((p) => p.codigo === a.codigoProducto);
+    const presentacion = producto?.presentaciones.find((p) => p.codigo === a.presentacion);
+    if (!producto || !presentacion) throw new Error("Elija el producto y su presentación");
+    const id = suyo.id ?? 0;
+    const lista = this.inventarios.get(id) ?? [];
+    const nuevo = { codigoProducto: a.codigoProducto, monto: a.monto, presentacion: a.presentacion, factor: presentacion.factor, disponibilidad: a.disponibilidad };
+    const i = lista.findIndex((x) => x.codigoProducto === a.codigoProducto);
+    if (i >= 0) lista[i] = nuevo;
+    else lista.push(nuevo);
+    this.inventarios.set(id, lista);
+    return (await this.articulos(id)).find((x) => x.codigoProducto === a.codigoProducto)!;
+  }
+
+  async quitarArticulo(codigoProducto: string): Promise<void> {
+    const suyo = this.registro.find((p) => p.idVendedor === this.sesion());
+    if (!suyo) return;
+    const id = suyo.id ?? 0;
+    this.inventarios.set(id, (this.inventarios.get(id) ?? []).filter((x) => x.codigoProducto !== codigoProducto));
+  }
+
+  private async articulos(idPuesto: number): Promise<ArticuloInventario[]> {
+    const productos = await this.catalogo.productos();
+    return (this.inventarios.get(idPuesto) ?? []).flatMap((a) => {
+      const producto = productos.find((p) => p.codigo === a.codigoProducto);
+      if (!producto) return [];
+      return [
+        {
+          codigoProducto: a.codigoProducto,
+          nombreProducto: producto.nombre,
+          categoria: producto.categoria,
+          monto: a.monto,
+          presentacion: a.presentacion,
+          precioPorUnidadBase: Math.round((a.monto / a.factor) * 100) / 100,
+          unidadBase: producto.unidadBase,
+          disponibilidad: a.disponibilidad,
+          actualizadoEn: null,
+        },
+      ];
+    });
   }
 
   async misOfertas(): Promise<MiOferta[]> {
@@ -303,7 +422,7 @@ export class MercadosMemoria
           `en su mercado (Bs ${sistema.toFixed(2)} por ${producto.unidadBase}). Publíquelo como precio normal.`,
       );
     }
-    const suyo = this.puestos.find((p) => p.idVendedor === yo);
+    const suyo = this.registro.find((p) => p.idVendedor === yo);
     this.ofertas.push({
       id: this.siguiente++,
       idVendedor: yo,
@@ -397,7 +516,7 @@ export class MercadosMemoria
     const mercado = (await this.catalogo.mercados()).find((m) => m.codigo === o.codigoMercado);
     if (!producto || !mercado) return null;
     const precio = await this.precios.precioEnMercado(o.codigoProducto, o.codigoMercado);
-    const puesto = this.puestos.find((p) => p.codigoMercado === o.codigoMercado && p.numero === o.numeroPuesto);
+    const puesto = this.registro.find((p) => p.codigoMercado === o.codigoMercado && p.numero === o.numeroPuesto);
     return {
       id: o.id,
       codigoProducto: o.codigoProducto,

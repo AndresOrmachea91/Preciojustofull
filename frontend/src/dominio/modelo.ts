@@ -678,6 +678,10 @@ export interface Puesto {
   readonly referencia: string;
   /** False si el número solo aparece en mediciones de campo: nadie lo registró todavía. */
   readonly registrado: boolean;
+  /** Dirección de la foto del puesto, o null si todavía no tiene. */
+  readonly foto: string | null;
+  /** El local entero de una distribuidora: no tiene número de puesto. */
+  readonly esLocal: boolean;
 }
 
 /**
@@ -981,4 +985,53 @@ export function agruparPorPrecio(items: readonly PrecioEnMercado[]): GrupoDePrec
     }
   }
   return grupos;
+}
+
+// --- inventario del puesto y la ventana del mapa (C137) -------------------------
+
+/** Si al casero le queda: "hay", "poco" o "se acabó". Se cambia en un toque desde el celular. */
+export type Disponibilidad = "hay" | "poco" | "agotado";
+
+export const DISPONIBILIDADES: readonly { valor: Disponibilidad; texto: string }[] = [
+  { valor: "hay", texto: "Hay" },
+  { valor: "poco", texto: "Queda poco" },
+  { valor: "agotado", texto: "Se acabó" },
+];
+
+export function textoDisponibilidad(d: Disponibilidad): string {
+  return DISPONIBILIDADES.find((x) => x.valor === d)?.texto ?? d;
+}
+
+export interface ArticuloInventario {
+  readonly codigoProducto: string;
+  readonly nombreProducto: string;
+  readonly categoria: string;
+  readonly monto: number;
+  readonly presentacion: string;
+  readonly precioPorUnidadBase: number;
+  readonly unidadBase: UnidadBase;
+  readonly disponibilidad: Disponibilidad;
+  readonly actualizadoEn: string | null;
+}
+
+export interface PuestoConInventario {
+  readonly puesto: Puesto;
+  /** Puede venir recortada: total dice cuántos tiene en realidad. */
+  readonly articulos: readonly ArticuloInventario[];
+  readonly total: number;
+}
+
+export interface PuestosDeMercado {
+  readonly mercado: Mercado;
+  readonly puestos: readonly PuestoConInventario[];
+}
+
+/** "Puesto 14 · Verduras Rosa", o solo el nombre si es el local de una distribuidora. */
+export function nombreDelPuesto(p: Puesto): string {
+  return p.esLocal ? p.nombre || "Local" : tituloPuesto(p.numero, p.nombre);
+}
+
+/** "Mercado Rodríguez · Puesto 14". */
+export function dondeEsta(mercado: Mercado, p: Puesto): string {
+  return p.esLocal ? mercado.nombre : `${mercado.nombre} · Puesto ${p.numero}`;
 }

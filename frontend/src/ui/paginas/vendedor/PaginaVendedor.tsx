@@ -1,20 +1,16 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 
 import {
-  CATEGORIAS,
   DURACIONES_OFERTA,
   MAXIMO_OFERTAS_ACTIVAS,
   NOMBRE_UNIDAD_BASE,
   bs,
   presentacionBase,
   textoVence,
-  tituloPuesto,
   type EstadoMiOferta,
-  type Mercado,
   type MiOferta,
   type PrecioPublicado,
   type Producto,
-  type Puesto,
   type Usuario,
 } from "@/dominio/modelo";
 import type { Contenedor } from "@/infraestructura/contenedor";
@@ -22,26 +18,34 @@ import { MensajeAviso, MensajeError, textoDeError } from "@/ui/componentes/Mensa
 import { Pestanas } from "@/ui/componentes/Pestanas";
 import { SelectorProducto } from "@/ui/componentes/SelectorProducto";
 import { useCatalogo } from "@/ui/hooks/useCatalogo";
+import { InventarioPuesto } from "@/ui/paginas/vendedor/InventarioPuesto";
+import { MiNegocio } from "@/ui/paginas/vendedor/MiNegocio";
 import { hrefMercado } from "@/ui/hooks/useRuta";
 
-type Vista = "precios" | "puesto" | "ofertas";
+type Vista = "inventario" | "negocio" | "ofertas" | "precios";
 
 /**
- * El vendedor publica los precios de su puesto, registra el puesto dentro
- * del mercado y maneja sus ofertas (C133).
+ * El casero desde el celular (C137): su inventario a un toque, su negocio
+ * (puesto en un mercado o distribuidora, con foto), sus ofertas y lo que
+ * publicó. Si todavía no registró dónde vende, empieza por ahí: ya no
+ * depende de que un administrador se lo asigne (decisión 26).
  */
 export function PaginaVendedor({ contenedor, vendedor }: { contenedor: Contenedor; vendedor: Usuario }) {
   const { productos, mercados } = useCatalogo(contenedor);
-  const [vista, setVista] = useState<Vista>("precios");
-  const lugar = mercados.find((m) => m.codigo === vendedor.codigoPuntoVenta);
+  const [punto, setPunto] = useState<string | null>(vendedor.codigoPuntoVenta ?? null);
+  const [vista, setVista] = useState<Vista>("inventario");
+  const lugar = mercados.find((m) => m.codigo === punto);
 
-  if (!vendedor.codigoPuntoVenta) {
+  if (!punto) {
     return (
-      <section className="estado" aria-labelledby="titulo-puesto">
+      <section aria-labelledby="titulo-puesto">
         <h2 id="titulo-puesto" className="seccion">
           Mi puesto
         </h2>
-        <p>Todavía no tiene un puesto asignado. Pídale al administrador que se lo asigne para publicar sus precios.</p>
+        <p className="app__lema">
+          Diga dónde vende y aparezca en el mapa: los compradores ven su puesto, su foto y sus precios.
+        </p>
+        <MiNegocio contenedor={contenedor} mercados={mercados} alGuardar={(p) => setPunto(p.codigoMercado)} />
       </section>
     );
   }
@@ -58,16 +62,20 @@ export function PaginaVendedor({ contenedor, vendedor }: { contenedor: Contenedo
       )}
       <Pestanas<Vista>
         pestanas={[
-          { id: "precios", texto: "Mis precios" },
-          { id: "puesto", texto: "Datos del puesto", visible: !lugar || lugar.tipo === "mercado" },
+          { id: "inventario", texto: "Inventario" },
+          { id: "negocio", texto: "Mi negocio" },
           { id: "ofertas", texto: "Mis ofertas" },
+          { id: "precios", texto: "Precios publicados" },
         ]}
         activa={vista}
         onCambiar={setVista}
       />
-      {vista === "precios" && <MisPrecios contenedor={contenedor} productos={productos} />}
-      {vista === "puesto" && <DatosDelPuesto contenedor={contenedor} lugar={lugar} />}
+      {vista === "inventario" && <InventarioPuesto contenedor={contenedor} productos={productos} />}
+      {vista === "negocio" && (
+        <MiNegocio contenedor={contenedor} mercados={mercados} alGuardar={(p) => setPunto(p.codigoMercado)} />
+      )}
       {vista === "ofertas" && <MisOfertas contenedor={contenedor} productos={productos} />}
+      {vista === "precios" && <MisPrecios contenedor={contenedor} productos={productos} />}
     </section>
   );
 }
@@ -202,98 +210,6 @@ function FormularioPrecio({
       <div className="formulario__botones">
         <button type="submit" className="boton">
           Publicar precio
-        </button>
-      </div>
-    </form>
-  );
-}
-
-// --- datos del puesto ------------------------------------------------------------------
-
-function DatosDelPuesto({ contenedor, lugar }: { contenedor: Contenedor; lugar: Mercado | undefined }) {
-  const [puesto, setPuesto] = useState<Puesto | null | undefined>(undefined);
-  const [numero, setNumero] = useState("");
-  const [nombre, setNombre] = useState("");
-  const [referencia, setReferencia] = useState("");
-  const [rubros, setRubros] = useState<string[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [aviso, setAviso] = useState<string | null>(null);
-
-  useEffect(() => {
-    contenedor.miPuesto.puesto().then(
-      (p) => {
-        setPuesto(p);
-        if (p) {
-          setNumero(p.numero);
-          setNombre(p.nombre);
-          setReferencia(p.referencia);
-          setRubros([...p.rubros]);
-        }
-      },
-      (e) => setError(textoDeError(e)),
-    );
-  }, [contenedor]);
-
-  async function guardar(evento: FormEvent) {
-    evento.preventDefault();
-    setError(null);
-    setAviso(null);
-    try {
-      const guardado = await contenedor.miPuesto.guardarPuesto({ numero, nombre, rubros, referencia });
-      setPuesto(guardado);
-      setAviso(`Guardado: ${tituloPuesto(guardado.numero, guardado.nombre)}. Ya aparece en la ficha del mercado.`);
-    } catch (e) {
-      setError(textoDeError(e));
-    }
-  }
-
-  if (puesto === undefined && !error) return <p className="estado">Cargando su puesto…</p>;
-  return (
-    <form className="formulario formulario--recuadro" onSubmit={(e) => void guardar(e)} aria-label="Datos del puesto">
-      <p className="tenue">
-        {puesto
-          ? "Así lo encuentran los compradores en la ficha del mercado."
-          : `Registre su número de puesto${lugar ? ` en ${lugar.nombre}` : ""}: sus precios y ofertas van a mostrarse con él.`}
-      </p>
-      <div className="formulario__fila">
-        <label className="campo">
-          <span>Número del puesto</span>
-          <input required maxLength={16} value={numero} onChange={(e) => setNumero(e.target.value)} placeholder="14, B-3…" />
-        </label>
-        <label className="campo">
-          <span>Nombre (opcional)</span>
-          <input maxLength={80} value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Verduras Doña Rosa" />
-        </label>
-      </div>
-      <label className="campo">
-        <span>Cómo encontrarlo (opcional)</span>
-        <input
-          maxLength={160}
-          value={referencia}
-          onChange={(e) => setReferencia(e.target.value)}
-          placeholder="Pasillo de verduras, frente a la puerta 2"
-        />
-      </label>
-      <fieldset className="campo--grupo">
-        <legend>Qué vende</legend>
-        {CATEGORIAS.map((c) => (
-          <label key={c.codigo} className="casilla">
-            <input
-              type="checkbox"
-              checked={rubros.includes(c.codigo)}
-              onChange={(e) =>
-                setRubros(e.target.checked ? [...rubros, c.codigo] : rubros.filter((r) => r !== c.codigo))
-              }
-            />
-            {c.nombre}
-          </label>
-        ))}
-      </fieldset>
-      <MensajeError texto={error} />
-      <MensajeAviso texto={aviso} />
-      <div className="formulario__botones">
-        <button type="submit" className="boton">
-          {puesto ? "Guardar cambios" : "Registrar mi puesto"}
         </button>
       </div>
     </form>

@@ -36,6 +36,9 @@ import type {
   Rol,
   Usuario,
   PlanDeVerificacion,
+  ArticuloInventario,
+  Disponibilidad,
+  PuestosDeMercado,
 } from "@/dominio/modelo";
 
 export interface PrecioRepositorio {
@@ -188,6 +191,8 @@ export interface MercadosRepositorio {
   ficha(codigoMercado: string): Promise<FichaMercado>;
   /** Qué conviene medir primero y cuánto se mueve cada precio (A4230, A5020). */
   verificaciones(): Promise<PlanDeVerificacion>;
+  /** Los puestos de un mercado con foto e inventario: la ventana del mapa (C137). */
+  puestos(codigoMercado: string, filtro?: { producto?: string; articulos?: number }): Promise<PuestosDeMercado>;
 }
 
 /** Las ofertas vigentes (públicas) y el "¿Lo viste así?" de quien tiene sesión. */
@@ -201,6 +206,25 @@ export interface DatosPuesto {
   nombre: string;
   rubros: string[];
   referencia: string;
+  /** El mercado lo elige el casero (decisión 26). Sin él, el que ya tenía. */
+  codigoMercado?: string;
+}
+
+export interface DatosDistribuidora {
+  nombre: string;
+  zona: string;
+  macrodistrito: string;
+  latitud: number;
+  longitud: number;
+  rubros: string[];
+  referencia: string;
+}
+
+export interface NuevoArticulo {
+  codigoProducto: string;
+  monto: number;
+  presentacion: string;
+  disponibilidad: Disponibilidad;
 }
 
 export interface NuevaOferta {
@@ -215,6 +239,12 @@ export interface NuevaOferta {
 export interface OfertasVendedorRepositorio {
   miPuesto(): Promise<Puesto | null>;
   guardarMiPuesto(datos: DatosPuesto): Promise<Puesto>;
+  registrarDistribuidora(datos: DatosDistribuidora): Promise<Puesto>;
+  /** La foto como data URL, ya achicada en el celular. */
+  ponerFoto(imagen: string): Promise<Puesto>;
+  inventario(): Promise<ArticuloInventario[]>;
+  guardarArticulo(articulo: NuevoArticulo): Promise<ArticuloInventario>;
+  quitarArticulo(codigoProducto: string): Promise<void>;
   misOfertas(): Promise<MiOferta[]>;
   publicarOferta(oferta: NuevaOferta): Promise<void>;
   retirarOferta(id: number): Promise<void>;
