@@ -708,3 +708,11 @@ a { text-underline-offset: 0.18em; }
 .casilla--destacada { align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--borde); background: var(--jade-claro); }
 .casilla--destacada input { margin-top: 4px; }
 .casilla--destacada > span { display: flex; flex-direction: column; gap: 2px; }
+
+/* --- la vitrina del casero: enlace y QR (C140) ----------------------------------- */
+.compartir { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; padding: 14px; border-radius: 12px; background: var(--superficie); border: 1px solid var(--borde); }
+.compartir__qr { width: 132px; height: 132px; border-radius: 10px; border: 1px solid var(--borde); background: #fff; flex: none; }
+.compartir__texto { flex: 1 1 240px; display: flex; flex-direction: column; gap: 6px; }
+.compartir__texto .subseccion { margin: 0; }
+.compartir__botones { display: flex; flex-wrap: wrap; gap: 8px; }
+.puesto--resaltado { border-color: var(--jade); box-shadow: 0 0 0 3px var(--jade-claro); }

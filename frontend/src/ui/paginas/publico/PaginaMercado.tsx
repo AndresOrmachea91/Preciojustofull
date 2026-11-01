@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   bs,
@@ -35,6 +35,8 @@ type Vista = "precios" | "puestos" | "ofertas";
  */
 export function PaginaMercado({ contenedor, usuario }: { contenedor: Contenedor; usuario: Usuario | null }) {
   const codigo = useParametroDeRuta("codigo");
+  // Un enlace compartido por un casero (#/mercado?codigo=x&puesto=14) abre sus puestos con el suyo resaltado.
+  const puestoBuscado = useParametroDeRuta("puesto");
   const [ficha, setFicha] = useState<FichaMercado | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [vista, setVista] = useState<Vista>("precios");
@@ -54,8 +56,8 @@ export function PaginaMercado({ contenedor, usuario }: { contenedor: Contenedor;
   // Al pasar de un mercado a otro (un sector, por ejemplo) se vuelve a los precios.
   useEffect(() => {
     setFicha(null);
-    setVista("precios");
-  }, [codigo]);
+    setVista(puestoBuscado ? "puestos" : "precios");
+  }, [codigo, puestoBuscado]);
 
   return (
     <section aria-labelledby="titulo-mercado" className="ficha">
@@ -78,7 +80,7 @@ export function PaginaMercado({ contenedor, usuario }: { contenedor: Contenedor;
           />
           {vista === "precios" && <TablaPrecios ficha={ficha} />}
           {vista === "puestos" && (
-            <Puestos ficha={ficha} contenedor={contenedor} usuario={usuario} />
+            <Puestos ficha={ficha} contenedor={contenedor} usuario={usuario} resaltado={puestoBuscado} />
           )}
           {vista === "ofertas" && (
             <div className="ofertas">
@@ -261,7 +263,17 @@ function TablaPrecios({ ficha }: { ficha: FichaMercado }) {
   );
 }
 
-function Puestos({ ficha, contenedor, usuario }: { ficha: FichaMercado; contenedor: Contenedor; usuario: Usuario | null }) {
+function Puestos({
+  ficha,
+  contenedor,
+  usuario,
+  resaltado = "",
+}: {
+  ficha: FichaMercado;
+  contenedor: Contenedor;
+  usuario: Usuario | null;
+  resaltado?: string;
+}) {
   // El inventario de cada puesto (C137): lo que tiene hoy, con su disponibilidad.
   const [inventarios, setInventarios] = useState<Map<string, readonly ArticuloInventario[]>>(new Map());
   useEffect(() => {
@@ -292,6 +304,7 @@ function Puestos({ ficha, contenedor, usuario }: { ficha: FichaMercado; contened
           articulos={inventarios.get(`${p.puesto.codigoMercado}:${p.puesto.numero}`) ?? []}
           contenedor={contenedor}
           usuario={usuario}
+          resaltado={resaltado !== "" && resaltado.toUpperCase() === p.puesto.numero}
         />
       ))}
     </div>
@@ -303,16 +316,22 @@ function TarjetaPuesto({
   articulos,
   contenedor,
   usuario,
+  resaltado = false,
 }: {
   item: PuestoEnFicha;
   articulos: readonly ArticuloInventario[];
   contenedor: Contenedor;
   usuario: Usuario | null;
+  resaltado?: boolean;
 }) {
   const { puesto, precios, ofertas } = item;
   const titulo = nombreDelPuesto(puesto);
+  const tarjeta = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (resaltado) tarjeta.current?.scrollIntoView?.({ block: "center" });
+  }, [resaltado]);
   return (
-    <article className="puesto" aria-label={titulo}>
+    <article ref={tarjeta} className={`puesto${resaltado ? " puesto--resaltado" : ""}`} aria-label={titulo}>
       {puesto.foto && <img className="puesto__foto" src={puesto.foto} alt={`Foto de ${titulo}`} loading="lazy" />}
       <header className="puesto__cabeza">
         <span className="puesto__numero" aria-hidden="true">

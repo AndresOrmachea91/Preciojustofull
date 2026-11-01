@@ -6,6 +6,7 @@ import { achicarFoto } from "@/ui/foto";
 import { Icono } from "@/ui/componentes/Iconos";
 import { MapaSelectorUbicacion } from "@/ui/componentes/MapaSelectorUbicacion";
 import { MensajeAviso, MensajeError, textoDeError } from "@/ui/componentes/Mensajes";
+import { CompartirPuesto } from "@/ui/paginas/vendedor/CompartirPuesto";
 
 type Clase = "puesto" | "distribuidora";
 
@@ -34,6 +35,7 @@ export function MiNegocio({ contenedor, mercados, alGuardar }: Props) {
     <div className="negocio">
       <MensajeError texto={error} />
       {puesto && <FotoDelPuesto contenedor={contenedor} puesto={puesto} alCambiar={setPuesto} />}
+      {puesto && <CompartirPuesto puesto={puesto} />}
       <FormularioNegocio
         contenedor={contenedor}
         mercados={mercados}

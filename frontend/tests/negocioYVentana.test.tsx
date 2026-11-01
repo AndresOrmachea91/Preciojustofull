@@ -95,3 +95,20 @@ describe("la ventana del mercado en el mapa", () => {
     expect(await screen.findByRole("link", { name: /¿Vende aquí\? Regístrese gratis/ })).toBeDefined();
   });
 });
+
+describe("la vitrina del casero", () => {
+  it("el enlace compartido abre los puestos del mercado con el suyo resaltado", async () => {
+    window.location.hash = "#/mercado?codigo=rodriguez&puesto=14";
+    render(<App />);
+    const tarjeta = await screen.findByRole("article", { name: "Puesto 14 · Verduras Doña Rosa" });
+    expect(tarjeta.className).toContain("puesto--resaltado");
+    expect(screen.getByRole("tab", { name: /Puestos/, selected: true })).toBeDefined();
+  });
+
+  it("en Mi negocio aparece para compartir por WhatsApp", async () => {
+    await ingresarComoVendedora();
+    fireEvent.click(await screen.findByRole("tab", { name: "Mi negocio" }));
+    const whatsapp = await screen.findByRole("link", { name: /Mandar por WhatsApp/ });
+    expect(decodeURIComponent(whatsapp.getAttribute("href") ?? "")).toContain("#/mercado?codigo=rodriguez&puesto=14");
+  });
+});

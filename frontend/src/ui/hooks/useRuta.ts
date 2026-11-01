@@ -24,6 +24,11 @@ export function hrefMercado(codigo: string): string {
   return `#/mercado?codigo=${encodeURIComponent(codigo)}`;
 }
 
+/** El enlace a un puesto: abre la ficha del mercado en sus puestos y lo resalta. */
+export function hrefPuesto(codigoMercado: string, numero: string): string {
+  return `${hrefMercado(codigoMercado)}&puesto=${encodeURIComponent(numero)}`;
+}
+
 /** Un parámetro de la ruta actual: "#/restablecer?token=abc" → parametroDeRuta("token") = "abc". */
 export function parametroDeRuta(nombre: string): string {
   const hash = globalThis.location?.hash ?? "";
