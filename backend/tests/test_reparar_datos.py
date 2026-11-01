@@ -79,7 +79,7 @@ def test_la_simulacion_no_escribe_nada():
     # haya trabajo pendiente y que la segunda pasada reporte cero.
     assert informe["3_parseo"]["cambios"] > 0
     assert informe["3_parseo"]["unidades_no_convertibles"] == []
-    assert informe["1_catalogo"]["puntos_insertados"] == 88
+    assert informe["1_catalogo"]["puntos_insertados"] == 66
     assert motor.connect().execute(text("SELECT count(*) FROM mercado")).scalar() == 0
 
 
@@ -93,7 +93,7 @@ def test_la_reparacion_deja_un_hecho_por_fila_con_la_primera_captura():
     assert v["por_ambito"] == {"ciudad": 6}
     assert v["sin_unidad_canonica"] == 0
     assert v["productos_que_fallan_al_cargar"] == 0 and v["cargadas_como_entidad"] == 6
-    assert (v["mercados_en_catalogo"], v["productos_en_catalogo"]) == (88, 45)
+    assert (v["mercados_en_catalogo"], v["productos_en_catalogo"]) == (66, 45)
 
     with motor.connect() as c:
         harina = c.execute(text(

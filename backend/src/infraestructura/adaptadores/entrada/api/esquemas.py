@@ -267,7 +267,7 @@ class ContrasenaEntrada(BaseModel):
 
 # --- catálogo (administrador) -----------------------------------------------
 
-TipoPuntoVentaTexto = Literal["mercado", "minimarket", "tienda", "supermercado", "mayorista"]
+TipoPuntoVentaTexto = Literal["mercado", "distribuidor", "mayorista", "minimarket", "tienda", "supermercado"]
 CategoriaTexto = Literal["hortaliza", "tuberculo", "fruta", "carne", "pescado", "lacteo", "abarrote", "otro"]
 UnidadBaseTexto = Literal["kg", "l", "u", "atado"]
 PresentacionTexto = Literal["kilo", "libra", "arroba", "quintal", "litro", "unidad", "docena", "maple", "atado"]

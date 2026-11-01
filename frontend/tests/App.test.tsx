@@ -35,7 +35,7 @@ describe("App sobre React 19", () => {
     expect(tarjetas[0].className).toContain("tarjeta--destacada");
     expect(screen.getByText("Más conveniente")).toBeDefined();
     expect(screen.getByRole("heading", { name: "Precio mayorista" })).toBeDefined();
-    expect(tarjetas[5].textContent).toContain("Makro");
+    expect(tarjetas[5].textContent).toContain("Distribuidora Central");
   });
 
   it("cambia de producto sin que el componente conozca el origen de datos", async () => {
@@ -68,7 +68,7 @@ describe("App sobre React 19", () => {
     const tarjetas = [...document.querySelectorAll(".tarjeta")];
     expect(tarjetas.every((t) => t.querySelector(".procedencia") !== null)).toBe(true);
     const estimadas = tarjetas.filter((t) => t.getAttribute("data-procedencia") === "estimado");
-    expect(estimadas.length).toBe(2);   // Ketal y Makro: nadie midió ahí
+    expect(estimadas.length).toBe(2);   // San Pedro y la distribuidora: nadie midió ahí
     expect(estimadas[0].textContent).toContain("Todavía nadie verificó este precio");
     // El resumen al lado del mapa cuenta lo mismo: de 6 lugares, 2 sin medir.
     expect(screen.getByLabelText("4 de 6 lugares con precio medido")).toBeDefined();

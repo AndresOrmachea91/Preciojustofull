@@ -101,13 +101,13 @@ def test_crear_un_mercado_arma_su_codigo_y_no_lo_repite(catalogo):
     b = puntos.crear(ADMIN, nombre="Mercado Lanza", tipo=TipoPuntoVenta.MERCADO, **EN_LA_PAZ)
     assert (a.codigo, b.codigo) == ("mercado_lanza", "mercado_lanza_2")
     with pytest.raises(CodigoYaExiste):
-        puntos.crear(ADMIN, nombre="Otro", tipo=TipoPuntoVenta.TIENDA, codigo="mercado_lanza")
+        puntos.crear(ADMIN, nombre="Otro", tipo=TipoPuntoVenta.DISTRIBUIDOR, codigo="mercado_lanza")
 
 
 def test_solo_el_administrador_toca_el_catalogo(catalogo):
     puntos, productos, *_ = catalogo
     with pytest.raises(PermisoDenegado):
-        puntos.crear(VECINO, nombre="X", tipo=TipoPuntoVenta.TIENDA)
+        puntos.crear(VECINO, nombre="X", tipo=TipoPuntoVenta.DISTRIBUIDOR)
     with pytest.raises(PermisoDenegado):
         productos.crear(VECINO, nombre="X", categoria=Categoria.OTRO, unidad_base=UnidadCanonica.KILOGRAMO)
 
@@ -121,19 +121,19 @@ def test_solo_el_administrador_toca_el_catalogo(catalogo):
 def test_la_ubicacion_tiene_que_estar_en_la_paz_o_el_alto(catalogo, latitud, longitud):
     puntos, *_ = catalogo
     with pytest.raises(DatoInvalido, match="ubicación"):
-        puntos.crear(ADMIN, nombre="X", tipo=TipoPuntoVenta.TIENDA, latitud=latitud, longitud=longitud)
+        puntos.crear(ADMIN, nombre="X", tipo=TipoPuntoVenta.DISTRIBUIDOR, latitud=latitud, longitud=longitud)
 
 
 def test_un_sector_solo_cuelga_de_un_mercado_que_existe(catalogo):
     puntos, *_ = catalogo
     puntos.crear(ADMIN, nombre="Mercado Lanza", tipo=TipoPuntoVenta.MERCADO)
-    tienda = puntos.crear(ADMIN, nombre="Tienda Doña Rosa", tipo=TipoPuntoVenta.TIENDA)
+    tienda = puntos.crear(ADMIN, nombre="Distribuidora Doña Rosa", tipo=TipoPuntoVenta.DISTRIBUIDOR)
     sector = puntos.crear(ADMIN, nombre="Lanza carnes", tipo=TipoPuntoVenta.MERCADO, codigo_padre="mercado_lanza")
     assert sector.codigo_padre == "mercado_lanza"
     with pytest.raises(MercadoNoEncontrado):
-        puntos.crear(ADMIN, nombre="X", tipo=TipoPuntoVenta.TIENDA, codigo_padre="no_existe")
+        puntos.crear(ADMIN, nombre="X", tipo=TipoPuntoVenta.DISTRIBUIDOR, codigo_padre="no_existe")
     with pytest.raises(JerarquiaInvalida):
-        puntos.crear(ADMIN, nombre="X", tipo=TipoPuntoVenta.TIENDA, codigo_padre=tienda.codigo)
+        puntos.crear(ADMIN, nombre="X", tipo=TipoPuntoVenta.DISTRIBUIDOR, codigo_padre=tienda.codigo)
 
 
 def test_actualizar_conserva_codigo_y_factor(catalogo):
@@ -217,12 +217,12 @@ def _token(cliente, correo):
 def test_api_catalogo_del_administrador(cliente):
     admin = _token(cliente, "admin@pj.bo")
     r = cliente.post("/api/v1/admin/mercados", headers=admin, json={
-        "nombre": "Tienda Doña Rosa", "tipo": "tienda", "zona": "Sopocachi", **EN_LA_PAZ})
-    assert r.status_code == 201 and r.json()["codigo"] == "tienda_dona_rosa"
-    assert "tienda_dona_rosa" in [m["codigo"] for m in cliente.get("/api/v1/mercados").json()]
+        "nombre": "Distribuidora Doña Rosa", "tipo": "distribuidor", "zona": "Sopocachi", **EN_LA_PAZ})
+    assert r.status_code == 201 and r.json()["codigo"] == "distribuidora_dona_rosa"
+    assert "distribuidora_dona_rosa" in [m["codigo"] for m in cliente.get("/api/v1/mercados").json()]
 
-    r = cliente.put("/api/v1/admin/mercados/tienda_dona_rosa", headers=admin, json={
-        "nombre": "Tienda Doña Rosa", "tipo": "tienda", "latitud": 16.5, "longitud": -68.1})
+    r = cliente.put("/api/v1/admin/mercados/distribuidora_dona_rosa", headers=admin, json={
+        "nombre": "Distribuidora Doña Rosa", "tipo": "distribuidor", "latitud": 16.5, "longitud": -68.1})
     assert r.status_code == 400
 
     r = cliente.post("/api/v1/admin/productos", headers=admin, json={
@@ -231,8 +231,8 @@ def test_api_catalogo_del_administrador(cliente):
     assert [p["codigo"] for p in r.json()["presentaciones"]] == ["unidad", "maple"]
     assert r.json()["presentaciones"][1]["factor"] == 30
 
-    assert cliente.delete("/api/v1/admin/mercados/tienda_dona_rosa", headers=admin).status_code == 204
-    assert "tienda_dona_rosa" not in [m["codigo"] for m in cliente.get("/api/v1/mercados").json()]
+    assert cliente.delete("/api/v1/admin/mercados/distribuidora_dona_rosa", headers=admin).status_code == 204
+    assert "distribuidora_dona_rosa" not in [m["codigo"] for m in cliente.get("/api/v1/mercados").json()]
 
 
 def test_api_catalogo_publico_trae_presentaciones(cliente):

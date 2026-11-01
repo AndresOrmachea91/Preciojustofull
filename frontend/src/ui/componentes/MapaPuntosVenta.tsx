@@ -17,6 +17,7 @@ const ZOOM_INICIAL = 13;
 /** Diferenciación visual por tipo: color del relleno. */
 const COLOR_TIPO: Record<TipoPuntoVenta, string> = {
   mercado: "#1c6b57",
+  distribuidor: "#6b4fa0",
   supermercado: "#1f5aa6",
   minimarket: "#4c8fd6",
   tienda: "#7a8f88",

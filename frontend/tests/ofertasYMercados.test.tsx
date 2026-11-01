@@ -83,12 +83,12 @@ describe("reglas de la oferta y del directorio", () => {
       { mercado: mercado("lanza", "Mercado Lanza"), puestos: 0, ofertas: 0, sectores: 0 },
       { mercado: mercado("rodriguez", "Mercado Rodríguez", { zona: "San Pedro" }), puestos: 2, ofertas: 1, sectores: 1 },
       { mercado: mercado("rod_cub", "Rodríguez cubierto", { codigoPadre: "rodriguez" }), puestos: 0, ofertas: 0, sectores: 0 },
-      { mercado: mercado("ketal", "Ketal", { tipo: "supermercado" }), puestos: 0, ofertas: 0, sectores: 0 },
+      { mercado: mercado("central", "Distribuidora Central", { tipo: "distribuidor" }), puestos: 0, ofertas: 0, sectores: 0 },
     ];
-    expect(filtrarDirectorio(entradas, "").map((e) => e.mercado.codigo)).toEqual(["rodriguez", "ketal", "lanza"]);
+    expect(filtrarDirectorio(entradas, "").map((e) => e.mercado.codigo)).toEqual(["rodriguez", "central", "lanza"]);
     expect(filtrarDirectorio(entradas, "RODRIGUEZ").map((e) => e.mercado.codigo)).toEqual(["rodriguez"]);
     expect(filtrarDirectorio(entradas, "san pedro").map((e) => e.mercado.codigo)).toEqual(["rodriguez"]);
-    expect(filtrarDirectorio(entradas, "", "supermercado").map((e) => e.mercado.codigo)).toEqual(["ketal"]);
+    expect(filtrarDirectorio(entradas, "", "distribuidor").map((e) => e.mercado.codigo)).toEqual(["central"]);
   });
 
   it("lee la diferencia con la ciudad", () => {

@@ -8,7 +8,8 @@
 
 export type NivelConfianza = "verificado" | "alto" | "medio" | "bajo";
 
-export type TipoPuntoVenta = "mercado" | "minimarket" | "tienda" | "supermercado" | "mayorista";
+/** Mercados, distribuidores y mayoristas. Las cadenas (supermercado, minimarket, tienda) salieron del sistema: decisión 26. */
+export type TipoPuntoVenta = "mercado" | "distribuidor" | "mayorista" | "minimarket" | "tienda" | "supermercado";
 
 /** A qué altura de la cadena está el precio. Dos números de niveles distintos no compiten. */
 export type NivelPrecio = "mayorista" | "minorista";
@@ -129,6 +130,7 @@ export function etiquetaConfianza(nivel: NivelConfianza): string {
 export function etiquetaTipo(tipo: TipoPuntoVenta): string {
   const etiquetas: Record<TipoPuntoVenta, string> = {
     mercado: "Mercado",
+    distribuidor: "Distribuidor",
     minimarket: "Minimarket",
     tienda: "Tienda",
     supermercado: "Supermercado",
@@ -446,7 +448,8 @@ export function precioEnPresentacion(precio: Precio, presentacion: Presentacion)
   };
 }
 
-export const TIPOS_PUNTO_VENTA: readonly TipoPuntoVenta[] = ["mercado", "supermercado", "minimarket", "tienda", "mayorista"];
+/** Los que se pueden dar de alta: el sistema es de mercados y caseros, no de cadenas. */
+export const TIPOS_PUNTO_VENTA: readonly TipoPuntoVenta[] = ["mercado", "distribuidor", "mayorista"];
 
 export const CATEGORIAS: readonly { codigo: string; nombre: string }[] = [
   { codigo: "hortaliza", nombre: "Hortaliza" },

@@ -516,7 +516,7 @@ button, a, [role="option"] { -webkit-tap-highlight-color: transparent; }
 .directorio__lugar > .icono:last-child { color: var(--tenue); }
 .directorio__icono { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 10px; background: var(--jade-claro); color: var(--jade); }
 .directorio__icono--supermercado, .directorio__icono--minimarket, .directorio__icono--tienda { background: var(--crema); color: #1f5aa6; }
-.directorio__icono--mayorista { background: var(--ambar-claro); color: var(--ambar); }
+.directorio__icono--mayorista, .directorio__icono--distribuidor { background: var(--ambar-claro); color: var(--ambar); }
 .directorio__texto { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .directorio__texto strong { color: var(--tinta); }
 .directorio__cifras { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }

@@ -61,7 +61,7 @@ describe("¿Lo vio aquí? Diga a cuánto", () => {
   async function ketal() {
     const memoria = new PreciosMemoria();
     const { marcadores } = await new VerMapa(memoria, memoria).ejecutar("tomate");
-    return marcadores.find((m) => m.mercado.codigo === "ketal_san_pedro")!;
+    return marcadores.find((m) => m.mercado.codigo === "mercado_san_pedro")!;
   }
 
   it("sin sesión invita a ingresar", async () => {

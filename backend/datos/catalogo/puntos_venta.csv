@@ -65,25 +65,3 @@ veinticuatro_enero,Mercado 24 de Enero,mercado,Sur,-16.537104,-68.048408,,w29676
 ovejuyo,Mercado de Ovejuyo,mercado,Sur,-16.534222,-68.038116,,w430247409,ok,
 las_cholas,Mercado Las Cholas,mercado,Sur,-16.544733,-68.092378,,w431568373,ok,
 chicani,Mercado Soris Kora de Chicani,mercado,Sur,-16.500521,-68.082198,,n4379563532,ok,"OSM nivel 9 solo define los 7 macrodistritos urbanos; Hampaturi y Zongo no existen como polígono, por eso el punto cae en Sur"
-hipermaxi_sopocachi,Hipermaxi Sopocachi,supermercado,Cotahuma,-16.509439,-68.127925,,n767617231,ok,
-hipermaxi_miraflores,Hipermaxi Miraflores,supermercado,Centro,-16.496182,-68.120448,,n2045415700,ok,
-hipermaxi_arce,Hipermaxi Avenida Arce,supermercado,Centro,-16.508975,-68.122995,,n5760486839,ok,
-hipermaxi_obrajes,Hipermaxi Obrajes,supermercado,Sur,-16.528313,-68.103342,,w372054111,ok,
-hipermaxi_ballivian,Hipermaxi Calacoto Ballivián,supermercado,Sur,-16.538257,-68.080383,,w351547114,ok,
-hipermaxi_achumani,Hipermaxi Achumani,supermercado,Sur,-16.518851,-68.062058,,w365104169,ok,
-hipermaxi_costanera_este,Hipermaxi Avenida Costanera (este),supermercado,Sur,-16.545761,-68.070011,,w834091759,confirmar_en_campo,no es Achumani; barrio sin confirmar. Está a 2 km de hipermaxi_costanera_oeste: verificar en el mapa si son dos sucursales o un duplicado de OSM
-hipermaxi_costanera_oeste,Hipermaxi Avenida Costanera (oeste),supermercado,Sur,-16.545346,-68.091130,,n10974264306,confirmar_en_campo,"no es Obrajes; barrio sin confirmar, por eso el nombre usa la avenida y no un barrio inventado"
-hipermaxi_chasquipampa,Hipermaxi Chasquipampa,supermercado,Sur,-16.540957,-68.057437,,n10927005512,ok,"fusionado con el duplicado OSM n11165113607, a 40 m"
-ketal_plaza_espana,Ketal Express Plaza España,supermercado,Cotahuma,-16.514544,-68.129027,,n767618112,ok,
-ketal_san_pedro,Ketal San Pedro,supermercado,Cotahuma,-16.501668,-68.135871,,n5712450233,ok,"el barrio es San Pedro, no Sopocachi; el macrodistrito Cotahuma viene del polígono oficial y no se toca"
-ketal_republica,Ketal Avenida República,supermercado,Max Paredes,-16.492262,-68.144836,,n5491718223,ok,
-ketal_calacoto_15,Ketal Calacoto Calle 15,supermercado,Sur,-16.539314,-68.083925,,n1208365165,ok,
-ketal_calacoto_21,Ketal Calacoto Calle 21,supermercado,Sur,-16.540441,-68.078032,,n1598894181,ok,
-ketal_san_miguel,Ketal San Miguel,supermercado,Sur,-16.533800,-68.087053,,w439924320,ok,"fusionado con el duplicado OSM n4376024110, mismo punto"
-ketal_obrajes,Ketal Obrajes,supermercado,Sur,-16.529130,-68.101787,,w439830838,ok,
-ketal_achumani,Ketal Achumani,supermercado,Sur,-16.534672,-68.071902,,w846263517,ok,
-fidalga_centro,Fidalga Centro,supermercado,Centro,-16.496699,-68.132526,,n4925402221,ok,
-fidalga_sanchez_lima,Supermercado Fidalga Sánchez Lima,supermercado,Cotahuma,-16.510590,-68.127996,,w827221171,ok,
-zumarket_german_busch,ZuMarket Germán Busch,supermercado,Centro,-16.502555,-68.121272,,w439091008,ok,
-emapa_camacho,EMAPA Avenida Camacho,supermercado,Centro,-16.500028,-68.132075,,n5796476453,ok,
-makro_centro,Makro,mayorista,Centro,-16.493233,-68.144270,,n11935477269,decidir_alcance,tipo mayorista: el dominio no lo compara con precios de consumidor final. Falta decidir si se muestra en la comparación o solo alimenta la serie mayorista

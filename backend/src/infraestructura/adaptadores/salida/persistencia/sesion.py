@@ -172,11 +172,22 @@ _INFORMANTE_REPORTE = (
     "WHERE 'reporte:' || CAST(r.id AS VARCHAR) = observacion_precio.evidencia) "
     "WHERE informante IS NULL AND evidencia LIKE 'reporte:%'"
 )
+# Decisión 26 (1 de noviembre): el sistema es de mercados y caseros. Las
+# cadenas (supermercados, minimarkets, tiendas y el mayorista Makro) se dan
+# de baja LÓGICA: la fila y sus observaciones quedan, y se pueden reactivar.
+CADENAS_FUERA_DE_ALCANCE = ("makro_centro",)
+_CADENAS_FUERA = (
+    "UPDATE mercado SET eliminado = TRUE, modificado_por = 'decision-26', modificado_en = CURRENT_TIMESTAMP "
+    "WHERE NOT eliminado AND (tipo IN ('supermercado', 'minimarket', 'tienda') "
+    f"OR codigo IN ({', '.join(repr(c) for c in CADENAS_FUERA_DE_ALCANCE)}))"
+)
+
 # El rol "recolector" pasó a llamarse "vendedor" (decisión del 8 de octubre).
 _ROL_RENOMBRADO = "UPDATE usuario SET rol = 'vendedor' WHERE rol = 'recolector'"
 
 _RELLENOS_HISTORICOS = {
     "sqlite": [
+        _CADENAS_FUERA,
         _ROL_RENOMBRADO,
         _AMBITO_POR_FUENTE,
         _INFORMANTE_VENDEDOR,
@@ -186,6 +197,7 @@ _RELLENOS_HISTORICOS = {
         "WHERE fecha_observacion IS NULL AND mes IS NOT NULL AND dia IS NOT NULL",
     ],
     "postgresql": [
+        _CADENAS_FUERA,
         _ROL_RENOMBRADO,
         _AMBITO_POR_FUENTE,
         _INFORMANTE_VENDEDOR,

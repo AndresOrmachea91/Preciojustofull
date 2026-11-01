@@ -19,10 +19,21 @@ class TipoPuntoVenta(str, Enum):
     """
 
     MERCADO = "mercado"
+    # Vende por caja, bulto o quintal a otros negocios y a familias que
+    # compran en cantidad: es otro nivel, como el mayorista (decisión 26).
+    DISTRIBUIDOR = "distribuidor"
+    MAYORISTA = "mayorista"
+    # Fuera de alcance desde el 1 de noviembre (decisión 26): el sistema es
+    # de mercados y caseros, no de cadenas. Quedan en el enum porque hay
+    # filas históricas que los nombran.
     MINIMARKET = "minimarket"
     TIENDA = "tienda"
     SUPERMERCADO = "supermercado"
-    MAYORISTA = "mayorista"
+
+    @property
+    def en_alcance(self) -> bool:
+        """Lo que el sistema muestra y deja dar de alta: mercados, distribuidores y mayoristas."""
+        return self in (TipoPuntoVenta.MERCADO, TipoPuntoVenta.DISTRIBUIDOR, TipoPuntoVenta.MAYORISTA)
 
     @property
     def admite_precio_puntual(self) -> bool:
@@ -31,7 +42,7 @@ class TipoPuntoVenta(str, Enum):
     @property
     def nivel_precio(self) -> NivelPrecio:
         """A qué nivel de la cadena pertenece lo que se observa en este tipo de local."""
-        if self is TipoPuntoVenta.MAYORISTA:
+        if self in (TipoPuntoVenta.MAYORISTA, TipoPuntoVenta.DISTRIBUIDOR):
             return NivelPrecio.MAYORISTA
         return NivelPrecio.MINORISTA
 

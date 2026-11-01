@@ -27,12 +27,12 @@ describe("CompararMercados", () => {
     expect(resultado.ahorro).toBeGreaterThan(0);
   });
 
-  it("el minimarket sale más caro que el mercado", async () => {
+  it("el mercado de Sopocachi sale más caro que el Rodríguez", async () => {
     const resultado = await caso.ejecutar("tomate");
     const porCodigo = Object.fromEntries(
       resultado.opciones.map((o) => [o.mercado.codigo, o.precio.rango.centro]),
     );
-    expect(porCodigo["minimarket_sopocachi"]).toBeGreaterThan(porCodigo["rodriguez"]);
+    expect(porCodigo["mercado_sopocachi"]).toBeGreaterThan(porCodigo["rodriguez"]);
   });
 
   it("filtra por zona", async () => {

@@ -24,7 +24,7 @@ const MERCADOS = [
     latitud: -16.500676, longitud: -68.139072, publica_rango: true,
   },
   {
-    codigo: "makro_centro", nombre: "Makro", tipo: "mayorista", zona: "Centro",
+    codigo: "distribuidora_central", nombre: "Distribuidora Central", tipo: "distribuidor", zona: "Centro",
     macrodistrito: "Centro", codigo_padre: null, nivel_precio: "mayorista",
     latitud: -16.493233, longitud: -68.14427, publica_rango: false,
   },
@@ -39,8 +39,8 @@ const PRECIO = {
 
 const COMPARAR = [
   { codigo_mercado: "rodriguez", nombre_mercado: "Mercado Rodríguez", tipo: "mercado", zona: "Cotahuma", nivel_precio: "minorista", precio: PRECIO },
-  { codigo_mercado: "makro_centro", nombre_mercado: "Makro", tipo: "mayorista", zona: "Centro", nivel_precio: "mayorista",
-    precio: { ...PRECIO, codigo_mercado: "makro_centro", rango: { minimo: 11.3, maximo: 13.26, centro: 12.28 } } },
+  { codigo_mercado: "distribuidora_central", nombre_mercado: "Distribuidora Central", tipo: "distribuidor", zona: "Centro", nivel_precio: "mayorista",
+    precio: { ...PRECIO, codigo_mercado: "distribuidora_central", rango: { minimo: 11.3, maximo: 13.26, centro: 12.28 } } },
 ];
 
 /** Servidor simulado: enruta por URL y registra lo que le pidieron. */

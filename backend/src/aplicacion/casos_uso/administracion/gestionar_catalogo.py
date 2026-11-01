@@ -88,6 +88,10 @@ class GestionarPuntosVenta:
     def _validar(self, mercado: Mercado) -> Mercado:
         if not mercado.nombre:
             raise DatoInvalido("El punto de venta necesita un nombre")
+        if not mercado.tipo.en_alcance:
+            raise DatoInvalido(
+                f"{mercado.tipo.value}: el sistema es de mercados, distribuidores y mayoristas, no de cadenas"
+            )
         if not ubicacion_valida(mercado.latitud, mercado.longitud):
             raise DatoInvalido("La ubicación tiene que tener latitud y longitud, dentro de La Paz o El Alto")
         if mercado.codigo_padre is not None and self._mercados.obtener(mercado.codigo_padre) is None:

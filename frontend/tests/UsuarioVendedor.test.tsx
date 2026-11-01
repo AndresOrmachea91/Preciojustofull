@@ -46,7 +46,7 @@ describe("usuario", () => {
     expect(within(cotizacion).getAllByRole("listitem")[0].textContent).toMatch(/Mercado Villa Fátima.*Bs 155\.94/);
     // El mayorista va aparte: no compite con los precios de consumidor final.
     const mayorista = within(cotizacion).getByRole("list", { name: "Precio mayorista de esta lista" });
-    expect(within(mayorista).getByText("Makro")).toBeDefined();
+    expect(within(mayorista).getByText("Distribuidora Central")).toBeDefined();
   });
 
   it("reporta un precio y lo ve pendiente en sus reportes", async () => {

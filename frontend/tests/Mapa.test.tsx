@@ -22,8 +22,8 @@ describe("VerMapa", () => {
 
     expect(marcadores).toHaveLength(7);                   // los 7 del catálogo en memoria
     expect(resumen.observados + resumen.estimados + resumen.sinDatos).toBe(7);
-    expect(resumen.estimados).toBe(1);                     // Makro
-    expect(resumen.sinDatos).toBe(3);                      // sin precio de papa: cubierto, mini, ketal
+    expect(resumen.estimados).toBe(1);                     // la distribuidora
+    expect(resumen.sinDatos).toBe(3);                      // sin precio de papa: cubierto, Sopocachi, San Pedro
     expect(resumen.porNivel.mayorista).toBe(1);
   });
 });
@@ -47,15 +47,15 @@ describe("PanelPunto", () => {
   it("muestra nombre, macrodistrito, tipo y el precio con su procedencia y respaldo", async () => {
     const memoria = new PreciosMemoria();
     const { marcadores } = await new VerMapa(memoria, memoria).ejecutar("tomate");
-    const ketal = marcadores.find((m) => m.mercado.codigo === "ketal_san_pedro")!;
+    const ketal = marcadores.find((m) => m.mercado.codigo === "mercado_san_pedro")!;
 
     render(<PanelPunto marcador={ketal} producto={{ codigo: "tomate", nombre: "Tomate", categoria: "hortaliza", esPerecedero: true, unidadBase: "kg", diasConservacion: 5, presentaciones: PRESENTACIONES_POR_UNIDAD.kg }} />);
 
-    expect(screen.getByRole("heading", { name: "Ketal San Pedro" })).toBeDefined();
-    expect(screen.getByText(/Supermercado · Cotahuma/)).toBeDefined();
+    expect(screen.getByRole("heading", { name: "Mercado San Pedro" })).toBeDefined();
+    expect(screen.getByText(/Mercado · Cotahuma/)).toBeDefined();
     expect(screen.getByText("Precio al consumidor")).toBeDefined();
     expect(document.querySelector(".procedencia--estimado")).not.toBeNull();
-    expect(screen.getByText(/Todavía nadie verificó este precio en Ketal San Pedro/)).toBeDefined();
+    expect(screen.getByText(/Todavía nadie verificó este precio en Mercado San Pedro/)).toBeDefined();
     expect(screen.getByText(/104 observaciones de la fuente oficial/)).toBeDefined();
     expect(document.querySelector(".confianza")).not.toBeNull();
   });
@@ -63,12 +63,12 @@ describe("PanelPunto", () => {
   it("un mayorista se presenta como otro nivel, no como competidor", async () => {
     const memoria = new PreciosMemoria();
     const { marcadores } = await new VerMapa(memoria, memoria).ejecutar("tomate");
-    const makro = marcadores.find((m) => m.mercado.codigo === "makro_centro")!;
+    const makro = marcadores.find((m) => m.mercado.codigo === "distribuidora_central")!;
 
     render(<PanelPunto marcador={makro} producto={null} />);
 
     expect(screen.getByText("Precio mayorista")).toBeDefined();
-    expect(screen.getByText(/Mayorista · Centro/)).toBeDefined();
+    expect(screen.getByText(/Distribuidor · Centro/)).toBeDefined();
   });
 
   it("sin precio lo dice, no lo inventa", () => {

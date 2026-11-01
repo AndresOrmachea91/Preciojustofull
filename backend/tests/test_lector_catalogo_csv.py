@@ -64,7 +64,8 @@ def test_el_catalogo_real_se_lee_entero():
     assert len(puntos) >= 50
     por_codigo = {p.codigo: p for p in puntos}
     assert por_codigo["rodriguez_cubierto"].codigo_padre == "rodriguez"
-    assert por_codigo["makro_centro"].tipo is TipoPuntoVenta.MAYORISTA
+    # Las cadenas (supermercados y Makro) salieron del catálogo: decisión 26.
+    assert all(p.tipo.en_alcance for p in puntos)
 
 
 # --- productos ------------------------------------------------------------

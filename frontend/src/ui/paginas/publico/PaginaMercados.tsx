@@ -14,8 +14,7 @@ import { hrefMercado } from "@/ui/hooks/useRuta";
 const TIPOS: readonly { valor: TipoPuntoVenta | "todos"; texto: string }[] = [
   { valor: "todos", texto: "Todos" },
   { valor: "mercado", texto: "Mercados" },
-  { valor: "supermercado", texto: "Supermercados" },
-  { valor: "minimarket", texto: "Minimarkets" },
+  { valor: "distribuidor", texto: "Distribuidores" },
   { valor: "mayorista", texto: "Mayoristas" },
 ];
 

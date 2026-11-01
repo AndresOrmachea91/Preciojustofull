@@ -16,7 +16,7 @@ const VACIO: DatosPuntoVenta = {
   codigoPadre: null,
 };
 
-/** Mercados, supermercados, tiendas y mayoristas: alta, edición (con su lugar en el mapa) y baja lógica. */
+/** Mercados, distribuidores y mayoristas: alta, edición (con su lugar en el mapa) y baja lógica. */
 export function CatalogoPuntosVenta({ contenedor }: { contenedor: Contenedor }) {
   const [lista, setLista] = useState<Mercado[] | null>(null);
   const [editando, setEditando] = useState<{ codigo: string | null; datos: DatosPuntoVenta } | null>(null);
