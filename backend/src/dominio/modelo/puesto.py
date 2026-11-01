@@ -20,6 +20,9 @@ from src.dominio.excepciones import DatoInvalido
 from src.dominio.modelo.auditoria import Auditoria
 from src.dominio.modelo.producto import Categoria
 
+# El "puesto" de una distribuidora es su local entero: no tiene número de
+# pasillo, pero sí foto, rubros e inventario como cualquier casero.
+NUMERO_LOCAL = "LOCAL"
 LARGO_MAXIMO_NUMERO = 16
 LARGO_MAXIMO_NOMBRE = 80
 LARGO_MAXIMO_REFERENCIA = 160
@@ -56,6 +59,8 @@ class Puesto:
     referencia: str = ""
     # El vendedor dueño del puesto. Un vendedor tiene a lo sumo uno.
     id_vendedor: int | None = None
+    # Nombre del archivo de la foto del puesto (lo da el almacén de fotos).
+    foto: str | None = None
     id: int | None = None
     auditoria: Auditoria | None = field(default=None, compare=False)
 
@@ -74,6 +79,13 @@ class Puesto:
         object.__setattr__(self, "rubros", unicos)
 
     @property
+    def es_local(self) -> bool:
+        """El local entero de una distribuidora, no un puesto de mercado."""
+        return self.numero == NUMERO_LOCAL
+
+    @property
     def titulo(self) -> str:
         """ "Puesto 14 · Verduras Doña Juana", como se muestra."""
+        if self.es_local:
+            return self.nombre or "Local"
         return f"Puesto {self.numero}" + (f" · {self.nombre}" if self.nombre else "")

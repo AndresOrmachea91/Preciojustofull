@@ -453,6 +453,46 @@ class PuestoEntrada(BaseModel):
     nombre: str = Field(default="", max_length=80)
     rubros: list[str] = Field(default_factory=list, max_length=8)
     referencia: str = Field(default="", max_length=160)
+    # El mercado lo elige el casero (decisión 26). Sin él, el que ya tenía.
+    codigo_mercado: str | None = Field(default=None, max_length=64)
+
+
+class DistribuidoraEntrada(BaseModel):
+    nombre: str = Field(min_length=1, max_length=80)
+    zona: str = Field(default="", max_length=128)
+    macrodistrito: str = Field(default="", max_length=64)
+    latitud: float
+    longitud: float
+    rubros: list[str] = Field(default_factory=list, max_length=8)
+    referencia: str = Field(default="", max_length=160)
+
+
+class FotoEntrada(BaseModel):
+    """La foto como data URL ("data:image/jpeg;base64,..."), ya achicada en el celular."""
+
+    imagen: str = Field(min_length=20, max_length=3_500_000)
+
+
+DisponibilidadTexto = Literal["hay", "poco", "agotado"]
+
+
+class ArticuloEntrada(BaseModel):
+    codigo_producto: str = Field(min_length=1, max_length=64)
+    monto: float = Field(gt=0)
+    presentacion: str = Field(min_length=1, max_length=16)
+    disponibilidad: DisponibilidadTexto = "hay"
+
+
+class ArticuloSalida(BaseModel):
+    codigo_producto: str
+    nombre_producto: str
+    categoria: str
+    monto: float
+    presentacion: str
+    precio_por_unidad_base: float
+    unidad_base: str
+    disponibilidad: DisponibilidadTexto
+    actualizado_en: datetime | None
 
 
 class PuestoSalida(BaseModel):
@@ -464,6 +504,21 @@ class PuestoSalida(BaseModel):
     referencia: str
     # False si el número solo aparece en mediciones de campo.
     registrado: bool = True
+    # Dirección para pedir la foto (/api/v1/fotos/...), o None si no tiene.
+    foto: str | None = None
+    # True: es el local de una distribuidora, no un puesto con número.
+    es_local: bool = False
+
+
+class PuestoConInventarioSalida(BaseModel):
+    puesto: PuestoSalida
+    articulos: list[ArticuloSalida]
+    total: int
+
+
+class PuestosDelMercadoSalida(BaseModel):
+    mercado: MercadoSalida
+    puestos: list[PuestoConInventarioSalida]
 
 
 class OfertaEntrada(BaseModel):

@@ -10,6 +10,7 @@ from datetime import date, datetime, timedelta, timezone
 from functools import lru_cache
 
 import logging
+from pathlib import Path
 
 from src.infraestructura.adaptadores.salida.memoria.cuentas import (
     AuditoriaEnMemoria, ReportesEnMemoria, UsuariosEnMemoria,
@@ -59,10 +60,17 @@ from src.aplicacion.casos_uso.vendedor.ofertas import OfertasDelCasero
 from src.aplicacion.casos_uso.precios.ofertas_vigentes import VerOfertasVigentes
 from src.aplicacion.casos_uso.precios.ficha_mercado import DirectorioMercados, FichaMercado
 from src.aplicacion.casos_uso.precios.priorizar_verificaciones import PriorizarVerificaciones
+from src.aplicacion.casos_uso.precios.puestos_del_mercado import PuestosDelMercado
+from src.aplicacion.casos_uso.vendedor.inventario import InventarioDelPuesto
+from src.infraestructura.adaptadores.salida.fotos.almacen_local import AlmacenFotosLocal
 from src.aplicacion.casos_uso.usuario.confirmar_oferta import ConfirmarOferta
 from src.aplicacion.casos_uso.administracion.revisar_ofertas import RevisarOfertas
-from src.infraestructura.adaptadores.salida.memoria.puestos_y_ofertas import OfertasEnMemoria, PuestosEnMemoria
-from src.infraestructura.adaptadores.salida.persistencia.puestos_y_ofertas import OfertasPostgres, PuestosPostgres
+from src.infraestructura.adaptadores.salida.memoria.puestos_y_ofertas import (
+    InventarioEnMemoria, OfertasEnMemoria, PuestosEnMemoria,
+)
+from src.infraestructura.adaptadores.salida.persistencia.puestos_y_ofertas import (
+    InventarioPostgres, OfertasPostgres, PuestosPostgres,
+)
 from src.configuracion import config
 from src.dominio.modelo import Rol
 from src.dominio.servicio.motor_fusion import MotorFusion
@@ -266,6 +274,16 @@ def _puestos_y_ofertas():
     return PuestosPostgres(fabrica), OfertasPostgres(fabrica)
 
 
+def _inventario():
+    fabrica = _fabrica()
+    return InventarioEnMemoria() if fabrica is None else InventarioPostgres(fabrica)
+
+
+def almacen_fotos() -> AlmacenFotosLocal:
+    carpeta = config.fotos_dir or str(Path(__file__).resolve().parents[5] / "datos" / "fotos")
+    return AlmacenFotosLocal(carpeta)
+
+
 def caso_ofertas_vigentes() -> VerOfertasVigentes:
     p, m, o = _repositorios()
     puestos, ofertas = _puestos_y_ofertas()
@@ -297,7 +315,17 @@ def caso_revisar_ofertas() -> RevisarOfertas:
 
 
 def caso_mi_puesto() -> MiPuestoCasoUso:
-    return MiPuestoCasoUso(_repositorios()[1], _puestos_y_ofertas()[0])
+    return MiPuestoCasoUso(_repositorios()[1], _puestos_y_ofertas()[0], _cuentas()[0], almacen_fotos())
+
+
+def caso_inventario() -> InventarioDelPuesto:
+    p, _, _ = _repositorios()
+    return InventarioDelPuesto(p, _puestos_y_ofertas()[0], _inventario(), caso_publicar_precio())
+
+
+def caso_puestos_del_mercado() -> PuestosDelMercado:
+    p, m, _ = _repositorios()
+    return PuestosDelMercado(m, p, _puestos_y_ofertas()[0], _inventario())
 
 
 def caso_ofertas_del_casero() -> OfertasDelCasero:

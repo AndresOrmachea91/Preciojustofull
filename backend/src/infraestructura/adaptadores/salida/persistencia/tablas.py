@@ -340,8 +340,31 @@ class PuestoTabla(Base, Auditable):
     rubros = Column(String(128), nullable=False, default="")
     referencia = Column(String(160), nullable=False, default="")
     id_vendedor = Column(Integer, ForeignKey("usuario.id"), nullable=True)
+    # Nombre del archivo de la foto (C137); la imagen vive en el almacén de fotos, no en la base.
+    foto = Column(String(80), nullable=True)
 
     __table_args__ = (Index("ix_puesto_mercado", "codigo_mercado"),)
+
+
+class InventarioPuestoTabla(Base, Auditable):
+    """
+    Qué vende un puesto, a cuánto y si le queda (C137). Una fila por puesto
+    y producto, única entre las vigentes (índice parcial en sesion.py): si
+    el casero deja de venderlo, se marca eliminado y la historia queda.
+    """
+
+    __tablename__ = "inventario_puesto"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    id_puesto = Column(Integer, ForeignKey("puesto.id"), nullable=False)
+    codigo_producto = Column(String(64), ForeignKey("producto.codigo"), nullable=False)
+    monto = Column(Float, nullable=False)
+    presentacion = Column(String(16), nullable=False)
+    # hay, poco o agotado.
+    disponibilidad = Column(String(12), nullable=False, default="hay")
+    actualizado_en = Column(DateTime(timezone=True), nullable=False)
+
+    __table_args__ = (Index("ix_inventario_puesto", "id_puesto"),)
 
 
 class OfertaTabla(Base, Auditable):

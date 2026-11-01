@@ -14,7 +14,7 @@ from datetime import date, datetime
 from typing import Protocol, runtime_checkable
 
 from src.dominio.modelo import (
-    Confirmacion, DatosSalud, EstadoReporte, EstadoRespaldo, Fuente, ListaCompras, Mercado, Observacion, Oferta,
+    ArticuloInventario, Confirmacion, DatosSalud, EstadoReporte, EstadoRespaldo, Fuente, ListaCompras, Mercado, Observacion, Oferta,
     Producto, Puesto, RegistroAuditado, Reporte, Usuario,
 )
 from src.dominio.valor import Periodo
@@ -234,6 +234,32 @@ class RepositorioPuestos(Protocol):
         ...
     def contar_por_mercado(self) -> dict[str, int]:
         """Cuántos puestos vigentes tiene cada mercado (para el directorio)."""
+        ...
+
+
+@runtime_checkable
+class RepositorioInventario(Protocol):
+    def del_puesto(self, id_puesto: int) -> list[ArticuloInventario]:
+        """Los artículos vigentes de un puesto."""
+        ...
+    def de_puestos(self, ids_puestos: list[int]) -> dict[int, list[ArticuloInventario]]:
+        """Los de varios puestos a la vez (la ficha de un mercado, la ventana del mapa)."""
+        ...
+    def guardar(self, articulo: ArticuloInventario) -> ArticuloInventario:
+        """Uno por puesto y producto: si ya está, se actualiza."""
+        ...
+    def quitar(self, id_puesto: int, codigo_producto: str) -> None:
+        """Borrado LÓGICO: el puesto dejó de vender ese producto."""
+        ...
+
+
+@runtime_checkable
+class AlmacenFotos(Protocol):
+    def guardar(self, contenido: bytes, extension: str) -> str:
+        """Guarda la imagen y devuelve su nombre de archivo (no adivinable)."""
+        ...
+    def ruta(self, nombre: str) -> str | None:
+        """Dónde está el archivo para servirlo; None si no existe o el nombre no es válido."""
         ...
 
 

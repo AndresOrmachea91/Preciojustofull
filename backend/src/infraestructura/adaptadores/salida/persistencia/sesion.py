@@ -70,6 +70,9 @@ _COLUMNAS_AGREGADAS = {
         "informante": "VARCHAR(64) NULL",
         "puesto": "VARCHAR(16) NULL",
     },
+    "puesto": {
+        "foto": "VARCHAR(80) NULL",
+    },
 }
 
 # Las 5 columnas de Auditable, para las tablas que existían antes de la
@@ -119,6 +122,12 @@ _PUESTO_UNO_POR_VENDEDOR = (
     "WHERE NOT eliminado AND id_vendedor IS NOT NULL"
 )
 
+# Un producto aparece una sola vez en el inventario vigente de un puesto.
+_INVENTARIO_UNICO_VIGENTE = (
+    "CREATE UNIQUE INDEX IF NOT EXISTS uq_inventario_vigente ON inventario_puesto (id_puesto, codigo_producto) "
+    "WHERE NOT eliminado"
+)
+
 # informante se agregó con ALTER: el índice que declara la tabla solo nace
 # con create_all en una base nueva, así que en una que ya existía se crea acá.
 _INDICE_INFORMANTE = (
@@ -145,8 +154,10 @@ _AJUSTES_POR_DIALECTO = {
         _PUESTO_UNICO_VIGENTE,
         _PUESTO_UNO_POR_VENDEDOR,
         _INDICE_INFORMANTE,
+        _INVENTARIO_UNICO_VIGENTE,
     ],
-    "sqlite": [_CORREO_UNICO_VIGENTE, _PUESTO_UNICO_VIGENTE, _PUESTO_UNO_POR_VENDEDOR, _INDICE_INFORMANTE],
+    "sqlite": [_CORREO_UNICO_VIGENTE, _PUESTO_UNICO_VIGENTE, _PUESTO_UNO_POR_VENDEDOR, _INDICE_INFORMANTE,
+               _INVENTARIO_UNICO_VIGENTE],
 }
 
 # Rellenos que se pueden hacer con honestidad sobre filas históricas. El

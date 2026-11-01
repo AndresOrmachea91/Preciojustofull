@@ -98,8 +98,8 @@ def test_el_casero_registra_su_puesto_y_nadie_mas_toma_ese_numero(mundo):
         mundo["mi_puesto"].guardar(PEDRO, "14", "Otro", [])
 
 
-def test_en_una_tienda_el_local_es_el_puesto(mundo):
-    with pytest.raises(DatoInvalido, match="local entero"):
+def test_un_puesto_va_solo_en_un_mercado(mundo):
+    with pytest.raises(DatoInvalido, match="no un mercado"):
         mundo["mi_puesto"].guardar(TIENDERA, "1", "Caja", [])
 
 

@@ -43,6 +43,9 @@ class Configuracion(BaseSettings):
     # Carpeta de respaldos (montada solo lectura en el contenedor de la
     # app): de ahí el panel de salud lee estado.json, que deja el respaldo.
     respaldos_dir: str = "/respaldos"
+    # Dónde se guardan las fotos de los puestos (C137). Vacío: backend/datos/fotos.
+    # En Docker es un volumen propio montado en /fotos.
+    fotos_dir: str = ""
     # Límite de intentos en ingresar, registro y recuperar (C131).
     limite_intentos_activo: bool = True
 

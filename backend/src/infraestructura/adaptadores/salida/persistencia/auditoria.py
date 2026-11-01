@@ -53,6 +53,10 @@ _COMO_SE_LEE: dict[str, tuple[str, str]] = {
         "CAST(id AS TEXT)",
         "'oferta ' || CAST(id_oferta AS TEXT) || CASE WHEN la_vio_asi THEN ' · la vio así' ELSE ' · no estaba así' END",
     ),
+    "inventario_puesto": (
+        "CAST(id_puesto AS TEXT) || ' / ' || codigo_producto",
+        "codigo_producto || ' · Bs ' || CAST(monto AS TEXT) || ' por ' || presentacion || ' · ' || disponibilidad",
+    ),
 }
 
 

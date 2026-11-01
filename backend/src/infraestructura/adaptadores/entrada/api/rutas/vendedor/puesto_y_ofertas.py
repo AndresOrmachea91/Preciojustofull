@@ -25,7 +25,8 @@ def mi_puesto(vendedor=Depends(usuario_actual), caso=Depends(caso_mi_puesto)):
 
 @router.put("/puesto", response_model=e.PuestoSalida)
 def guardar_puesto(cuerpo: e.PuestoEntrada, vendedor=Depends(usuario_actual), caso=Depends(caso_mi_puesto)):
-    puesto = caso.guardar(vendedor, cuerpo.numero, cuerpo.nombre, cuerpo.rubros, cuerpo.referencia)
+    puesto = caso.guardar(vendedor, cuerpo.numero, cuerpo.nombre, cuerpo.rubros, cuerpo.referencia,
+                          cuerpo.codigo_mercado)
     olvidar()
     return puesto_a_salida(puesto)
 

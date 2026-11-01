@@ -13,12 +13,14 @@ from datetime import datetime, timezone
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker
 
-from src.dominio.modelo import Categoria, Confirmacion, EstadoOferta, Oferta, Presentacion, Puesto
+from src.dominio.modelo import (
+    ArticuloInventario, Categoria, Confirmacion, Disponibilidad, EstadoOferta, Oferta, Presentacion, Puesto,
+)
 from src.dominio.modelo.auditoria import Auditoria
 from src.dominio.modelo.puesto import orden_de_numero
 from src.infraestructura.adaptadores.salida.persistencia.sesion import sesion_de
 from src.infraestructura.adaptadores.salida.persistencia.tablas import (
-    ConfirmacionOfertaTabla, OfertaTabla, PuestoTabla,
+    ConfirmacionOfertaTabla, InventarioPuestoTabla, OfertaTabla, PuestoTabla,
 )
 
 
@@ -37,7 +39,15 @@ def _a_puesto(f: PuestoTabla) -> Puesto:
     return Puesto(
         id=f.id, codigo_mercado=f.codigo_mercado, numero=f.numero, nombre=f.nombre or "",
         rubros=tuple(Categoria(r) for r in (f.rubros or "").split(",") if r),
-        referencia=f.referencia or "", id_vendedor=f.id_vendedor, auditoria=_auditoria(f),
+        referencia=f.referencia or "", id_vendedor=f.id_vendedor, foto=f.foto, auditoria=_auditoria(f),
+    )
+
+
+def _a_articulo(f: InventarioPuestoTabla) -> ArticuloInventario:
+    return ArticuloInventario(
+        id=f.id, id_puesto=f.id_puesto, codigo_producto=f.codigo_producto, monto=f.monto,
+        presentacion=Presentacion(f.presentacion), disponibilidad=Disponibilidad(f.disponibilidad),
+        actualizado_en=_utc(f.actualizado_en), auditoria=_auditoria(f),
     )
 
 
@@ -88,6 +98,7 @@ class PuestosPostgres:
             fila.rubros = ",".join(r.value for r in puesto.rubros)
             fila.referencia = puesto.referencia
             fila.id_vendedor = puesto.id_vendedor
+            fila.foto = puesto.foto
             s.flush()
             return _a_puesto(fila)
 
@@ -183,3 +194,51 @@ class OfertasPostgres:
                 s.add(fila)
             fila.la_vio_asi = confirmacion.la_vio_asi
             fila.eliminado = False
+
+
+class InventarioPostgres:
+    """El inventario de cada puesto (C137). Quitar es borrado lógico."""
+
+    def __init__(self, fabrica: sessionmaker[Session]):
+        self._fabrica = fabrica
+
+    def del_puesto(self, id_puesto: int) -> list[ArticuloInventario]:
+        return self.de_puestos([id_puesto]).get(id_puesto, [])
+
+    def de_puestos(self, ids_puestos: list[int]) -> dict[int, list[ArticuloInventario]]:
+        if not ids_puestos:
+            return {}
+        with sesion_de(self._fabrica) as s:
+            filas = s.scalars(select(InventarioPuestoTabla).where(
+                InventarioPuestoTabla.id_puesto.in_(ids_puestos), InventarioPuestoTabla.eliminado.is_(False),
+            ))
+            salida: dict[int, list[ArticuloInventario]] = {}
+            for f in filas:
+                salida.setdefault(f.id_puesto, []).append(_a_articulo(f))
+            return salida
+
+    def guardar(self, articulo: ArticuloInventario) -> ArticuloInventario:
+        with sesion_de(self._fabrica) as s:
+            fila = s.scalars(select(InventarioPuestoTabla).where(
+                InventarioPuestoTabla.id_puesto == articulo.id_puesto,
+                InventarioPuestoTabla.codigo_producto == articulo.codigo_producto,
+                InventarioPuestoTabla.eliminado.is_(False),
+            )).first()
+            if fila is None:
+                fila = InventarioPuestoTabla(id_puesto=articulo.id_puesto, codigo_producto=articulo.codigo_producto)
+                s.add(fila)
+            fila.monto = articulo.monto
+            fila.presentacion = articulo.presentacion.value
+            fila.disponibilidad = articulo.disponibilidad.value
+            fila.actualizado_en = articulo.actualizado_en or datetime.now(timezone.utc)
+            s.flush()
+            return _a_articulo(fila)
+
+    def quitar(self, id_puesto: int, codigo_producto: str) -> None:
+        with sesion_de(self._fabrica) as s:
+            for fila in s.scalars(select(InventarioPuestoTabla).where(
+                InventarioPuestoTabla.id_puesto == id_puesto,
+                InventarioPuestoTabla.codigo_producto == codigo_producto,
+                InventarioPuestoTabla.eliminado.is_(False),
+            )):
+                fila.eliminado = True

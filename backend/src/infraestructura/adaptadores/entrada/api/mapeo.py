@@ -145,10 +145,37 @@ def precio_publicado_a_salida(p: PrecioPublicado) -> e.PrecioPublicadoSalida:
 
 # --- puestos, ofertas y ficha del mercado (C133, C134) ---------------------------
 
+def url_foto(nombre: str | None) -> str | None:
+    return f"/api/v1/fotos/{nombre}" if nombre else None
+
+
 def puesto_a_salida(p, registrado: bool = True) -> e.PuestoSalida:
     return e.PuestoSalida(
         id=p.id, codigo_mercado=p.codigo_mercado, numero=p.numero, nombre=p.nombre,
         rubros=[r.value for r in p.rubros], referencia=p.referencia, registrado=registrado,
+        foto=url_foto(p.foto), es_local=p.es_local,
+    )
+
+
+def articulo_a_salida(a, producto) -> e.ArticuloSalida:
+    return e.ArticuloSalida(
+        codigo_producto=a.codigo_producto, nombre_producto=producto.nombre, categoria=producto.categoria.value,
+        monto=a.monto, presentacion=a.presentacion.value, precio_por_unidad_base=round(a.precio_por_unidad_base, 4),
+        unidad_base=producto.unidad_base.value, disponibilidad=a.disponibilidad.value, actualizado_en=a.actualizado_en,
+    )
+
+
+def puestos_del_mercado_a_salida(r) -> e.PuestosDelMercadoSalida:
+    return e.PuestosDelMercadoSalida(
+        mercado=mercado_a_salida(r.mercado),
+        puestos=[
+            e.PuestoConInventarioSalida(
+                puesto=puesto_a_salida(x.puesto),
+                articulos=[articulo_a_salida(v.articulo, v.producto) for v in x.articulos],
+                total=x.total,
+            )
+            for x in r.puestos
+        ],
     )
 
 

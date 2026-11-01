@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import datetime
 
-from src.dominio.modelo import Confirmacion, EstadoOferta, Oferta, Puesto
+from src.dominio.modelo import ArticuloInventario, Confirmacion, EstadoOferta, Oferta, Puesto
 from src.dominio.modelo.puesto import orden_de_numero
 
 
@@ -81,3 +81,33 @@ class OfertasEnMemoria:
 
     def guardar_confirmacion(self, confirmacion: Confirmacion) -> None:
         self._confirmaciones[(confirmacion.id_oferta, confirmacion.id_usuario)] = confirmacion
+
+
+class InventarioEnMemoria:
+    def __init__(self):
+        self._datos: dict[tuple[int, str], ArticuloInventario] = {}
+        self._siguiente = 1
+
+    def del_puesto(self, id_puesto: int) -> list[ArticuloInventario]:
+        return [a for (p, _), a in self._datos.items() if p == id_puesto]
+
+    def de_puestos(self, ids_puestos: list[int]) -> dict[int, list[ArticuloInventario]]:
+        salida: dict[int, list[ArticuloInventario]] = {}
+        for (p, _), a in self._datos.items():
+            if p in ids_puestos:
+                salida.setdefault(p, []).append(a)
+        return salida
+
+    def guardar(self, articulo: ArticuloInventario) -> ArticuloInventario:
+        clave = (articulo.id_puesto, articulo.codigo_producto)
+        anterior = self._datos.get(clave)
+        if anterior is not None:
+            articulo = replace(articulo, id=anterior.id)
+        elif articulo.id is None:
+            articulo = replace(articulo, id=self._siguiente)
+            self._siguiente += 1
+        self._datos[clave] = articulo
+        return articulo
+
+    def quitar(self, id_puesto: int, codigo_producto: str) -> None:
+        self._datos.pop((id_puesto, codigo_producto), None)
