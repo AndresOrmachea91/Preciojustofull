@@ -196,6 +196,13 @@ En el frontend:
 | Qué medir primero (A4230) y cuánto varía cada producto (A5020) | `aplicacion/casos_uso/precios/priorizar_verificaciones.py`; ruta `GET /verificaciones`; web: `ui/componentes/PlanVerificacion.tsx` en `PaginaConfiabilidad.tsx`, «Próxima ronda sugerida» en `PlanillaCampo.tsx` (`planillaDeLaRonda` en `operarSistema.ts`) |
 | Limpieza de la web (C135) | `agruparPorPrecio` en `dominio/modelo.ts` y `ListaDePrecios` en `PaginaPrecios.tsx`; resumen y «¿Lo vio aquí? Diga a cuánto» en `ui/componentes/PanelPunto.tsx`; `InterfazSinCacheViejo` en `api/main.py`; `public/favicon.svg` |
 | Base de datos explicada (C136) | `docs/BASE_DE_DATOS.md`; índice `ix_observacion_precio_informante` en `sesion.py` |
+| Solo mercados, distribuidores y mayoristas (decisión 26) | `TipoPuntoVenta.en_alcance` y `DISTRIBUIDOR` en `dominio/modelo/mercado.py`; baja lógica de cadenas en `sesion.py` (`_CADENAS_FUERA`); catálogo CSV sin supermercados |
+| Negocio del casero: puesto elegido, distribuidora y foto (C137) | `aplicacion/casos_uso/vendedor/mi_puesto.py`; `dominio/modelo/foto.py`; `salida/fotos/almacen_local.py`; rutas `PUT /vendedor/puesto`, `/vendedor/distribuidora`, `/vendedor/puesto/foto`; web: `ui/paginas/vendedor/MiNegocio.tsx`, `ui/foto.ts` |
+| Inventario del puesto (C137) | `dominio/modelo/inventario.py`; `aplicacion/casos_uso/vendedor/inventario.py`; tabla `inventario_puesto`; rutas `/vendedor/inventario`; web: `ui/paginas/vendedor/InventarioPuesto.tsx` |
+| Ventana del mercado en el mapa (C137) | `aplicacion/casos_uso/precios/puestos_del_mercado.py`; ruta `GET /mercados/{codigo}/puestos`; web: `ui/componentes/VentanaMercado.tsx` y `ventana` en `MapaPuntosVenta.tsx` |
+| Registro como vendedor (decisión 27) | `quiere_vender` en `registrar_usuario.py` y `PaginaIngreso.tsx` |
+| App instalable en el celular (C138) | `frontend/public/manifest.json`, `sw.js`, íconos; registro en `main.tsx` |
+| Viabilidad y mejoras | `docs/VIABILIDAD.md` |
 
 ## Rutas de la API
 
