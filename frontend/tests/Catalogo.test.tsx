@@ -29,7 +29,7 @@ async function ingresarComoAdmin() {
   fireEvent.change(screen.getByLabelText("Correo"), { target: { value: ADMIN_DEMO.correo } });
   fireEvent.change(screen.getByLabelText("Contraseña"), { target: { value: ADMIN_DEMO.contrasena } });
   fireEvent.submit(screen.getByRole("button", { name: "Ingresar" }).closest("form")!);
-  await screen.findByRole("tab", { name: "Mercados y tiendas" });
+  await screen.findByRole("tab", { name: "Mercados y distribuidores" });
 }
 
 describe("presentaciones", () => {
@@ -82,25 +82,25 @@ describe("presentaciones", () => {
 });
 
 describe("catálogo del administrador", () => {
-  it("crea una tienda con su ubicación y la ve en la lista", async () => {
+  it("crea una distribuidora con su ubicación y la ve en la lista", async () => {
     await ingresarComoAdmin();
-    fireEvent.click(screen.getByRole("tab", { name: "Mercados y tiendas" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Mercados y distribuidores" }));
     fireEvent.click(await screen.findByRole("button", { name: "Nuevo punto de venta" }));
 
     const form = screen.getByRole("form", { name: "Nuevo punto de venta" });
-    fireEvent.change(within(form).getByLabelText("Nombre"), { target: { value: "Tienda Doña Rosa" } });
-    fireEvent.change(within(form).getByLabelText("Tipo"), { target: { value: "tienda" } });
+    fireEvent.change(within(form).getByLabelText("Nombre"), { target: { value: "Distribuidora Doña Rosa" } });
+    fireEvent.change(within(form).getByLabelText("Tipo"), { target: { value: "distribuidor" } });
     fireEvent.change(within(form).getByLabelText("Latitud"), { target: { value: "-16.51" } });
     fireEvent.change(within(form).getByLabelText("Longitud"), { target: { value: "-68.13" } });
     fireEvent.submit(form);
 
-    expect(await screen.findByRole("status")).toHaveProperty("textContent", "Tienda Doña Rosa quedó guardado.");
-    expect(within(screen.getByRole("table", { name: "Puntos de venta" })).getByText("Tienda Doña Rosa")).toBeDefined();
+    expect(await screen.findByRole("status")).toHaveProperty("textContent", "Distribuidora Doña Rosa quedó guardado.");
+    expect(within(screen.getByRole("table", { name: "Puntos de venta" })).getByText("Distribuidora Doña Rosa")).toBeDefined();
   });
 
   it("una ubicación fuera de La Paz no se guarda", async () => {
     await ingresarComoAdmin();
-    fireEvent.click(screen.getByRole("tab", { name: "Mercados y tiendas" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Mercados y distribuidores" }));
     fireEvent.click(await screen.findByRole("button", { name: "Nuevo punto de venta" }));
     const form = screen.getByRole("form", { name: "Nuevo punto de venta" });
     fireEvent.change(within(form).getByLabelText("Nombre"), { target: { value: "Mal ubicado" } });
@@ -112,7 +112,7 @@ describe("catálogo del administrador", () => {
 
   it("no deja eliminar un mercado que tiene sectores", async () => {
     await ingresarComoAdmin();
-    fireEvent.click(screen.getByRole("tab", { name: "Mercados y tiendas" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Mercados y distribuidores" }));
     fireEvent.click(await screen.findByRole("button", { name: "Eliminar Mercado Rodríguez" }));
     fireEvent.click(screen.getByRole("button", { name: "Sí, eliminar" }));
     expect((await screen.findByRole("alert")).textContent).toMatch(/tiene sectores/);

@@ -37,7 +37,7 @@ export function PaginaAdmin({ contenedor, usuario }: { contenedor: Contenedor; u
 
   const pestanas: { id: Pestana; texto: string; visible: boolean }[] = [
     { id: "usuarios", texto: "Usuarios", visible: verUsuarios },
-    { id: "puntos", texto: "Mercados y tiendas", visible: verCatalogo },
+    { id: "puntos", texto: "Mercados y distribuidores", visible: verCatalogo },
     { id: "productos", texto: "Productos", visible: verCatalogo },
     { id: "reportes", texto: "Reportes por revisar", visible: verReportes },
     { id: "ofertas", texto: "Ofertas en revisión", visible: verReportes },
