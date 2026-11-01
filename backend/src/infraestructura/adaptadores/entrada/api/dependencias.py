@@ -274,6 +274,7 @@ def _puestos_y_ofertas():
     return PuestosPostgres(fabrica), OfertasPostgres(fabrica)
 
 
+@lru_cache
 def _inventario():
     fabrica = _fabrica()
     return InventarioEnMemoria() if fabrica is None else InventarioPostgres(fabrica)
