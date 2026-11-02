@@ -235,6 +235,7 @@ sin ella, memoria". Ningún caso de uso sabe cuál le tocó.
 | Los clientes del SIIP                  | `infraestructura/adaptadores/salida/fuentes/` |
 | Crear o promover un administrador      | `infraestructura/adaptadores/entrada/cli/crear_admin.py` |
 | Sembrar catálogos                      | `infraestructura/adaptadores/entrada/cli/sembrar.py` |
+| Datos de prueba (C142)                 | `infraestructura/adaptadores/entrada/cli/sembrar_demo.py` |
 
 ## Frontend (`frontend/src/`), la misma idea
 
@@ -248,3 +249,5 @@ sin ella, memoria". Ningún caso de uso sabe cuál le tocó.
 | Dónde se guarda el token        | `infraestructura/almacen/almacenSesion.ts` |
 | Qué adaptador se usa            | `infraestructura/contenedor.ts` |
 | Pantallas                       | `ui/paginas/{publico, cuentas, usuario, vendedor, administracion}/` |
+| El mapa: pines, filtros (C141)  | `ui/componentes/MapaPuntosVenta.tsx` |
+| Tema de vidrio y paleta (C141)  | `ui/tema.css` (sobre `ui/estilos.css`) |

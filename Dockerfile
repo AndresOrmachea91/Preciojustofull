@@ -23,7 +23,9 @@ COPY backend/datos ./datos
 COPY --from=interfaz /app/frontend/dist /app/frontend/dist
 
 # Sin privilegios de root dentro del contenedor.
-RUN useradd --system --no-create-home preciojusto
+# /fotos es del usuario de la app: el volumen nuevo hereda este dueño y las
+# fotos de los puestos se pueden guardar sin root.
+RUN useradd --system --no-create-home preciojusto     && mkdir -p /fotos && chown preciojusto:preciojusto /fotos
 USER preciojusto
 
 EXPOSE 8000

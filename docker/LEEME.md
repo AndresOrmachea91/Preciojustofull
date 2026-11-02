@@ -39,6 +39,22 @@ sesiones, el administrador inicial y las cuentas de prueba.
     docker compose down -v                    detener y BORRAR la base (cuidado)
     herramientas\copiar_desde_neon.cmd        traer una copia fresca de Neon
 
+## Datos de prueba
+
+Mientras no hay caseros reales, este comando carga unos 30 puestos en
+mercados de La Paz y tres distribuidoras, con foto ilustrada, inventario y
+algunas ofertas, más una compradora con su lista. Los precios parten del
+precio del sistema en cada mercado y se mueven un poco. La contraseña de esas
+cuentas es `DEMO_CONTRASENA` de `docker/.env`.
+
+    docker compose exec app python -m src.infraestructura.adaptadores.entrada.cli.sembrar_demo
+    docker compose exec app python -m src.infraestructura.adaptadores.entrada.cli.sembrar_demo --retirar
+
+Las cuentas son `casero01@demo.preciojusto.bo` en adelante,
+`distribuidora01@…` y `compradora@demo.preciojusto.bo`. `--retirar` da de baja
+(lógica) todo lo que creó el comando; nada se borra. Se niega a correr contra
+Neon.
+
 ## Copiar desde Neon
 
 `herramientas\copiar_desde_neon.cmd` lee la cadena de Neon de `backend\.env`,

@@ -228,6 +228,7 @@ export function PaginaPrecios({ contenedor, usuario = null }: { contenedor: Cont
               onSeleccionar={setSeleccionado}
               ubicacion={cercania.ubicacion}
               conOferta={conOferta}
+              onUbicar={() => void cercania.buscar()}
               ventana={(codigo, alCambiarTamano) => {
                 const marcador = marcadores.find((m) => m.mercado.codigo === codigo);
                 return marcador ? (
@@ -398,21 +399,21 @@ function TarjetaGrupo({ items }: { items: readonly PrecioEnMercado[] }) {
   );
 }
 
-/** Cómo leer el mapa: qué es un punto lleno, uno hueco y uno atenuado. */
+/** Cómo leer el mapa: el color dice qué es; el borde, de dónde sale el precio. */
 function LeyendaMapa() {
   return (
     <ul className="leyenda" aria-label="Cómo leer el mapa">
       <li>
-        <span className="leyenda__punto leyenda__punto--observado" aria-hidden="true" /> Observado: alguien lo midió ahí
+        <span className="leyenda__pin leyenda__pin--observado" aria-hidden="true">8,50</span> Observado: alguien lo midió ahí
       </li>
       <li>
-        <span className="leyenda__punto leyenda__punto--estimado" aria-hidden="true" /> Estimado desde el precio de la ciudad
+        <span className="leyenda__pin leyenda__pin--estimado" aria-hidden="true">8,50</span> Estimado desde el precio de la ciudad
       </li>
       <li>
-        <span className="leyenda__punto leyenda__punto--viejo" aria-hidden="true" /> Atenuado: el dato tiene más de una semana
+        <span className="leyenda__pin leyenda__pin--viejo" aria-hidden="true">8,50</span> Atenuado: el dato tiene más de una semana
       </li>
       <li>
-        <span className="leyenda__punto leyenda__punto--oferta" aria-hidden="true" /> Anillo dorado: un casero tiene una oferta
+        <span className="leyenda__pin leyenda__pin--oferta" aria-hidden="true">★</span> Estrella dorada: un casero tiene una oferta
       </li>
     </ul>
   );

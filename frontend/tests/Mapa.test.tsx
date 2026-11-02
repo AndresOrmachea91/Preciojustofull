@@ -5,7 +5,7 @@
  * muestra su precio con procedencia. Leaflet solo dibuja.
  */
 import { PRESENTACIONES_POR_UNIDAD } from "@/dominio/modelo";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { VerMapa } from "@/aplicacion/casosUso/publico/verMapa";
@@ -38,8 +38,21 @@ describe("MapaPuntosVenta", () => {
     const mapa = screen.getByRole("region", { name: /Mapa de puntos de venta/ });
     expect(mapa.getAttribute("data-marcadores")).toBe("7");
     await waitFor(() => {
-      expect(mapa.querySelectorAll("path.leaflet-interactive").length).toBe(7);
+      expect(document.querySelectorAll(".pin").length).toBe(7);
     });
+  });
+
+  it("los filtros flotantes dejan ver solo un tipo de punto (C141)", async () => {
+    const memoria = new PreciosMemoria();
+    const { marcadores } = await new VerMapa(memoria, memoria).ejecutar("tomate");
+
+    render(<MapaPuntosVenta marcadores={marcadores} seleccionado={null} onSeleccionar={() => {}} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Distribuidor 1/ }));
+    await waitFor(() => expect(document.querySelectorAll(".pin").length).toBe(1));
+    expect(document.querySelector(".pin--distribuidor")).not.toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /Todos 7/ }));
+    await waitFor(() => expect(document.querySelectorAll(".pin").length).toBe(7));
   });
 });
 
