@@ -8,23 +8,27 @@ import {
   precioEnPresentacion,
   presentacionBase,
   publicaRango,
+  nombreDelPuesto,
   textoDistancia,
   unidadDePresentacion,
+  ZONAS_DE_LA_PAZ,
 } from "@/dominio/modelo";
 import { ahorroPosible } from "@/dominio/servicio/ordenarPorConveniencia";
 import type { Contenedor } from "@/infraestructura/contenedor";
 import { GraficoHistorial } from "@/ui/componentes/GraficoHistorial";
 import { Icono } from "@/ui/componentes/Iconos";
-import { MapaPuntosVenta } from "@/ui/componentes/MapaPuntosVenta";
+import { MapaPuntosVenta, type RamasDelMercado } from "@/ui/componentes/MapaPuntosVenta";
 import { PanelPunto, type ResumenDelMapa } from "@/ui/componentes/PanelPunto";
 import { Procedencia } from "@/ui/componentes/Procedencia";
 import { SelectorProducto } from "@/ui/componentes/SelectorProducto";
 import { TarjetaMercado } from "@/ui/componentes/TarjetaMercado";
 import { VentanaMercado } from "@/ui/componentes/VentanaMercado";
+import { VentanaPuesto } from "@/ui/componentes/VentanaPuesto";
 import { useCercania } from "@/ui/hooks/useCercania";
 import { useComparativa } from "@/ui/hooks/useComparativa";
 import { useHistorial } from "@/ui/hooks/useHistorial";
 import { useMapa } from "@/ui/hooks/useMapa";
+import { useRamasDelMercado } from "@/ui/hooks/useRamasDelMercado";
 import { hrefMercado } from "@/ui/hooks/useRuta";
 
 // Con qué producto abre la pantalla: uno que tenga precio en los 88 puntos.
@@ -87,6 +91,34 @@ export function PaginaPrecios({ contenedor, usuario = null }: { contenedor: Cont
   );
   const marcadorSeleccionado = marcadores.find((m) => m.mercado.codigo === seleccionado) ?? null;
   const cercania = useCercania(contenedor, marcadores);
+
+  // Los puestos del mercado elegido se abren como ramas en el mapa (C143).
+  // Un lugar con un solo puesto (una distribuidora) abre su ventana de siempre.
+  const delElegido = useRamasDelMercado(contenedor, seleccionado, producto);
+  const ramas = useMemo((): RamasDelMercado | null => {
+    if (!delElegido || !marcadorSeleccionado || delElegido.codigoMercado !== seleccionado) return null;
+    const lista =
+      delElegido.puestos.length < 2
+        ? []
+        : delElegido.puestos.map(({ puesto, articulos }) => {
+            const buscado = articulos.find((a) => a.codigoProducto === producto);
+            return {
+              clave: puesto.numero,
+              numero: puesto.esLocal ? "•" : puesto.numero,
+              titulo: nombreDelPuesto(puesto),
+              foto: puesto.foto,
+              precio: buscado ? buscado.monto : null,
+              agotado: buscado?.disponibilidad === "agotado",
+              oferta: delElegido.ofertas.some((o) => o.numeroPuesto === puesto.numero),
+            };
+          });
+    return {
+      codigo: delElegido.codigoMercado,
+      nombre: marcadorSeleccionado.mercado.nombre,
+      enlace: hrefMercado(delElegido.codigoMercado),
+      lista,
+    };
+  }, [delElegido, marcadorSeleccionado, seleccionado, producto]);
 
   // Solo se ofrecen presentaciones de la magnitud en que llegó el precio: si
   // la fuente publica por unidad, no hay "por arroba" que mostrar.
@@ -162,6 +194,24 @@ export function PaginaPrecios({ contenedor, usuario = null }: { contenedor: Cont
         </div>
       </div>
 
+      {/* Si el GPS no responde (o está apagado), la zona sirve igual: "estoy en Sopocachi". */}
+      {(cercania.error || cercania.ubicacion) && (
+        <div className="zonas" role="group" aria-label="Elegir mi zona">
+          <span className="tenue">{cercania.error ? "O elija su zona:" : "¿Está en otra zona?"}</span>
+          {ZONAS_DE_LA_PAZ.map((z) => (
+            <button
+              key={z.nombre}
+              type="button"
+              className="filtro"
+              aria-pressed={cercania.zona === z.nombre}
+              onClick={() => cercania.elegirZona(z)}
+            >
+              {z.nombre}
+            </button>
+          ))}
+        </div>
+      )}
+
       {cercania.error && (
         <p className="estado estado--error" role="alert">
           {cercania.error}
@@ -171,7 +221,7 @@ export function PaginaPrecios({ contenedor, usuario = null }: { contenedor: Cont
         <section className="cercanos" aria-labelledby="titulo-cercanos">
           <div className="cercanos__cabeza">
             <h2 id="titulo-cercanos" className="seccion">
-              Más cerca de usted
+              {cercania.zona ? `Mercados cerca de ${cercania.zona}` : "Mercados cerca de usted"}
             </h2>
             <button type="button" className="enlace" onClick={cercania.olvidar}>
               Ocultar
@@ -191,7 +241,15 @@ export function PaginaPrecios({ contenedor, usuario = null }: { contenedor: Cont
                       aria-pressed={seleccionado === marcador.mercado.codigo}
                       onClick={() => setSeleccionado(marcador.mercado.codigo)}
                     >
-                      <span className="cercanos__nombre">{marcador.mercado.nombre}</span>
+                      <span className="cercanos__nombre">
+                        {marcador.mercado.nombre}
+                        {conOferta.has(marcador.mercado.codigo) && (
+                          <span className="cercanos__oferta" title="Un casero tiene una oferta">
+                            {" "}
+                            ★ oferta
+                          </span>
+                        )}
+                      </span>
                       <span className="tenue">{textoDistancia(distanciaKm)}</span>
                       {precio && (
                         <span className="cercanos__precio">
@@ -229,6 +287,20 @@ export function PaginaPrecios({ contenedor, usuario = null }: { contenedor: Cont
               ubicacion={cercania.ubicacion}
               conOferta={conOferta}
               onUbicar={() => void cercania.buscar()}
+              ramas={seleccionado ? ramas : null}
+              onCerrar={() => setSeleccionado(null)}
+              ventanaRama={(clave, alCambiarTamano) => {
+                const datos = delElegido?.puestos.find((x) => x.puesto.numero === clave);
+                return datos && marcadorSeleccionado ? (
+                  <VentanaPuesto
+                    mercado={marcadorSeleccionado.mercado}
+                    datos={datos}
+                    ofertas={delElegido!.ofertas.filter((o) => o.numeroPuesto === clave)}
+                    codigoProducto={producto}
+                    alCambiarTamano={alCambiarTamano}
+                  />
+                ) : null;
+              }}
               ventana={(codigo, alCambiarTamano) => {
                 const marcador = marcadores.find((m) => m.mercado.codigo === codigo);
                 return marcador ? (

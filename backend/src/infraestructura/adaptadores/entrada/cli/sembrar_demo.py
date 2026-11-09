@@ -88,7 +88,36 @@ PUESTOS = [
     ("modelo_achumani", "13", "Abarrotes Calacoto", "abarrotes", "Junto a la entrada"),
     ("las_cholas", "16", "Verduras Doña Teodora", "verduras", "Pasillo central"),
     ("munaypata", "24", "Papas Don Gregorio", "papas", "Sector papas"),
+    # Los mercados grandes tienen muchos puestos y de todo: en el mapa se abren como ramas.
+    ("lanza", "A-2", "Pollos La Paceña", "carnes", "Planta baja, sector carnes"),
+    ("lanza", "A-9", "Papas Doña Sabina", "papas", "Planta baja, junto a la rampa"),
+    ("lanza", "A-14", "Trucha Doña Francisca", "pescados", "Planta baja, al fondo"),
+    ("lanza", "B-3", "Verduras Doña Hilda", "verduras", "Segundo piso, primer pasillo"),
+    ("lanza", "B-7", "Abarrotes Don Ramiro", "abarrotes", "Segundo piso, ala sur"),
+    ("lanza", "B-25", "Frutas Doña Remedios", "frutas", "Segundo piso, junto a los jugos"),
+    ("lanza", "C-4", "Carnes Don Germán", "carnes", "Tercer piso, sector carnes"),
+    ("lanza", "C-11", "Verduras Doña Sonia", "verduras", "Tercer piso, frente a las gradas"),
+    ("lanza", "C-18", "Abarrotes La Económica", "abarrotes", "Tercer piso, salida a la Evaristo Valle"),
+    ("rodriguez", "3", "Verduras Doña Felisa", "verduras", "Primera cuadra, lado derecho"),
+    ("rodriguez", "11", "Frutas Don Severo", "frutas", "Esquina con la Max Paredes"),
+    ("rodriguez", "19", "Carnes Doña Gladys", "carnes", "Sector carnes, segunda fila"),
+    ("rodriguez", "27", "Trucha Don Mario", "pescados", "Junto a la pila"),
+    ("rodriguez", "36", "Abarrotes Don Wilfredo", "abarrotes", "Frente a la iglesia"),
+    ("rodriguez", "40", "Papas Doña Asunta", "papas", "Al fondo, lado izquierdo"),
+    ("rodriguez", "52", "Verduras Doña Eulogia", "verduras", "Última cuadra, frente a la farmacia"),
+    ("camacho", "8", "Frutas Doña Clotilde", "frutas", "Ingreso de la Loayza"),
+    ("camacho", "12", "Papas Don Simón", "papas", "Pasillo lateral"),
+    ("camacho", "21", "Pollos Camacho", "carnes", "Pasillo central, al fondo"),
+    ("camacho", "30", "Pescados Doña Elvira", "pescados", "Junto a la salida de la Bueno"),
+    ("villa_fatima", "5", "Frutas Doña Cira", "frutas", "Entrada principal"),
+    ("villa_fatima", "14", "Carnes Villa Fátima", "carnes", "Sector carnes"),
+    ("yungas", "3", "Verduras Doña Zenobia", "verduras", "Pasillo de entrada"),
+    ("uruguay", "9", "Abarrotes Uruguay", "abarrotes", "Planta alta"),
 ]
+
+# Las notas de las ofertas: lo que el casero diría en su puesto.
+NOTAS_OFERTA = ["Precio de casera", "Hoy llegó fresquito", "Llevando 2 kilos", "Hasta agotar",
+                "Directo de la chacra", "Promo de la semana", "Para la casera madrugadora", "Último lote del día"]
 
 # (nombre, zona, macrodistrito, latitud, longitud, clases, referencia)
 DISTRIBUIDORAS = [
@@ -234,18 +263,29 @@ class Siembra:
             except ErrorDominio as e:
                 log.warning("  %s en %s: %s", codigo, codigo_mercado, e)
 
-    def _oferta(self, vendedor, codigo_mercado: str) -> None:
-        """Una rebaja de verdad: por debajo del precio del sistema, o no se publica."""
-        for articulo in self.inventario.ver(vendedor):
+    def _ofertas(self, vendedor, codigo_mercado: str, cuantas: int) -> None:
+        """Rebajas de verdad: por debajo del precio del sistema, o no se publican.
+
+        Las ofertas vencen (72 horas como mucho): cada corrida repone las que
+        faltan, así la demostración siempre tiene ofertas vigentes."""
+        vigentes = {o.oferta.codigo_producto for o in self.ofertas.mias(vendedor) if o.estado == "activa"}
+        faltan = cuantas - len(vigentes)
+        articulos = [a for a in self.inventario.ver(vendedor)
+                     if a.codigo_producto not in vigentes and a.disponibilidad is not Disponibilidad.AGOTADO]
+        self.azar.shuffle(articulos)
+        for articulo in articulos:
+            if faltan <= 0:
+                return
             base = self._base(articulo.codigo_producto, codigo_mercado)
-            if base is None or articulo.disponibilidad is Disponibilidad.AGOTADO:
+            if base is None:
                 continue
-            monto = round(base * articulo.presentacion.factor * 0.85, 1)
+            rebaja = self.azar.choice([0.8, 0.83, 0.85, 0.88, 0.9])
+            monto = round(base * articulo.presentacion.factor * rebaja, 1)
             try:
                 self.ofertas.publicar(vendedor, articulo.codigo_producto, monto, articulo.presentacion,
-                                      self.azar.choice([24, 48, 72]), nota="Precio de casera")
+                                      72, nota=self.azar.choice(NOTAS_OFERTA))
                 self.cuenta["ofertas"] += 1
-                return
+                faltan -= 1
             except ErrorDominio:
                 continue
 
@@ -260,10 +300,10 @@ class Siembra:
                 if puesto.foto is None:
                     self.mi_puesto.poner_foto(vendedor, foto_de_puesto(clase, i))
                 vendedor = self.usuarios.obtener_por_correo(correo)
-                nuevo = not self.inventario.ver(vendedor)
                 self._cargar_inventario(vendedor, mercado, [clase], mayorista=False)
-                if nuevo and i % 3 == 0:
-                    self._oferta(vendedor, mercado)
+                # Dos de cada tres caseros tienen alguna oferta; algunos, dos.
+                if i % 3 != 2:
+                    self._ofertas(vendedor, mercado, 2 if i % 4 == 0 else 1)
                 self.cuenta["caseros"] += 1
                 log.info("Puesto %s de %s listo", numero, mercado)
             except ErrorDominio as e:
@@ -283,6 +323,7 @@ class Siembra:
                     self.mi_puesto.poner_foto(vendedor, foto_de_puesto(clases[0], 100 + j))
                 vendedor = self.usuarios.obtener_por_correo(correo)
                 self._cargar_inventario(vendedor, puesto.codigo_mercado, clases, mayorista=True)
+                self._ofertas(vendedor, puesto.codigo_mercado, 1)
                 self.cuenta["caseros"] += 1
                 log.info("Distribuidora %s lista", nombre)
             except ErrorDominio as e:

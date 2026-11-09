@@ -6,6 +6,9 @@
  * C141: cada punto es un "pin" con su precio (de cerca) o un punto de color
  * (de lejos), con filtros por tipo flotando sobre el mapa, un fondo de mapa
  * suave que sigue el tema claro u oscuro, y vuelo suave al punto elegido.
+ *
+ * C143: al elegir un mercado con varios puestos, sus puestos se abren como
+ * ramas alrededor del pin; cada rama abre la ventana de ese puesto.
  */
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -31,6 +34,26 @@ const ATRIBUCION = '&copy; <a href="https://www.openstreetmap.org/copyright">Ope
 
 type Filtro = "todos" | TipoPuntoVenta;
 
+/** Un puesto dibujado como rama alrededor de su mercado. El mapa no sabe más que esto. */
+export interface Rama {
+  readonly clave: string;
+  /** Lo que se lee en la rama: el número del puesto. */
+  readonly numero: string;
+  readonly titulo: string;
+  readonly foto: string | null;
+  /** El precio del producto buscado en ese puesto, si lo tiene. */
+  readonly precio: number | null;
+  readonly agotado: boolean;
+  readonly oferta: boolean;
+}
+
+export interface RamasDelMercado {
+  readonly codigo: string;
+  readonly nombre: string;
+  readonly enlace: string;
+  readonly lista: readonly Rama[];
+}
+
 interface Props {
   readonly marcadores: readonly MarcadorMapa[];
   readonly seleccionado: string | null;
@@ -46,6 +69,16 @@ interface Props {
   readonly ventana?: (codigo: string, alCambiarTamano: () => void) => ReactNode;
   /** El botón "mi ubicación" del mapa; sin esto no aparece. */
   readonly onUbicar?: () => void;
+  /**
+   * Los puestos del mercado elegido (C143). undefined: el mapa no usa ramas y
+   * abre la ventana del mercado. null: todavía se están cargando. Con la lista
+   * vacía se abre la ventana del mercado; con puestos, las ramas.
+   */
+  readonly ramas?: RamasDelMercado | null;
+  /** Lo que se muestra al tocar una rama: la ventana de ese puesto. */
+  readonly ventanaRama?: (clave: string, alCambiarTamano: () => void) => ReactNode;
+  /** Cerrar las ramas y dejar de elegir el mercado. */
+  readonly onCerrar?: () => void;
 }
 
 const NINGUNO: ReadonlySet<string> = new Set();
@@ -53,6 +86,50 @@ const NINGUNO: ReadonlySet<string> = new Set();
 /** "8,50" o "125": corto, para que entre en el pin. */
 function montoCorto(monto: number): string {
   return monto >= 100 ? Math.round(monto).toString() : monto.toFixed(2).replace(".", ",");
+}
+
+const ESCAPES: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+function escapar(texto: string): string {
+  return texto.replace(/[&<>"']/g, (c) => ESCAPES[c]!);
+}
+
+/** Distancia entre ramas vecinas y del mercado a la primera vuelta, en píxeles. */
+const SEPARACION_RAMAS = 60;
+const RADIO_RAMAS = 80;
+
+/**
+ * Dónde va cada rama, en píxeles desde el mercado: en vueltas alrededor del
+ * pin, las primeras (las que tienen el producto buscado) más cerca.
+ */
+export function posicionesDeRamas(cuantas: number): [number, number][] {
+  const salida: [number, number][] = [];
+  let vuelta = 0;
+  while (salida.length < cuantas) {
+    const radio = RADIO_RAMAS + vuelta * SEPARACION_RAMAS;
+    const capacidad = Math.max(1, Math.floor((2 * Math.PI * radio) / SEPARACION_RAMAS));
+    const enEsta = Math.min(capacidad, cuantas - salida.length);
+    // Cada vuelta arranca girada medio paso: así las ramas no se tapan entre vueltas.
+    const inicio = -Math.PI / 2 + (vuelta % 2 ? Math.PI / enEsta : 0);
+    for (let i = 0; i < enEsta; i++) {
+      const angulo = inicio + (2 * Math.PI * i) / enEsta;
+      salida.push([Math.round(radio * Math.cos(angulo)), Math.round(radio * Math.sin(angulo))]);
+    }
+    vuelta++;
+  }
+  return salida;
+}
+
+function htmlDeRama(rama: Rama, orden: number, entrar: boolean): string {
+  const clases = ["rama", rama.agotado ? "rama--agotado" : "", rama.oferta ? "rama--oferta" : "", entrar ? "rama--entra" : ""];
+  const foto = rama.foto
+    ? `<span class="rama__foto" style="background-image:url('${escapar(rama.foto)}')"></span>`
+    : '<span class="rama__foto rama__foto--vacia"></span>';
+  const precio = rama.precio !== null ? `<span class="rama__precio">${montoCorto(rama.precio)}</span>` : "";
+  const estrella = rama.oferta ? '<span class="rama__oferta" aria-hidden="true">★</span>' : "";
+  return (
+    `<div class="${clases.filter(Boolean).join(" ")}" style="--orden:${orden}">` +
+    `${foto}<span class="rama__numero">${escapar(rama.numero)}</span>${precio}${estrella}</div>`
+  );
 }
 
 function htmlDelPin({ mercado, precio }: MarcadorMapa, oferta: boolean): string {
@@ -76,10 +153,15 @@ export function MapaPuntosVenta({
   conOferta = NINGUNO,
   ventana,
   onUbicar,
+  ramas,
+  ventanaRama,
+  onCerrar,
 }: Props) {
   const contenedor = useRef<HTMLDivElement>(null);
   const mapa = useRef<L.Map | null>(null);
   const capa = useRef<L.LayerGroup | null>(null);
+  const capaRamas = useRef<L.LayerGroup | null>(null);
+  const [zoom, setZoom] = useState(ZOOM_INICIAL);
   const [cerca, setCerca] = useState(false);
   const [filtro, setFiltro] = useState<Filtro>("todos");
   const [soloOfertas, setSoloOfertas] = useState(false);
@@ -90,13 +172,18 @@ export function MapaPuntosVenta({
     const m = L.map(contenedor.current, { zoomControl: false }).setView(CENTRO_LA_PAZ, ZOOM_INICIAL);
     L.control.zoom({ position: "bottomright", zoomInTitle: "Acercar", zoomOutTitle: "Alejar" }).addTo(m);
     L.tileLayer(FONDO, { maxZoom: 19, attribution: ATRIBUCION }).addTo(m);
-    m.on("zoomend", () => setCerca(m.getZoom() >= ZOOM_ETIQUETAS));
+    m.on("zoomend", () => {
+      setCerca(m.getZoom() >= ZOOM_ETIQUETAS);
+      setZoom(m.getZoom());
+    });
     capa.current = L.layerGroup().addTo(m);
+    capaRamas.current = L.layerGroup().addTo(m);
     mapa.current = m;
     return () => {
       m.remove();
       mapa.current = null;
       capa.current = null;
+      capaRamas.current = null;
     };
   }, []);
 
@@ -108,6 +195,9 @@ export function MapaPuntosVenta({
       ),
     [marcadores, filtro, soloOfertas, conOferta],
   );
+
+  // Si la página da puestos, el mercado elegido se abre en ramas en vez de en una ventana.
+  const conRamas = ramas !== undefined;
 
   // Los puntos se crean cuando cambian los datos o el filtro; elegir uno solo
   // cambia la clase del anterior y del nuevo, no redibuja todos.
@@ -161,14 +251,17 @@ export function MapaPuntosVenta({
     const m = mapa.current;
     const punto = seleccionado ? puntos.current.get(seleccionado) : undefined;
     if (!m || !punto) return;
-    const zoom = Math.max(m.getZoom(), 15);
-    const destino = m.unproject(m.project(punto.getLatLng(), zoom).subtract([0, 180]), zoom);
+    const destinoZoom = Math.max(m.getZoom(), conRamas ? 16 : 15);
+    // Con ramas el mercado queda al centro, rodeado de sus puestos; sin ellas,
+    // abajo, para dejar lugar arriba a la ventana.
+    const subir = conRamas ? 40 : 180;
+    const destino = m.unproject(m.project(punto.getLatLng(), destinoZoom).subtract([0, subir]), destinoZoom);
     volando.current = true;
-    m.flyTo(destino, zoom, { duration: 0.6 });
+    m.flyTo(destino, destinoZoom, { duration: 0.6 });
     m.once("moveend", () => {
       volando.current = false;
     });
-  }, [seleccionado, visibles, marcar]);
+  }, [seleccionado, visibles, marcar, conRamas]);
 
   // La persona: un punto azul que late, distinto de cualquier mercado.
   const aqui = useRef<L.Marker | null>(null);
@@ -191,7 +284,10 @@ export function MapaPuntosVenta({
   // React (createPortal), así puede cargar datos y usar los componentes de siempre.
   const [nodoVentana, setNodoVentana] = useState<HTMLDivElement | null>(null);
   const popup = useRef<L.Popup | null>(null);
-  const conVentana = ventana !== undefined;
+  // Sin ramas (o con el mercado sin puestos) se abre la ventana del mercado.
+  const ramasDelElegido = ramas && ramas.codigo === seleccionado ? ramas : null;
+  const hayRamas = (ramasDelElegido?.lista.length ?? 0) > 0;
+  const conVentana = ventana !== undefined && (!conRamas || (ramasDelElegido !== null && !hayRamas));
   useEffect(() => {
     popup.current?.remove();
     popup.current = null;
@@ -232,6 +328,88 @@ export function MapaPuntosVenta({
   }, [seleccionado, visibles, conVentana, marcar]);
   const acomodar = useCallback(() => popup.current?.update(), []);
 
+  // --- las ramas: los puestos del mercado elegido alrededor de su pin (C143) ---
+  const [ramaElegida, setRamaElegida] = useState<string | null>(null);
+  const ramasDibujadas = useRef(new Map<string, L.Marker>());
+  const yaEntraron = useRef<string | null>(null);
+  useEffect(() => setRamaElegida(null), [seleccionado]);
+
+  useEffect(() => {
+    const grupo = capaRamas.current;
+    const m = mapa.current;
+    grupo?.clearLayers();
+    ramasDibujadas.current.clear();
+    const punto = seleccionado ? puntos.current.get(seleccionado) : undefined;
+    if (!grupo || !m || !punto || !ramasDelElegido || !hayRamas) return;
+    // La animación de entrada, una vez por mercado: al acercar o alejar las ramas solo se acomodan.
+    const entrar = yaEntraron.current !== ramasDelElegido.codigo;
+    yaEntraron.current = ramasDelElegido.codigo;
+    const centro = m.latLngToLayerPoint(punto.getLatLng());
+    const lugares = posicionesDeRamas(ramasDelElegido.lista.length);
+    ramasDelElegido.lista.forEach((rama, i) => {
+      const [dx, dy] = lugares[i]!;
+      const donde = m.layerPointToLatLng(centro.add([dx, dy]));
+      L.polyline([punto.getLatLng(), donde], {
+        className: `rama__linea${entrar ? " rama__linea--entra" : ""}${rama.oferta ? " rama__linea--oferta" : ""}`,
+        interactive: false,
+        weight: 2,
+      }).addTo(grupo);
+      const marcador = L.marker(donde, {
+        icon: L.divIcon({ html: htmlDeRama(rama, i, entrar), className: "pin-icono", iconSize: [0, 0] }),
+        keyboard: true,
+        zIndexOffset: 1500,
+        riseOnHover: true,
+      });
+      marcador.bindTooltip(rama.titulo, { direction: "top", offset: [0, -24], className: "tooltip-vidrio" });
+      marcador.on("click", () => setRamaElegida(rama.clave));
+      marcador.on("keypress", (e: L.LeafletKeyboardEvent) => {
+        if (e.originalEvent.key === "Enter") setRamaElegida(rama.clave);
+      });
+      marcador.addTo(grupo);
+      marcador.getElement()?.setAttribute("aria-label", rama.titulo);
+      ramasDibujadas.current.set(rama.clave, marcador);
+    });
+  }, [ramasDelElegido, hayRamas, seleccionado, visibles, zoom]);
+
+  // Marca la rama elegida y le abre su ventana.
+  const [nodoRama, setNodoRama] = useState<HTMLDivElement | null>(null);
+  const popupRama = useRef<L.Popup | null>(null);
+  useEffect(() => {
+    for (const [clave, marcador] of ramasDibujadas.current) {
+      marcador.getElement()?.querySelector(".rama")?.classList.toggle("rama--activa", clave === ramaElegida);
+    }
+    popupRama.current?.remove();
+    popupRama.current = null;
+    setNodoRama(null);
+    const m = mapa.current;
+    const marcador = ramaElegida ? ramasDibujadas.current.get(ramaElegida) : undefined;
+    if (!m || !marcador || !ventanaRama) return;
+    const nodo = document.createElement("div");
+    const nueva = L.popup({
+      maxWidth: 320,
+      minWidth: 260,
+      maxHeight: 340,
+      className: "ventana-mapa",
+      offset: [0, -24],
+      autoPanPaddingTopLeft: [16, 64],
+      autoPanPaddingBottomRight: [64, 16],
+    })
+      .setLatLng(marcador.getLatLng())
+      .setContent(nodo);
+    nueva.on("remove", () => {
+      if (popupRama.current === nueva) setRamaElegida(null);
+    });
+    popupRama.current = nueva;
+    setNodoRama(nodo);
+    nueva.openOn(m);
+    return () => {
+      if (popupRama.current === nueva) popupRama.current = null;
+      nueva.remove();
+    };
+    // Con el zoom las ramas se redibujan: la ventana vuelve a pegarse a la suya.
+  }, [ramaElegida, ventanaRama, ramasDelElegido, zoom]);
+  const acomodarRama = useCallback(() => popupRama.current?.update(), []);
+
   const verTodo = () => {
     const m = mapa.current;
     const conLugar = visibles.filter((v) => v.mercado.latitud !== undefined && v.mercado.longitud !== undefined);
@@ -255,7 +433,7 @@ export function MapaPuntosVenta({
   const ofertasEnMapa = marcadores.filter((m) => conOferta.has(m.mercado.codigo)).length;
 
   return (
-    <div className={`mapa-marco${cerca ? " mapa-marco--cerca" : ""}`}>
+    <div className={`mapa-marco${cerca ? " mapa-marco--cerca" : ""}${hayRamas ? " mapa-marco--ramas" : ""}${ramaElegida ? " mapa-marco--puesto" : ""}`}>
       <div
         ref={contenedor}
         className="mapa"
@@ -311,7 +489,30 @@ export function MapaPuntosVenta({
         </p>
       )}
 
+      {ramasDelElegido && hayRamas && (
+        <div className="mapa__ramas" role="status">
+          <div className="mapa__ramas-texto">
+            <strong>{ramasDelElegido.nombre}</strong>
+            <span className="tenue">
+              {ramasDelElegido.lista.length} puestos
+              {ramasDelElegido.lista.some((r) => r.oferta) &&
+                ` · ${ramasDelElegido.lista.filter((r) => r.oferta).length} con oferta`}
+              {" · toque uno para ver sus precios"}
+            </span>
+          </div>
+          <a className="mapa__ramas-entrar" href={ramasDelElegido.enlace}>
+            Entrar
+          </a>
+          {onCerrar && (
+            <button type="button" className="mapa__ramas-cerrar" onClick={onCerrar} aria-label="Cerrar los puestos">
+              ×
+            </button>
+          )}
+        </div>
+      )}
+
       {nodoVentana && seleccionado && ventana && createPortal(ventana(seleccionado, acomodar), nodoVentana)}
+      {nodoRama && ramaElegida && ventanaRama && createPortal(ventanaRama(ramaElegida, acomodarRama), nodoRama)}
     </div>
   );
 }

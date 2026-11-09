@@ -251,3 +251,5 @@ sin ella, memoria". Ningún caso de uso sabe cuál le tocó.
 | Pantallas                       | `ui/paginas/{publico, cuentas, usuario, vendedor, administracion}/` |
 | El mapa: pines, filtros (C141)  | `ui/componentes/MapaPuntosVenta.tsx` |
 | Tema de vidrio y paleta (C141)  | `ui/tema.css` (sobre `ui/estilos.css`) |
+| Puestos en ramas (C143)         | `MapaPuntosVenta.tsx` (ramas), `ui/hooks/useRamasDelMercado.ts`, `ui/componentes/VentanaPuesto.tsx` |
+| Zonas sin GPS (C143)            | `ZONAS_DE_LA_PAZ` en `dominio/modelo.ts`, `ui/hooks/useCercania.ts` |

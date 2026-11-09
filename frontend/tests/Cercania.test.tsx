@@ -55,7 +55,7 @@ describe("Cerca de mí (interfaz)", () => {
     render(<App />);
     fireEvent.click(await screen.findByRole("button", { name: "Cerca de mí" }));
 
-    const lista = await screen.findByRole("region", { name: "Más cerca de usted" });
+    const lista = await screen.findByRole("region", { name: "Mercados cerca de usted" });
     const puntos = within(within(lista).getByRole("list")).getAllByRole("button");
     expect(puntos.length).toBeGreaterThan(0);
     expect(puntos[0].textContent).toMatch(/\d+ m|km/);

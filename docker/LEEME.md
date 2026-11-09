@@ -41,9 +41,11 @@ sesiones, el administrador inicial y las cuentas de prueba.
 
 ## Datos de prueba
 
-Mientras no hay caseros reales, este comando carga unos 30 puestos en
-mercados de La Paz y tres distribuidoras, con foto ilustrada, inventario y
-algunas ofertas, más una compradora con su lista. Los precios parten del
+Mientras no hay caseros reales, este comando carga unos 50 puestos en
+mercados de La Paz (los grandes, como el Lanza y el Rodríguez, con más de diez
+cada uno) y tres distribuidoras, con foto ilustrada, inventario y ofertas, más
+una compradora con su lista. Las ofertas vencen a las 72 horas: volver a correr
+el comando el día de una demostración repone las vencidas. Los precios parten del
 precio del sistema en cada mercado y se mueven un poco. La contraseña de esas
 cuentas es `DEMO_CONTRASENA` de `docker/.env`.
 

@@ -494,6 +494,24 @@ export function masCercanos(marcadores: readonly MarcadorMapa[], aqui: Coordenad
     .slice(0, cuantos);
 }
 
+/**
+ * Zonas conocidas de La Paz y El Alto, por si el GPS no responde o está
+ * apagado: "estoy en Sopocachi" alcanza para ordenar los mercados por cercanía.
+ */
+export interface Zona extends Coordenadas {
+  readonly nombre: string;
+}
+
+export const ZONAS_DE_LA_PAZ: readonly Zona[] = [
+  { nombre: "Centro", latitud: -16.4958, longitud: -68.1336 },
+  { nombre: "Max Paredes", latitud: -16.4935, longitud: -68.1455 },
+  { nombre: "Sopocachi", latitud: -16.5106, longitud: -68.1263 },
+  { nombre: "Miraflores", latitud: -16.5013, longitud: -68.1174 },
+  { nombre: "Villa Fátima", latitud: -16.4835, longitud: -68.1219 },
+  { nombre: "Zona Sur", latitud: -16.5393, longitud: -68.0858 },
+  { nombre: "El Alto (Ceja)", latitud: -16.5055, longitud: -68.163 },
+];
+
 /** "350 m" o "1,4 km". */
 export function textoDistancia(km: number): string {
   return km < 1 ? `${Math.round((km * 1000) / 10) * 10} m` : `${km.toFixed(1).replace(".", ",")} km`;

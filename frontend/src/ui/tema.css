@@ -224,7 +224,7 @@ body {
 .pin:hover .pin__precio, .pin:hover .pin__oferta,
 .pin--activo .pin__precio, .pin--activo .pin__oferta { display: inline; }
 .pin:hover { transform: translate(-50%, -50%) scale(1.08); }
-.pin--activo { transform: translate(-50%, -50%) scale(1.15); background: var(--c); color: #fff; opacity: 1; }
+.pin--activo, .mapa-marco .pin.pin--activo { transform: translate(-50%, -50%) scale(1.15); background: var(--c); color: #fff; opacity: 1; }
 .pin--activo .pin__precio { color: #fff; }
 .pin--activo .pin__punto { background: #fff; border: 0; box-shadow: none; }
 .pin--activo::after {
@@ -274,7 +274,98 @@ body {
 .leyenda__pin--oferta { color: var(--c-oferta); }
 .leyenda__pin--oferta::before { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--c-oferta); }
 
+/* --- Las ramas (C143): los puestos de un mercado alrededor de su pin --------- */
+/* Con las ramas abiertas, los demás lugares se apagan: la atención va al mercado elegido. */
+.mapa-marco--ramas .pin:not(.pin--activo) { opacity: 0.35; }
+.rama__linea { stroke: var(--c-mercado); stroke-opacity: 0.55; stroke-linecap: round; fill: none; }
+.rama__linea--oferta { stroke: var(--c-oferta); stroke-opacity: 0.8; }
+.rama__linea--entra { stroke-dasharray: 400; stroke-dashoffset: 400; animation: rama-crece 420ms var(--ease-out) forwards; }
+@keyframes rama-crece { to { stroke-dashoffset: 0; } }
+
+.rama {
+  position: absolute; left: 0; top: 0; transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer;
+  transition: transform 180ms var(--ease-out);
+}
+.rama--entra { animation: rama-brota 360ms var(--ease-out) both; animation-delay: calc(var(--orden) * 28ms + 120ms); }
+@keyframes rama-brota { from { opacity: 0; transform: translate(-50%, -50%) scale(0.3); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+.rama__foto {
+  box-sizing: border-box; width: 38px; height: 38px; border-radius: 50%; background: var(--pin-fondo) center / cover no-repeat;
+  border: 2.5px solid var(--c-mercado); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12), 0 6px 14px rgba(0, 0, 0, 0.18);
+}
+.rama__foto--vacia { background-color: color-mix(in srgb, var(--c-mercado) 22%, var(--pin-fondo)); }
+.rama__numero {
+  position: absolute; top: -6px; right: -12px; min-width: 18px; padding: 1px 5px; box-sizing: border-box; border-radius: 999px;
+  background: var(--texto); color: var(--superficie-solida); font-size: 0.64rem; font-weight: 700; line-height: 1.4; text-align: center; white-space: nowrap;
+}
+.rama__precio {
+  padding: 1px 7px; border-radius: 999px; background: var(--pin-fondo); color: var(--texto);
+  box-shadow: 0 0 0 1px var(--borde), 0 2px 6px rgba(0, 0, 0, 0.14); font-size: 0.72rem; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.rama__oferta {
+  position: absolute; top: -7px; left: -9px; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--c-oferta); color: #3b2a00; font-size: 0.66rem; box-shadow: 0 0 0 2px var(--pin-fondo);
+}
+.rama--oferta .rama__foto { border-color: var(--c-oferta); }
+.rama--agotado .rama__foto { filter: grayscale(1); opacity: 0.7; }
+.rama--agotado .rama__precio { color: var(--tenue); text-decoration: line-through; }
+@media (hover: hover) and (pointer: fine) { .rama:hover { transform: translate(-50%, -50%) scale(1.12); } }
+.rama--activa { transform: translate(-50%, -50%) scale(1.18); }
+.rama--activa .rama__foto { box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-mercado) 35%, transparent), 0 6px 16px rgba(0, 0, 0, 0.25); }
+
+/* La tarjeta del mercado abierto, abajo: cuántos puestos, entrar o cerrar. */
+.mapa__ramas {
+  position: absolute; z-index: 800; left: 12px; right: 64px; bottom: 14px; max-width: 460px;
+  display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 14px; border-radius: 16px;
+  background: var(--vidrio-fuerte); border: 1px solid var(--vidrio-borde); box-shadow: var(--sombra-alta);
+  backdrop-filter: var(--desenfoque); -webkit-backdrop-filter: var(--desenfoque); animation: brotar 260ms var(--ease-out);
+}
+.mapa__ramas-texto { display: flex; flex-direction: column; min-width: 0; flex: 1; font-size: 0.85rem; }
+.mapa__ramas-texto strong { color: var(--tinta); }
+.mapa__ramas-entrar {
+  flex: none; padding: 7px 14px; border-radius: 999px; font-weight: 600; font-size: 0.82rem; text-decoration: none; color: #fff;
+  background: linear-gradient(180deg, #14b088, #0b8a66);
+}
+.mapa__ramas-cerrar {
+  flex: none; width: 30px; height: 30px; border-radius: 50%; border: 0; cursor: pointer; font-size: 18px; line-height: 1;
+  background: rgba(118, 118, 128, 0.16); color: var(--tenue);
+}
+.mapa__ramas-cerrar:focus-visible, .mapa__ramas-entrar:focus-visible { outline: 2px solid var(--jade); outline-offset: 2px; }
+.mapa-marco--ramas .mapa__pista { display: none; }
+
+/* La ventana del puesto: su foto arriba, sus ofertas y todo lo que tiene. */
+.ventana--puesto { gap: 8px; }
+.ventana__portada { display: block; width: calc(100% + 32px); margin: -14px -16px 2px; height: 120px; object-fit: cover; border-radius: 20px 20px 0 0; background: var(--jade-claro); }
+.ventana__portada--vacia { display: grid; place-items: center; color: var(--jade); }
+.ventana__referencia { font-size: 0.76rem; }
+.ventana__ofertas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.ventana__oferta {
+  display: grid; grid-template-columns: auto 1fr auto; align-items: baseline; gap: 2px 8px; padding: 8px 10px; border-radius: 12px;
+  background: color-mix(in srgb, var(--c-oferta) 16%, transparent); border: 1px solid color-mix(in srgb, var(--c-oferta) 45%, transparent);
+}
+.ventana__oferta-cinta { font-size: 0.7rem; font-weight: 800; color: #8a6100; white-space: nowrap; }
+.ventana__oferta-producto { font-weight: 600; color: var(--tinta); min-width: 0; }
+.ventana__oferta-nota { grid-column: 1 / -1; font-size: 0.74rem; }
+.ventana__articulos--todos { border-top: 1px solid var(--borde); padding-top: 6px; }
+.ventana__buscado { font-weight: 700; color: var(--tinta); }
+.ventana__estrella { color: var(--c-oferta); }
+@media (prefers-color-scheme: dark) { .ventana__oferta-cinta { color: var(--c-oferta); } }
+
+/* Elegir la zona a mano cuando el GPS no responde. */
+.zonas { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 14px; font-size: 0.85rem; }
+.cercanos__oferta { color: #8a6100; font-weight: 700; font-size: 0.78rem; }
+@media (prefers-color-scheme: dark) { .cercanos__oferta { color: var(--c-oferta); } }
+
+/* Con la ventana de un puesto abierta, la tarjeta del mercado se aparta: no la tapa. */
+.mapa-marco--puesto .mapa__ramas { display: none; }
+@media (max-width: 700px) {
+  .mapa__ramas { bottom: 10px; padding: 8px 8px 8px 12px; }
+  .mapa__ramas-texto { font-size: 0.8rem; }
+  .ventana__portada { height: 84px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .rama, .rama--entra, .rama__linea--entra, .mapa__ramas { animation: none; transition: none; stroke-dashoffset: 0; }
   .pin, .tarjeta, .filtro, .mapa__boton { transition: none; }
   .pin--activo::after, .yo::after, .ventana-mapa .leaflet-popup-content-wrapper { animation: none; }
   .tarjeta:hover { transform: none; }
