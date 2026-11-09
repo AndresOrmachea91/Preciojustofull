@@ -14,6 +14,7 @@ import { PaginaConfiabilidad } from "@/ui/paginas/publico/PaginaConfiabilidad";
 import { PaginaMercado } from "@/ui/paginas/publico/PaginaMercado";
 import { PaginaMercados } from "@/ui/paginas/publico/PaginaMercados";
 import { PaginaOfertas } from "@/ui/paginas/publico/PaginaOfertas";
+import { PaginaReferencias } from "@/ui/paginas/publico/PaginaReferencias";
 import { PaginaUsuario } from "@/ui/paginas/usuario/PaginaUsuario";
 import { PaginaVendedor } from "@/ui/paginas/vendedor/PaginaVendedor";
 
@@ -98,6 +99,8 @@ export default function App() {
         {ruta === "mercado" && <PaginaMercado contenedor={contenedor} usuario={usuario} />}
 
         {ruta === "ofertas" && <PaginaOfertas contenedor={contenedor} usuario={usuario} />}
+
+        {ruta === "referencias" && <PaginaReferencias contenedor={contenedor} />}
 
         {(ruta === "precios" || (cuenta && usuario)) && <PaginaPrecios contenedor={contenedor} usuario={usuario} />}
       </main>

@@ -18,6 +18,33 @@ class RangoSalida(BaseModel):
     centro: float
 
 
+class RegistrarCaseraEntrada(BaseModel):
+    nombre: str = Field(min_length=1, max_length=120)
+    celular: str = Field(min_length=8, max_length=20)
+    codigo_mercado: str = Field(min_length=1, max_length=64)
+    numero: str = Field(min_length=1, max_length=20)
+    nombre_puesto: str = Field(default="", max_length=120)
+    rubros: list[str] = Field(default_factory=list)
+    referencia: str = Field(default="", max_length=200)
+
+
+class CaseraRegistradaSalida(BaseModel):
+    id_usuario: int
+    nombre: str
+    celular: str
+    codigo_mercado: str
+    numero: str
+    # Solo en esta respuesta: el administrador se la da a la casera.
+    clave_temporal: str
+
+
+class PrecioReferencialSalida(BaseModel):
+    """Un renglón de los precios referenciales de La Paz (C144)."""
+    producto: "ProductoSalida"
+    consumidor: "PrecioSalida | None"
+    mayorista: "PrecioSalida | None"
+
+
 class PrecioSalida(BaseModel):
     codigo_producto: str
     codigo_mercado: str

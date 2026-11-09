@@ -253,3 +253,7 @@ sin ella, memoria". Ningún caso de uso sabe cuál le tocó.
 | Tema de vidrio y paleta (C141)  | `ui/tema.css` (sobre `ui/estilos.css`) |
 | Puestos en ramas (C143)         | `MapaPuntosVenta.tsx` (ramas), `ui/hooks/useRamasDelMercado.ts`, `ui/componentes/VentanaPuesto.tsx` |
 | Zonas sin GPS (C143)            | `ZONAS_DE_LA_PAZ` en `dominio/modelo.ts`, `ui/hooks/useCercania.ts` |
+| Plan de compra con pasajes (C144) | `dominio/servicio/planificarCompra.ts`, `aplicacion/casosUso/usuario/planificarCompra.ts`, `ui/componentes/PlanDeCompra.tsx` |
+| Precios referenciales (C144)    | `ui/paginas/publico/PaginaReferencias.tsx`; backend `casos_uso/precios/precios_referenciales.py` (GET /precios/referencia) |
+| Resumen de mercados (C144)      | `panoramaDeMercados` en `dominio/modelo.ts`, `ui/paginas/publico/PaginaMercados.tsx` |
+| Registrar casera (C144)         | `ui/paginas/administracion/RegistrarCasera.tsx`; backend `casos_uso/administracion/registrar_casera.py` (POST /admin/usuarios/caseras) |

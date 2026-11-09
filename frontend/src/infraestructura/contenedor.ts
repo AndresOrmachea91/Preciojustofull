@@ -19,6 +19,8 @@ import { GestionarSesion } from "@/aplicacion/casosUso/cuentas/gestionarSesion";
 import { RecuperarContrasena } from "@/aplicacion/casosUso/cuentas/recuperarContrasena";
 import { CercaDeMi } from "@/aplicacion/casosUso/publico/cercaDeMi";
 import { VerHistorial } from "@/aplicacion/casosUso/publico/verHistorial";
+import { VerPreciosReferenciales } from "@/aplicacion/casosUso/publico/verPreciosReferenciales";
+import { PlanificarCompra } from "@/aplicacion/casosUso/usuario/planificarCompra";
 import { VerMapa } from "@/aplicacion/casosUso/publico/verMapa";
 import { VerConfiabilidad } from "@/aplicacion/casosUso/publico/verConfiabilidad";
 import { OperarSistema } from "@/aplicacion/casosUso/administracion/operarSistema";
@@ -33,6 +35,7 @@ import type {
   CatalogoRepositorio,
   ConfiabilidadRepositorio,
   HistorialRepositorio,
+  ReferenciasRepositorio,
   OperacionRepositorio,
   ListasRepositorio,
   MercadosRepositorio,
@@ -68,6 +71,8 @@ export interface Contenedor {
   readonly catalogo: ConsultarCatalogo;
   readonly verMapa: VerMapa;
   readonly verHistorial: VerHistorial;
+  readonly referencias: VerPreciosReferenciales;
+  readonly planificarCompra: PlanificarCompra;
   readonly cercaDeMi: CercaDeMi;
   readonly sesion: GestionarSesion;
   readonly recuperar: RecuperarContrasena;
@@ -87,7 +92,7 @@ export interface Contenedor {
 export function crearContenedor(origen?: string, almacen?: AlmacenSesion): Contenedor {
   const modo = origen ?? import.meta.env?.VITE_ORIGEN_DATOS ?? "memoria";
 
-  let precios: PrecioRepositorio & HistorialRepositorio;
+  let precios: PrecioRepositorio & HistorialRepositorio & ReferenciasRepositorio;
   let catalogo: CatalogoRepositorio;
   let cuentas: SesionRepositorio & AdministracionRepositorio & AuditoriaRepositorio & RecuperacionRepositorio;
   let catalogoAdmin: CatalogoAdminRepositorio;
@@ -146,6 +151,8 @@ export function crearContenedor(origen?: string, almacen?: AlmacenSesion): Conte
     catalogo: new ConsultarCatalogo(catalogo),
     verMapa: new VerMapa(catalogo, precios),
     verHistorial: new VerHistorial(precios),
+    referencias: new VerPreciosReferenciales(precios),
+    planificarCompra: new PlanificarCompra(precios),
     // El GPS es del navegador en los dos modos: no depende de dónde salen los precios.
     cercaDeMi: new CercaDeMi(new UbicacionNavegador()),
     sesion: new GestionarSesion(cuentas, almacen),

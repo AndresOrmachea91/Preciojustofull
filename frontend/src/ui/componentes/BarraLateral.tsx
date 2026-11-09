@@ -22,6 +22,8 @@ export function seccionesPublicas(): Seccion[] {
     // Entrar a un mercado: sus precios, sus puestos y sus ofertas (C134).
     { ruta: "mercados", texto: "Mercados", icono: "mercado" },
     { ruta: "ofertas", texto: "Ofertas de hoy", icono: "oferta" },
+    // C144: la lista de precios de la ciudad, producto por producto.
+    { ruta: "referencias", texto: "Precios referenciales", icono: "planilla" },
     // Pública: cualquiera puede ver cuánto se equivoca el estimado.
     { ruta: "confiabilidad", texto: "¿Qué tan confiable es?", icono: "confiabilidad" },
   ];

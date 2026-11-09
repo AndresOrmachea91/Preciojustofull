@@ -20,11 +20,13 @@ import { CatalogoProductos } from "@/ui/paginas/administracion/CatalogoProductos
 import { CatalogoPuntosVenta } from "@/ui/paginas/administracion/CatalogoPuntosVenta";
 import { OfertasEnRevision } from "@/ui/paginas/administracion/OfertasEnRevision";
 import { PlanillaCampo } from "@/ui/paginas/administracion/PlanillaCampo";
+import { RegistrarCasera } from "@/ui/paginas/administracion/RegistrarCasera";
 import { Referencias } from "@/ui/paginas/administracion/Referencias";
 import { SaludSistema } from "@/ui/paginas/administracion/SaludSistema";
 
 type Pestana =
-  | "usuarios" | "reportes" | "ofertas" | "puntos" | "productos" | "campo" | "salud" | "auditoria" | "referencias";
+  | "usuarios" | "caseras" | "reportes" | "ofertas" | "puntos" | "productos" | "campo" | "salud" | "auditoria"
+  | "referencias";
 
 export function PaginaAdmin({ contenedor, usuario }: { contenedor: Contenedor; usuario: Usuario }) {
   const verUsuarios = puede(usuario, "gestionar_usuarios");
@@ -37,6 +39,7 @@ export function PaginaAdmin({ contenedor, usuario }: { contenedor: Contenedor; u
 
   const pestanas: { id: Pestana; texto: string; visible: boolean }[] = [
     { id: "usuarios", texto: "Usuarios", visible: verUsuarios },
+    { id: "caseras", texto: "Registrar casera", visible: verUsuarios },
     { id: "puntos", texto: "Mercados y distribuidores", visible: verCatalogo },
     { id: "productos", texto: "Productos", visible: verCatalogo },
     { id: "reportes", texto: "Reportes por revisar", visible: verReportes },
@@ -54,6 +57,7 @@ export function PaginaAdmin({ contenedor, usuario }: { contenedor: Contenedor; u
       </h2>
       <Pestanas pestanas={pestanas} activa={pestana} onCambiar={setPestana} />
       {pestana === "usuarios" && verUsuarios && <Usuarios contenedor={contenedor} yo={usuario} />}
+      {pestana === "caseras" && verUsuarios && <RegistrarCasera contenedor={contenedor} />}
       {pestana === "puntos" && verCatalogo && <CatalogoPuntosVenta contenedor={contenedor} />}
       {pestana === "productos" && verCatalogo && <CatalogoProductos contenedor={contenedor} />}
       {pestana === "reportes" && verReportes && <Reportes contenedor={contenedor} />}

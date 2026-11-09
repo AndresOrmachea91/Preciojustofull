@@ -36,6 +36,7 @@ from src.aplicacion.casos_uso.precios.calcular_canasta import CalcularCanastaCas
 from src.aplicacion.casos_uso.precios.comparar_mercados import CompararMercadosCasoUso
 from src.aplicacion.casos_uso.precios.consultar_precio import ConsultarPrecioProducto
 from src.aplicacion.casos_uso.precios.historial_precio import HistorialPrecio
+from src.aplicacion.casos_uso.precios.precios_referenciales import PreciosReferenciales
 from src.aplicacion.casos_uso.precios.evaluar_estimador import EvaluarEstimador
 from src.aplicacion.casos_uso.administracion.importar_campo import ImportarCotizacionesCampo
 from src.aplicacion.casos_uso.administracion.salud_sistema import VerSaludSistema
@@ -56,6 +57,7 @@ from src.aplicacion.casos_uso.usuario.mis_reportes import MisReportes
 from src.aplicacion.casos_uso.usuario.reportar_precio import RegistrarReporteCiudadano
 from src.aplicacion.casos_uso.vendedor.publicar_precio import MisPrecios, PublicarPrecioPropio
 from src.aplicacion.casos_uso.vendedor.mi_puesto import MiPuestoCasoUso
+from src.aplicacion.casos_uso.administracion.registrar_casera import RegistrarCasera
 from src.aplicacion.casos_uso.vendedor.ofertas import OfertasDelCasero
 from src.aplicacion.casos_uso.precios.ofertas_vigentes import VerOfertasVigentes
 from src.aplicacion.casos_uso.precios.ficha_mercado import DirectorioMercados, FichaMercado
@@ -183,6 +185,11 @@ def caso_consultar_precio() -> ConsultarPrecioProducto:
 def caso_comparar_mercados() -> CompararMercadosCasoUso:
     p, m, o = _repositorios()
     return CompararMercadosCasoUso(p, m, o, obtener_motor(), reloj=hoy_en_bolivia)
+
+
+def caso_precios_referenciales() -> PreciosReferenciales:
+    p, m, o = _repositorios()
+    return PreciosReferenciales(p, m, o, obtener_motor(), reloj=hoy_en_bolivia)
 
 
 def caso_historial_precio() -> HistorialPrecio:
@@ -317,6 +324,11 @@ def caso_revisar_ofertas() -> RevisarOfertas:
 
 def caso_mi_puesto() -> MiPuestoCasoUso:
     return MiPuestoCasoUso(_repositorios()[1], _puestos_y_ofertas()[0], _cuentas()[0], almacen_fotos())
+
+
+def caso_registrar_casera() -> RegistrarCasera:
+    return RegistrarCasera(caso_registrar_usuario(), caso_mi_puesto(), _cuentas()[0], _repositorios()[1],
+                           _puestos_y_ofertas()[0])
 
 
 def caso_inventario() -> InventarioDelPuesto:

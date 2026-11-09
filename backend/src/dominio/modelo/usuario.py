@@ -13,7 +13,7 @@ from dataclasses import dataclass, field, replace
 from datetime import datetime
 from enum import Enum
 
-from src.dominio.excepciones import ContrasenaDebil, CorreoInvalido
+from src.dominio.excepciones import DatoInvalido, ContrasenaDebil, CorreoInvalido
 from src.dominio.modelo.auditoria import Auditoria
 
 _CORREO = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -58,6 +58,35 @@ PERMISOS_POR_ROL: dict[Rol, frozenset[Permiso]] = {
     }),
     Rol.ADMINISTRADOR: frozenset(Permiso),
 }
+
+
+# Las caseras registradas en su puesto entran con su celular (C144): por
+# dentro, la cuenta es <celular>@caseras.preciojusto.bo.
+DOMINIO_CASERAS = "caseras.preciojusto.bo"
+_CELULAR = re.compile(r"^[67]\d{7}$")
+
+
+def celular_boliviano(texto: str) -> str | None:
+    """'+591 712-34567' → '71234567'. None si no es un celular de Bolivia (8 dígitos, empieza en 6 o 7)."""
+    digitos = re.sub(r"[\s\-().]", "", texto or "")
+    if digitos.startswith("+591"):
+        digitos = digitos[4:]
+    elif digitos.startswith("591") and len(digitos) == 11:
+        digitos = digitos[3:]
+    return digitos if _CELULAR.match(digitos) else None
+
+
+def correo_de_celular(celular: str) -> str:
+    numero = celular_boliviano(celular)
+    if numero is None:
+        raise DatoInvalido("El celular debe tener 8 dígitos y empezar en 6 o 7")
+    return f"{numero}@{DOMINIO_CASERAS}"
+
+
+def identificador_de_ingreso(texto: str) -> str:
+    """Se entra con el correo o, si es una casera, con su celular."""
+    numero = celular_boliviano(texto)
+    return f"{numero}@{DOMINIO_CASERAS}" if numero else texto
 
 
 def normalizar_correo(correo: str) -> str:

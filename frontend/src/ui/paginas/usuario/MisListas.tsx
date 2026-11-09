@@ -16,6 +16,7 @@ import {
 } from "@/dominio/modelo";
 import type { Contenedor } from "@/infraestructura/contenedor";
 import { MensajeAviso, MensajeError, textoDeError } from "@/ui/componentes/Mensajes";
+import { PlanDeCompra } from "@/ui/componentes/PlanDeCompra";
 import { SelectorProducto } from "@/ui/componentes/SelectorProducto";
 import { useCatalogo } from "@/ui/hooks/useCatalogo";
 import { hrefMercado } from "@/ui/hooks/useRuta";
@@ -136,6 +137,7 @@ function Cotizacion({ contenedor, lista, productos }: { contenedor: Contenedor; 
   return (
     <div className="cotizacion" aria-label="Dónde conviene comprar esta lista">
       <ResumenAhorro resultado={minoristas} />
+      <PlanDeCompra contenedor={contenedor} lista={lista} productos={productos} />
       <OfertasDeLaLista contenedor={contenedor} lista={lista} productos={productos} />
       <Ranking costos={minoristas.opciones.slice(0, 5)} nombre={nombre} />
       {mayoristas.length > 0 && (

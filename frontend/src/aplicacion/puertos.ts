@@ -39,12 +39,20 @@ import type {
   ArticuloInventario,
   Disponibilidad,
   PuestosDeMercado,
+  PrecioReferencial,
+  NuevaCasera,
+  CaseraRegistrada,
 } from "@/dominio/modelo";
 
 export interface PrecioRepositorio {
   compararMercados(codigoProducto: string, zona?: string): Promise<PrecioEnMercado[]>;
   precioEnMercado(codigoProducto: string, codigoMercado: string): Promise<Precio>;
   calcularCanasta(items: readonly ItemCanasta[], zona?: string): Promise<CostoCanasta[]>;
+}
+
+/** Los precios referenciales de la ciudad (C144). */
+export interface ReferenciasRepositorio {
+  referencias(): Promise<PrecioReferencial[]>;
 }
 
 /** El precio de la ciudad mes a mes. Puerto aparte: no todo el que compara precios necesita historia. */
@@ -113,6 +121,8 @@ export interface AdministracionRepositorio {
     cambios: { rol?: Rol; activo?: boolean; codigoPuntoVenta?: string | null },
   ): Promise<Usuario>;
   restablecerContrasena(id: number, contrasena: string): Promise<Usuario>;
+  /** C144: la casera queda con cuenta (entra con su celular) y su puesto, en un solo paso. */
+  registrarCasera(casera: NuevaCasera): Promise<CaseraRegistrada>;
   reportes(estado: EstadoReporte | "todos"): Promise<ReporteEnRevision[]>;
   aprobarReporte(id: number): Promise<ReporteEnRevision>;
   rechazarReporte(id: number, motivo: string): Promise<ReporteEnRevision>;

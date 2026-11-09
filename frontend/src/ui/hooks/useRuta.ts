@@ -6,11 +6,11 @@ import { useCallback, useEffect, useState } from "react";
  * index.html) y no suman una dependencia.
  */
 export type Ruta =
-  | "precios" | "mercados" | "mercado" | "ofertas" | "confiabilidad" | "ingresar" | "registrarse" | "recuperar"
+  | "precios" | "mercados" | "mercado" | "ofertas" | "referencias" | "confiabilidad" | "ingresar" | "registrarse" | "recuperar"
   | "restablecer" | "mi-cuenta" | "mi-puesto" | "admin";
 
 const RUTAS: readonly Ruta[] = [
-  "mercados", "mercado", "ofertas", "confiabilidad", "ingresar", "registrarse", "recuperar", "restablecer",
+  "mercados", "mercado", "ofertas", "referencias", "confiabilidad", "ingresar", "registrarse", "recuperar", "restablecer",
   "mi-cuenta", "mi-puesto", "admin",
 ];
 

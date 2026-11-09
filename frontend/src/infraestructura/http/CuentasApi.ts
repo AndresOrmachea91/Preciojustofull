@@ -21,6 +21,8 @@ import type {
   ReporteEnRevision,
   Rol,
   Usuario,
+  NuevaCasera,
+  CaseraRegistrada,
 } from "@/dominio/modelo";
 import type { ClienteHttp } from "@/infraestructura/http/clienteHttp";
 
@@ -184,6 +186,19 @@ export class CuentasApi
         automatica: f.automatica,
         url: f.url,
       })),
+    };
+  }
+
+  async registrarCasera(c: NuevaCasera): Promise<CaseraRegistrada> {
+    const d = await this.http.post<{
+      id_usuario: number; nombre: string; celular: string; codigo_mercado: string; numero: string; clave_temporal: string;
+    }>("/admin/usuarios/caseras", {
+      nombre: c.nombre, celular: c.celular, codigo_mercado: c.codigoMercado, numero: c.numero,
+      nombre_puesto: c.nombrePuesto, rubros: c.rubros, referencia: c.referencia,
+    });
+    return {
+      idUsuario: d.id_usuario, nombre: d.nombre, celular: d.celular, codigoMercado: d.codigo_mercado,
+      numero: d.numero, claveTemporal: d.clave_temporal,
     };
   }
 

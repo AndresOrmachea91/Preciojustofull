@@ -1,4 +1,4 @@
-import type { EstadoReporte, ReporteEnRevision, Rol, Usuario } from "@/dominio/modelo";
+import { celularBoliviano, type CaseraRegistrada, type EstadoReporte, type NuevaCasera, type ReporteEnRevision, type Rol, type Usuario } from "@/dominio/modelo";
 import type { AdministracionRepositorio, NuevaCuenta } from "@/aplicacion/puertos";
 
 /**
@@ -17,6 +17,17 @@ export class Administrar {
   eliminarUsuario(id: number, yo: Usuario): Promise<void> {
     if (id === yo.id) return Promise.reject(new Error("No puede eliminar su propia cuenta"));
     return this.repositorio.eliminarUsuario(id);
+  }
+
+  /** C144: registrar a una casera en su puesto. Se avisa antes lo que el backend igual rechazaría. */
+  registrarCasera(casera: NuevaCasera): Promise<CaseraRegistrada> {
+    if (!casera.nombre.trim()) return Promise.reject(new Error("Escriba el nombre de la casera"));
+    if (!celularBoliviano(casera.celular)) {
+      return Promise.reject(new Error("El celular debe tener 8 dígitos y empezar en 6 o 7"));
+    }
+    if (!casera.codigoMercado) return Promise.reject(new Error("Elija el mercado"));
+    if (!casera.numero.trim()) return Promise.reject(new Error("Escriba el número del puesto"));
+    return this.repositorio.registrarCasera(casera);
   }
 
   crearUsuario(cuenta: NuevaCuenta & { rol: Rol }): Promise<Usuario> {

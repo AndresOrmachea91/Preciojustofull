@@ -370,6 +370,68 @@ body {
   .pin--activo::after, .yo::after, .ventana-mapa .leaflet-popup-content-wrapper { animation: none; }
   .tarjeta:hover { transform: none; }
 }
+/* --- C144: plan de compra con pasajes ---------------------------------------- */
+.plan { display: flex; flex-direction: column; gap: 12px; margin: 16px 0; padding: 16px; border-radius: 18px; background: var(--superficie); border: 1px solid var(--vidrio-borde); box-shadow: var(--sombra-suave); }
+.plan .subseccion { margin: 0; }
+.plan__opciones { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+.plan__pasaje { max-width: 170px; margin: 0; }
+.plan__opciones .zonas { margin: 0; flex: 1; min-width: 240px; }
+.plan__veredicto { padding: 14px 16px; border-radius: 16px; background: linear-gradient(120deg, rgba(16, 163, 122, 0.14), rgba(59, 130, 246, 0.08)); border: 1px solid color-mix(in srgb, var(--jade) 35%, transparent); }
+.plan__titulo { margin: 0 0 10px; font-size: 1.05rem; font-weight: 750; color: var(--tinta); letter-spacing: -0.01em; }
+.plan__balance { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.plan__cifra { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border-radius: 12px; background: var(--vidrio-fuerte); }
+.plan__cifra span { font-size: 0.74rem; }
+.plan__cifra strong { font-size: 1.1rem; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.plan__cifra--gana strong { color: var(--jade); }
+.plan__cifra--pierde strong { color: var(--peligro); }
+.plan__cifra--neto { background: var(--jade); }
+.plan__cifra--neto span, .plan__cifra--neto strong { color: #fff; }
+.plan__explica { margin: 8px 0 0; font-size: 0.82rem; }
+.plan__paradas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.plan__parada { padding: 12px; border-radius: 14px; border: 1px solid var(--borde); background: var(--vidrio-fuerte); }
+.plan__parada-cabeza { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.plan__parada-cabeza a { color: var(--tinta); text-decoration: none; }
+.plan__parada-cabeza a:hover { text-decoration: underline; }
+.plan__numero { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--jade); color: #fff; font-size: 0.75rem; font-weight: 700; align-self: center; }
+.plan__subtotal { margin-left: auto; font-variant-numeric: tabular-nums; }
+.plan__compras { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 3px; font-size: 0.88rem; }
+.plan__compras li { display: flex; justify-content: space-between; gap: 8px; }
+.plan__puestos { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--borde); font-size: 0.82rem; }
+.plan__puestos ul { margin: 4px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; }
+.plan__puestos a { color: var(--jade); font-weight: 600; }
+.plan__total { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 0; font-variant-numeric: tabular-nums; }
+.plan__gran-total { font-size: 1.15rem; }
+.plan__tabla caption { text-align: left; padding: 0 0 6px; }
+.plan__fila-mejor { background: var(--jade-claro); }
+@media (max-width: 560px) { .plan__balance { grid-template-columns: 1fr; } }
+
+/* --- C144: panorama de mercados y precios referenciales ------------------------ */
+.panorama { margin: 0 0 16px; padding: 14px; border-radius: 18px; background: var(--superficie); border: 1px solid var(--vidrio-borde); box-shadow: var(--sombra-suave); }
+.panorama__cifras { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+.panorama__cifra { display: flex; flex-direction: column; padding: 10px 12px; border-radius: 14px; background: var(--vidrio-fuerte); }
+.panorama__cifra strong { font-size: 1.5rem; letter-spacing: -0.02em; color: var(--tinta); font-variant-numeric: tabular-nums; }
+.panorama__cifra span { font-size: 0.78rem; color: var(--tenue); }
+.panorama__cifra--destacada { background: var(--jade); }
+.panorama__cifra--destacada strong, .panorama__cifra--destacada span { color: #fff; }
+.panorama__detalle { margin-top: 10px; font-size: 0.86rem; }
+.panorama__detalle summary { cursor: pointer; font-weight: 600; color: var(--jade); }
+.panorama__macros { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.panorama__macros li { display: grid; grid-template-columns: minmax(110px, 160px) 1fr auto; align-items: center; gap: 10px; }
+.panorama__barra { height: 8px; border-radius: 999px; background: var(--borde); overflow: hidden; }
+.panorama__barra span { display: block; height: 100%; border-radius: inherit; background: var(--jade); }
+.referencias { margin-bottom: 14px; }
+.referencias__categoria { text-align: left; font-weight: 700; color: var(--tinta); padding: 10px 12px 4px; }
+.referencias tbody th, .plan__tabla tbody th { text-transform: none; letter-spacing: normal; font-size: 0.9rem; font-weight: 600; color: var(--tinta); }
+.referencias__monto { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.referencias__rango { font-size: 0.78rem; }
+
+/* --- C144: casera registrada en su puesto ------------------------------------- */
+.casera-lista { margin: 0 0 16px; padding: 14px 16px; border-radius: 16px; background: var(--jade-claro); border: 1px solid var(--jade); }
+.casera-lista p { margin: 0 0 6px; }
+.casera-lista__datos { font-size: 1.05rem; }
+.casera-lista__clave { font-family: ui-monospace, "SF Mono", Consolas, monospace; letter-spacing: 0.08em; padding: 2px 8px; border-radius: 8px; background: var(--vidrio-fuerte); }
+.casera-lista a { color: var(--jade); font-weight: 600; }
+
 /* Sin desenfoque en el navegador: superficies casi opacas, para que se lea igual. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   :root { --vidrio: rgba(255, 255, 255, 0.96); --vidrio-fuerte: #fff; }

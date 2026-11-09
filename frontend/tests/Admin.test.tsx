@@ -19,7 +19,7 @@ afterEach(cleanup);
 
 async function ingresar(correo: string, contrasena: string) {
   fireEvent.click(await screen.findByRole("link", { name: "Ingresar" }));
-  fireEvent.change(screen.getByLabelText("Correo"), { target: { value: correo } });
+  fireEvent.change(screen.getByLabelText(/^Correo/), { target: { value: correo } });
   fireEvent.change(screen.getByLabelText("Contraseña"), { target: { value: contrasena } });
   fireEvent.submit(screen.getByRole("button", { name: "Ingresar" }).closest("form")!);
 }

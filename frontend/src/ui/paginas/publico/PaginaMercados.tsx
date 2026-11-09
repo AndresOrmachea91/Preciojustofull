@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   etiquetaTipo,
   filtrarDirectorio,
+  panoramaDeMercados,
   type EntradaDirectorio,
   type TipoPuntoVenta,
 } from "@/dominio/modelo";
@@ -27,12 +28,17 @@ export function PaginaMercados({ contenedor }: { contenedor: Contenedor }) {
   const [error, setError] = useState<string | null>(null);
   const [texto, setTexto] = useState("");
   const [tipo, setTipo] = useState<TipoPuntoVenta | "todos">("todos");
+  const [soloConCaseras, setSoloConCaseras] = useState(false);
 
   useEffect(() => {
     contenedor.mercados.directorio().then(setEntradas, (e) => setError(textoDeError(e)));
   }, [contenedor]);
 
-  const visibles = useMemo(() => filtrarDirectorio(entradas ?? [], texto, tipo), [entradas, texto, tipo]);
+  const visibles = useMemo(
+    () => filtrarDirectorio(entradas ?? [], texto, tipo).filter((e) => !soloConCaseras || e.puestos > 0),
+    [entradas, texto, tipo, soloConCaseras],
+  );
+  const panorama = useMemo(() => (entradas ? panoramaDeMercados(entradas) : null), [entradas]);
   const tiposPresentes = TIPOS.filter((t) => t.valor === "todos" || entradas?.some((e) => e.mercado.tipo === t.valor));
 
   return (
@@ -41,6 +47,34 @@ export function PaginaMercados({ contenedor }: { contenedor: Contenedor }) {
         Mercados
       </h2>
       <p className="app__lema">Entre a un mercado para ver cuánto sale cada producto ahí, sus puestos y sus ofertas.</p>
+
+      {panorama && (
+        <div className="panorama" aria-label="Los mercados de La Paz en el sistema">
+          <div className="panorama__cifras">
+            <Cifra valor={panorama.mercados} texto="mercados de La Paz en el sistema" />
+            <Cifra valor={panorama.conCaseras} texto="con caseras registradas" destacada />
+            <Cifra valor={panorama.puestos} texto="puestos registrados" />
+            <Cifra valor={panorama.ofertas} texto="ofertas vigentes" />
+            <Cifra valor={panorama.distribuidores + panorama.mayoristas} texto="distribuidores y mayoristas" />
+          </div>
+          <details className="panorama__detalle">
+            <summary>Por macrodistrito: dónde ya hay caseras y dónde falta llegar</summary>
+            <ul className="panorama__macros">
+              {panorama.porMacrodistrito.map((m) => (
+                <li key={m.nombre}>
+                  <span>{m.nombre}</span>
+                  <span className="panorama__barra" aria-hidden="true">
+                    <span style={{ width: `${m.mercados ? (m.conCaseras / m.mercados) * 100 : 0}%` }} />
+                  </span>
+                  <span className="tenue">
+                    {m.conCaseras} de {m.mercados}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </details>
+        </div>
+      )}
 
       <div className="barra barra--directorio">
         <input
@@ -64,6 +98,14 @@ export function PaginaMercados({ contenedor }: { contenedor: Contenedor }) {
             </button>
           ))}
         </div>
+        <button
+          type="button"
+          className="filtro"
+          aria-pressed={soloConCaseras}
+          onClick={() => setSoloConCaseras(!soloConCaseras)}
+        >
+          Solo con caseras registradas
+        </button>
       </div>
 
       <MensajeError texto={error} />
@@ -111,5 +153,14 @@ export function PaginaMercados({ contenedor }: { contenedor: Contenedor }) {
         ))}
       </ul>
     </section>
+  );
+}
+
+function Cifra({ valor, texto, destacada = false }: { valor: number; texto: string; destacada?: boolean }) {
+  return (
+    <div className={`panorama__cifra${destacada ? " panorama__cifra--destacada" : ""}`}>
+      <strong>{valor}</strong>
+      <span>{texto}</span>
+    </div>
   );
 }

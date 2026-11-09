@@ -17,6 +17,7 @@ import type {
   Precio,
   PrecioEnMercado,
   Producto,
+  PrecioReferencial,
 } from "@/dominio/modelo";
 import { PRESENTACIONES_POR_UNIDAD, ubicacionValida } from "@/dominio/modelo";
 import type {
@@ -26,6 +27,7 @@ import type {
   DatosPuntoVenta,
   HistorialRepositorio,
   PrecioRepositorio,
+  ReferenciasRepositorio,
 } from "@/aplicacion/puertos";
 
 const MERCADOS: Mercado[] = [
@@ -133,7 +135,7 @@ function codigoLibre(base: string, existe: (codigo: string) => boolean): string 
 }
 
 export class PreciosMemoria
-  implements PrecioRepositorio, CatalogoRepositorio, CatalogoAdminRepositorio, HistorialRepositorio
+  implements PrecioRepositorio, CatalogoRepositorio, CatalogoAdminRepositorio, HistorialRepositorio, ReferenciasRepositorio
 {
   // Copias por instancia: lo que el administrador cambie en una sesión de
   // memoria no se filtra a otra (ni a otra prueba).
@@ -159,6 +161,20 @@ export class PreciosMemoria
       puntos.push({ periodo, nivel: "minorista", precio: Math.round(base * ola * 100) / 100, observaciones: 1 });
     }
     return { unidad: "kg", puntos };
+  }
+
+  /** La referencia de la ciudad en memoria: el precio estimado (sin medir) de cada nivel. */
+  async referencias(): Promise<PrecioReferencial[]> {
+    return Promise.all(
+      this.listaProductos.map(async (producto) => {
+        const lugares = await this.compararMercados(producto.codigo);
+        const del = (nivel: string) =>
+          lugares.find((x) => x.mercado.nivelPrecio === nivel && x.precio.procedencia === "estimado")?.precio ??
+          lugares.find((x) => x.mercado.nivelPrecio === nivel)?.precio ??
+          null;
+        return { producto, consumidor: del("minorista"), mayorista: del("mayorista") };
+      }),
+    );
   }
 
   async compararMercados(codigoProducto: string, zona?: string): Promise<PrecioEnMercado[]> {

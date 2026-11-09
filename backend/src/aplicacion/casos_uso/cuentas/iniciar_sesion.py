@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from src.aplicacion.puertos.salida import CifradorContrasenas, EmisorTokens, RepositorioUsuarios
 from src.dominio.excepciones import CredencialesInvalidas
 from src.dominio.modelo import Usuario
-from src.dominio.modelo.usuario import normalizar_correo
+from src.dominio.modelo.usuario import identificador_de_ingreso, normalizar_correo
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,7 +24,7 @@ class IniciarSesion:
 
     def ejecutar(self, correo: str, contrasena: str) -> Sesion:
         try:
-            correo = normalizar_correo(correo)
+            correo = normalizar_correo(identificador_de_ingreso(correo))
         except Exception:
             raise CredencialesInvalidas()
         usuario = self._usuarios.obtener_por_correo(correo)

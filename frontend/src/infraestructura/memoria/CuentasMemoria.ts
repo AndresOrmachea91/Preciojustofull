@@ -15,7 +15,7 @@ import type {
   ReporteRepositorio,
   SesionRepositorio,
 } from "@/aplicacion/puertos";
-import { NOMBRE_ROL } from "@/dominio/modelo";
+import { celularBoliviano, DOMINIO_CASERAS, identificadorDeIngreso, NOMBRE_ROL } from "@/dominio/modelo";
 import type {
   Auditoria,
   EstadoReporte,
@@ -25,6 +25,8 @@ import type {
   ReporteEnRevision,
   Rol,
   Usuario,
+  NuevaCasera,
+  CaseraRegistrada,
 } from "@/dominio/modelo";
 
 const PERMISOS: Record<Rol, Permiso[]> = {
@@ -153,7 +155,8 @@ export class CuentasMemoria
   }
 
   async ingresar(correo: string, contrasena: string): Promise<{ token: string; usuario: Usuario }> {
-    const cuenta = this.vigentes().find((c) => c.usuario.correo === correo.trim().toLowerCase());
+    const buscado = identificadorDeIngreso(correo).toLowerCase();
+    const cuenta = this.vigentes().find((c) => c.usuario.correo === buscado);
     if (!cuenta || cuenta.contrasena !== contrasena || !cuenta.usuario.activo) {
       throw new Error("Correo o contraseña incorrectos");
     }
@@ -244,6 +247,19 @@ export class CuentasMemoria
         permisos: PERMISOS[rol].map((codigo) => ({ codigo, descripcion: codigo.replaceAll("_", " ") })),
       })),
       fuentes: FUENTES,
+    };
+  }
+
+  /** En memoria solo nace la cuenta: los puestos viven en el adaptador de mercados. */
+  async registrarCasera(c: NuevaCasera): Promise<CaseraRegistrada> {
+    this.exigir("gestionar_usuarios");
+    const celular = celularBoliviano(c.celular);
+    if (!celular) throw new Error("El celular debe tener 8 dígitos y empezar en 6 o 7");
+    const claveTemporal = `casera${celular.slice(-4)}`;
+    const usuario = this.alta({ correo: `${celular}@${DOMINIO_CASERAS}`, nombre: c.nombre, contrasena: claveTemporal }, "vendedor");
+    return {
+      idUsuario: usuario.id, nombre: usuario.nombre, celular, codigoMercado: c.codigoMercado,
+      numero: c.numero.trim().toUpperCase(), claveTemporal,
     };
   }
 

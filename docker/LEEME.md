@@ -57,6 +57,17 @@ Las cuentas son `casero01@demo.preciojusto.bo` en adelante,
 (lógica) todo lo que creó el comando; nada se borra. Se niega a correr contra
 Neon.
 
+## Ver la base con Navicat (u otro cliente)
+
+La base de Docker escucha solo en esta computadora: servidor `127.0.0.1`,
+puerto `5433`, base `preciojusto`, usuario `preciojusto` y la contraseña de
+`POSTGRES_PASSWORD` en `docker/.env`. En Navicat: Conexión → PostgreSQL con
+esos datos; para el modelo físico, clic derecho en el esquema `public` →
+"Reverse Schema to Model". El mismo modelo, como SQL (solo estructura, sin
+datos), se saca con:
+
+    docker compose exec -T db pg_dump -U preciojusto -d preciojusto --schema-only --no-owner --no-privileges > modelo_fisico.sql
+
 ## Copiar desde Neon
 
 `herramientas\copiar_desde_neon.cmd` lee la cadena de Neon de `backend\.env`,

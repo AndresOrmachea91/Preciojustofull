@@ -16,12 +16,14 @@ import type {
   Presentacion,
   Producto,
   UnidadBase,
+  PrecioReferencial,
 } from "@/dominio/modelo";
 import { PRESENTACIONES_POR_UNIDAD } from "@/dominio/modelo";
 import type {
   CatalogoRepositorio,
   HistorialRepositorio,
   PrecioRepositorio,
+  ReferenciasRepositorio,
   ReporteRepositorio,
 } from "@/aplicacion/puertos";
 import { ClienteHttp } from "@/infraestructura/http/clienteHttp";
@@ -162,9 +164,20 @@ interface HistorialDto {
 }
 
 export class PreciosApi
-  implements PrecioRepositorio, CatalogoRepositorio, ReporteRepositorio, HistorialRepositorio
+  implements PrecioRepositorio, CatalogoRepositorio, ReporteRepositorio, HistorialRepositorio, ReferenciasRepositorio
 {
   constructor(private readonly http: ClienteHttp) {}
+
+  async referencias(): Promise<PrecioReferencial[]> {
+    const d = await this.http.get<{ producto: ProductoDto; consumidor: PrecioDto | null; mayorista: PrecioDto | null }[]>(
+      "/precios/referencia",
+    );
+    return d.map((x) => ({
+      producto: aProducto(x.producto),
+      consumidor: x.consumidor ? aPrecio(x.consumidor) : null,
+      mayorista: x.mayorista ? aPrecio(x.mayorista) : null,
+    }));
+  }
 
   async compararMercados(codigoProducto: string, zona?: string): Promise<PrecioEnMercado[]> {
     const datos = await this.http.get<PrecioEnMercadoDto[]>(

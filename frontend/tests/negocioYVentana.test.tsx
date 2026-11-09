@@ -29,7 +29,7 @@ const TOMATE: Producto = {
 async function ingresarComoVendedora() {
   render(<App />);
   fireEvent.click(await screen.findByRole("link", { name: "Ingresar" }));
-  fireEvent.change(screen.getByLabelText("Correo"), { target: { value: "vendedora@preciojusto.bo" } });
+  fireEvent.change(screen.getByLabelText(/^Correo/), { target: { value: "vendedora@preciojusto.bo" } });
   fireEvent.change(screen.getByLabelText("Contraseña"), { target: { value: "puesto1234" } });
   fireEvent.submit(screen.getByRole("button", { name: "Ingresar" }).closest("form")!);
   await screen.findByRole("button", { name: "Salir" });

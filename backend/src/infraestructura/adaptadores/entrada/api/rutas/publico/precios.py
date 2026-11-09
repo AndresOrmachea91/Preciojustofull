@@ -7,8 +7,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from src.infraestructura.adaptadores.entrada.api import esquemas as e
 from src.infraestructura.adaptadores.entrada.api.dependencias import (
     caso_comparar_mercados, caso_consultar_precio, caso_evaluar_estimador, caso_historial_precio,
+    caso_precios_referenciales,
 )
-from src.infraestructura.adaptadores.entrada.api.mapeo import precio_a_salida, precio_en_mercado_a_salida
+from src.infraestructura.adaptadores.entrada.api.mapeo import (
+    precio_a_salida, precio_en_mercado_a_salida, producto_a_salida,
+)
 from src.dominio.excepciones import ProductoNoEncontrado, SinObservaciones
 
 router = APIRouter(prefix="/precios", tags=["precios"])
@@ -47,6 +50,19 @@ def confiabilidad(caso=Depends(caso_evaluar_estimador)):
         )
         _CACHE_EVALUACION.update(salida=salida, en=time.monotonic())
         return salida
+
+
+@router.get("/referencia", response_model=list[e.PrecioReferencialSalida])
+def referencia(caso=Depends(caso_precios_referenciales)):
+    """Los precios referenciales de La Paz: cada producto, al consumidor y por mayor, sin ajuste de lugar."""
+    return [
+        e.PrecioReferencialSalida(
+            producto=producto_a_salida(r.producto),
+            consumidor=precio_a_salida(r.consumidor) if r.consumidor else None,
+            mayorista=precio_a_salida(r.mayorista) if r.mayorista else None,
+        )
+        for r in caso.ejecutar()
+    ]
 
 
 @router.get("/{codigo_producto}/comparar", response_model=list[e.PrecioEnMercadoSalida])

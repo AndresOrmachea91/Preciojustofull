@@ -68,13 +68,14 @@ export function PaginaIngreso({
           </label>
         )}
         <label className="campo">
-          <span>Correo</span>
+          <span>{modo === "registrarse" ? "Correo" : "Correo o celular"}</span>
           <input
-            type="email"
+            type={modo === "registrarse" ? "email" : "text"}
+            inputMode="email"
             required
             value={correo}
             onChange={(e) => setCorreo(e.target.value)}
-            autoComplete="email"
+            autoComplete={modo === "registrarse" ? "email" : "username"}
           />
         </label>
         <label className="campo">

@@ -906,6 +906,88 @@ export function sinTildes(texto: string): string {
  * tipo. Primero los que tienen ofertas, después por nombre. Los sectores
  * no se listan sueltos: se entra por su mercado.
  */
+// --- caseras con puesto fijo, registradas en el mercado (C144) ---------------
+
+/** Las caseras registradas en su puesto entran con su celular: por dentro, <celular>@caseras.preciojusto.bo. */
+export const DOMINIO_CASERAS = "caseras.preciojusto.bo";
+
+/** "+591 712-34567" → "71234567". Null si no es un celular de Bolivia (8 dígitos, empieza en 6 o 7). */
+export function celularBoliviano(texto: string): string | null {
+  let digitos = (texto ?? "").replace(/[\s\-().]/g, "");
+  if (digitos.startsWith("+591")) digitos = digitos.slice(4);
+  else if (digitos.startsWith("591") && digitos.length === 11) digitos = digitos.slice(3);
+  return /^[67]\d{7}$/.test(digitos) ? digitos : null;
+}
+
+/** Se entra con el correo o, si es una casera, con su celular. */
+export function identificadorDeIngreso(texto: string): string {
+  const celular = celularBoliviano(texto);
+  return celular ? `${celular}@${DOMINIO_CASERAS}` : texto.trim();
+}
+
+export interface NuevaCasera {
+  readonly nombre: string;
+  readonly celular: string;
+  readonly codigoMercado: string;
+  readonly numero: string;
+  readonly nombrePuesto: string;
+  readonly rubros: readonly string[];
+  readonly referencia: string;
+}
+
+export interface CaseraRegistrada {
+  readonly idUsuario: number;
+  readonly nombre: string;
+  readonly celular: string;
+  readonly codigoMercado: string;
+  readonly numero: string;
+  /** Se muestra una sola vez, para anotársela a la casera. */
+  readonly claveTemporal: string;
+}
+
+/** El precio de la ciudad de un producto, al consumidor y por mayor (C144). */
+export interface PrecioReferencial {
+  readonly producto: Producto;
+  readonly consumidor: Precio | null;
+  readonly mayorista: Precio | null;
+}
+
+/** Cuántos lugares hay y en cuántos ya hay caseras registradas (C144). */
+export interface PanoramaMercados {
+  /** Mercados de consumidor final, sin contar sus sectores. */
+  readonly mercados: number;
+  readonly distribuidores: number;
+  readonly mayoristas: number;
+  /** Lugares con al menos un puesto registrado: los que entran al piloto. */
+  readonly conCaseras: number;
+  readonly puestos: number;
+  readonly ofertas: number;
+  /** Por macrodistrito: cuántos mercados hay y en cuántos ya hay caseras. */
+  readonly porMacrodistrito: readonly { nombre: string; mercados: number; conCaseras: number }[];
+}
+
+export function panoramaDeMercados(entradas: readonly EntradaDirectorio[]): PanoramaMercados {
+  const lugares = entradas.filter((e) => !e.mercado.codigoPadre);
+  const porMacro = new Map<string, { nombre: string; mercados: number; conCaseras: number }>();
+  for (const e of lugares.filter((x) => x.mercado.tipo === "mercado")) {
+    const nombre = e.mercado.macrodistrito || e.mercado.zona || "Sin macrodistrito";
+    const fila = porMacro.get(nombre) ?? { nombre, mercados: 0, conCaseras: 0 };
+    fila.mercados++;
+    if (e.puestos > 0) fila.conCaseras++;
+    porMacro.set(nombre, fila);
+  }
+  return {
+    mercados: lugares.filter((e) => e.mercado.tipo === "mercado").length,
+    distribuidores: lugares.filter((e) => e.mercado.tipo === "distribuidor").length,
+    mayoristas: lugares.filter((e) => e.mercado.tipo === "mayorista").length,
+    conCaseras: lugares.filter((e) => e.puestos > 0).length,
+    // Los puestos y ofertas de los sectores cuentan para su mercado.
+    puestos: entradas.reduce((s, e) => s + e.puestos, 0),
+    ofertas: entradas.reduce((s, e) => s + e.ofertas, 0),
+    porMacrodistrito: [...porMacro.values()].sort((a, b) => b.mercados - a.mercados || a.nombre.localeCompare(b.nombre)),
+  };
+}
+
 export function filtrarDirectorio(
   entradas: readonly EntradaDirectorio[],
   texto: string,
