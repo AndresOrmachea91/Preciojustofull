@@ -52,10 +52,14 @@ cuentas es `DEMO_CONTRASENA` de `docker/.env`.
     docker compose exec app python -m src.infraestructura.adaptadores.entrada.cli.sembrar_demo
     docker compose exec app python -m src.infraestructura.adaptadores.entrada.cli.sembrar_demo --retirar
 
-Las cuentas son `casero01@demo.preciojusto.bo` en adelante,
-`distribuidora01@…` y `compradora@demo.preciojusto.bo`. `--retirar` da de baja
-(lógica) todo lo que creó el comando; nada se borra. Se niega a correr contra
-Neon.
+Las cuentas son `casero01@demo.preciojusto.bo` a `casero51@…`,
+`distribuidora01@…` a `03` y `compradora@demo.preciojusto.bo`, todas con la
+contraseña `DEMO_CONTRASENA`. El administrador es `ADMIN_INICIAL_CORREO` con
+`ADMIN_INICIAL_CONTRASENA` (las dos en `docker/.env`). Algunos caseros tienen
+combos. `--retirar` da de baja (lógica) todo lo que creó el comando; nada se
+borra. Se niega a correr contra Neon.
+
+Para mostrar las consultas con F12 y `/docs`, ver `docs/EXPLICAR_CON_F12.md`.
 
 ## Ver la base con Navicat (u otro cliente)
 

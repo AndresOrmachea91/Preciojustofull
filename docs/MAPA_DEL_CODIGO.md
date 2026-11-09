@@ -257,3 +257,8 @@ sin ella, memoria". Ningún caso de uso sabe cuál le tocó.
 | Precios referenciales (C144)    | `ui/paginas/publico/PaginaReferencias.tsx`; backend `casos_uso/precios/precios_referenciales.py` (GET /precios/referencia) |
 | Resumen de mercados (C144)      | `panoramaDeMercados` en `dominio/modelo.ts`, `ui/paginas/publico/PaginaMercados.tsx` |
 | Registrar casera (C144)         | `ui/paginas/administracion/RegistrarCasera.tsx`; backend `casos_uso/administracion/registrar_casera.py` (POST /admin/usuarios/caseras) |
+| Ingresar con celular (C144)     | `identificadorDeIngreso` en `dominio/modelo.ts`; backend `identificador_de_ingreso` en `dominio/modelo/usuario.py` |
+| Pasajes Bs 3 y Bs 3,50 (C145)   | `enZonaSur` y `recorrido` en `dominio/servicio/planificarCompra.ts`; tarifas en `aplicacion/casosUso/usuario/planificarCompra.ts` |
+| Ofertas en combo (C145)         | `PRODUCTOS_POR_COMBO` y `ofertasQueCuentan` en `dominio/modelo.ts`; `FormularioCombo` en `ui/paginas/vendedor/PaginaVendedor.tsx`; backend `publicar_combo` en `casos_uso/vendedor/ofertas.py` (POST /vendedor/ofertas/combo) |
+| Visitas de ejemplo (C145)       | `dominio/servicio/rendimientoDeEjemplo.ts`, `ui/paginas/vendedor/RendimientoPuesto.tsx` |
+| Explicar con F12 y /docs        | [EXPLICAR_CON_F12.md](EXPLICAR_CON_F12.md) |

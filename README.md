@@ -10,6 +10,14 @@ específicos.
 
 Proyecto integrador de Ingeniería de Sistemas.
 
+## Documentación
+
+- [docs/MANUAL.md](docs/MANUAL.md): cómo se usa, para quien compra, la casera y el administrador.
+- [docs/EXPLICAR_CON_F12.md](docs/EXPLICAR_CON_F12.md): explicar el sistema mirando las consultas (F12 y `/docs`).
+- [docs/MAPA_DEL_CODIGO.md](docs/MAPA_DEL_CODIGO.md): qué está en qué archivo.
+- [docs/BASE_DE_DATOS.md](docs/BASE_DE_DATOS.md): las tablas, columna por columna.
+- [docker/LEEME.md](docker/LEEME.md): arrancar con Docker, datos de prueba, Navicat y respaldos.
+
 ## Este repositorio
 
 Monorepo. Dos aplicaciones desplegables, una arquitectura.

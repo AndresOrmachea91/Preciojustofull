@@ -75,6 +75,25 @@ arrancar con depurador.
 
 ## 3. Qué abrir y qué se debería ver
 
+> **Actualizado al 9 de noviembre (Docker).** Hoy el sistema corre en
+> `http://localhost:8088` y la API se prueba en `http://localhost:8088/docs`.
+> Los supermercados y Makro ya no forman parte (decisión 26): el mapa muestra
+> mercados, distribuidores y mayoristas. Lo nuevo para mostrar:
+>
+> - **Precios:** buscar "Tomate", acercar el mapa y tocar el **Mercado Lanza**:
+>   sus puestos se abren como ramas; tocar uno con estrella.
+> - **Mercados:** el resumen de cuántos mercados hay y en cuántos ya hay caseras.
+> - **Precios referenciales:** la lista oficial de la ciudad.
+> - **Mis listas** (como la compradora): el plan de compra con pasajes de Bs 3
+>   y Bs 3,50 a la Zona Sur, con lo que se gana y lo que se pierde.
+> - **Mi puesto** (como una casera): combos y "Cómo le va a su puesto" (datos
+>   de ejemplo, y la pantalla lo dice).
+> - **Administración → Registrar casera.**
+>
+> Para explicar las consultas con F12 y `/docs`, paso a paso:
+> [docs/EXPLICAR_CON_F12.md](docs/EXPLICAR_CON_F12.md). La tabla de abajo es
+> de la versión anterior (puerto 8000, contra Neon) y queda como referencia.
+
 | URL | Qué se ve |
 |---|---|
 | http://localhost:8000 | El mapa de La Paz con **88 puntos**, "Arroz de primera" seleccionado, y arriba el aviso: *88 puntos con precio ◌ estimado …, 0 con precio ● observado*. Abajo, 87 tarjetas de consumidor final y Makro aparte como mayorista. |

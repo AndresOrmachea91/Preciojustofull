@@ -308,6 +308,7 @@ La rebaja que declara un casero. **No** es una observación: el motor de fusión
 | `desde`, `hasta` | timestamp con zona | Vigencia, de 24 a 72 horas. Vence sola. |
 | `nota` | varchar(80) | "Solo hasta el mediodía". |
 | `estado` | varchar(16) | `activa`, `en_revision` (dos personas dijeron que no estaba así) o `retirada`. |
+| `combo` | varchar(40), puede ser NULL | (C145) El nombre del combo al que pertenece ("Combo sopa"). Las ofertas de un mismo combo comparten nombre y vencen juntas; el combo entero cuenta como una oferta activa. NULL si es una oferta suelta. |
 
 ### `confirmacion_oferta` (0 filas todavía)
 El "¿Lo viste así?". Hay una fila por persona y oferta (índice único `id_oferta + id_usuario`). Si la persona cambia de opinión se actualiza la misma fila, y la auditoría guarda cuándo.
@@ -337,3 +338,25 @@ El "¿Lo viste así?". Hay una fila por persona y oferta (índice único `id_ofe
 - rellena con honestidad lo histórico. Por ejemplo, el `ambito` sale de la fuente; la fecha se recupera solo si el dato trae el día y, si no, queda vacía.
 
 Si el esquema sigue creciendo, el paso siguiente natural es Alembic, que lleva versiones numeradas de cada cambio.
+
+---
+
+## Cambios de noviembre (C143 a C145)
+
+- **`oferta.combo`** (C145): columna nueva, agregada con la migración mínima de
+  `persistencia/sesion.py` (`_COLUMNAS_AGREGADAS`). En una base que ya existía
+  se agrega sola al arrancar; no hace falta tocar nada a mano.
+- **Caseras con celular** (C144): no hay columna nueva. La casera registrada
+  por el administrador queda en `usuario` con el correo
+  `<celular>@caseras.preciojusto.bo`; al ingresar, si se escribe un celular de
+  Bolivia (8 dígitos, empieza en 6 o 7), el sistema lo convierte a ese correo.
+- **Precios referenciales** (C144) y **plan de compra** (C144): no guardan nada.
+  Se calculan con las mismas tablas de siempre (`observacion_precio`,
+  `mercado`, `producto`).
+- **Visitas por casera** (C145): todavía no tienen tabla. Lo que se ve son datos
+  de ejemplo calculados en la pantalla. Cuando empiece el piloto hará falta una
+  tabla de visitas, auditada como las demás.
+
+**Modelo físico para Navicat:** `pg_dump --schema-only` deja la estructura en
+SQL (ver `docker/LEEME.md`, sección Navicat). Navicat también lo dibuja
+conectándose a la base de Docker (`127.0.0.1:5433`) con "Reverse Schema to Model".
