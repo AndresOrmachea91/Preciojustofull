@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { PASAJE_POR_DEFECTO } from "@/aplicacion/casosUso/usuario/planificarCompra";
+import { PASAJE_POR_DEFECTO, PASAJE_ZONA_SUR } from "@/aplicacion/casosUso/usuario/planificarCompra";
 import {
   bs,
   nombreDelPuesto,
@@ -35,6 +35,7 @@ export function PlanDeCompra({
   productos: readonly Producto[];
 }) {
   const [pasaje, setPasaje] = useState(PASAJE_POR_DEFECTO);
+  const [pasajeSur, setPasajeSur] = useState(PASAJE_ZONA_SUR);
   const [origen, setOrigen] = useState<{ nombre: string; punto: Coordenadas } | null>(null);
   const [resultado, setResultado] = useState<ResultadoPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +46,7 @@ export function PlanDeCompra({
     setResultado(null);
     setError(null);
     contenedor.planificarCompra
-      .ejecutar(lista.items, productos, { pasaje, origen: origen?.punto ?? null })
+      .ejecutar(lista.items, productos, { pasaje, pasajeZonaSur: pasajeSur, origen: origen?.punto ?? null })
       .then(
         (r) => vigente && setResultado(r),
         (e) => vigente && setError(textoDeError(e)),
@@ -53,7 +54,7 @@ export function PlanDeCompra({
     return () => {
       vigente = false;
     };
-  }, [contenedor, lista, productos, pasaje, origen]);
+  }, [contenedor, lista, productos, pasaje, pasajeSur, origen]);
 
   async function usarMiUbicacion() {
     setUbicando(true);
@@ -72,7 +73,7 @@ export function PlanDeCompra({
 
       <div className="plan__opciones">
         <label className="campo plan__pasaje">
-          <span>Pasaje por tramo (Bs)</span>
+          <span>Pasaje en minibús (Bs)</span>
           <input
             type="number"
             min={0}
@@ -80,6 +81,17 @@ export function PlanDeCompra({
             inputMode="decimal"
             value={pasaje}
             onChange={(e) => setPasaje(Math.max(0, Number(e.target.value) || 0))}
+          />
+        </label>
+        <label className="campo plan__pasaje">
+          <span>De o a la Zona Sur (Bs)</span>
+          <input
+            type="number"
+            min={0}
+            step={0.5}
+            inputMode="decimal"
+            value={pasajeSur}
+            onChange={(e) => setPasajeSur(Math.max(0, Number(e.target.value) || 0))}
           />
         </label>
         <div className="zonas" role="group" aria-label="Desde dónde sale">
@@ -188,6 +200,7 @@ function ResultadoDelPlan({
           <span className="tenue">
             {" "}
             ({mejor.tramosPagados} de {mejor.tramos} tramos en minibús
+            {mejor.tramosZonaSur > 0 ? `, ${mejor.tramosZonaSur} a o desde la Zona Sur` : ""}
             {mejor.tramos > mejor.tramosPagados ? `, ${mejor.tramos - mejor.tramosPagados} a pie` : ""})
           </span>
         </span>

@@ -3,6 +3,7 @@ import type {
   DatosDistribuidora,
   DatosPuesto,
   NuevaOferta,
+  NuevoCombo,
   NuevoArticulo,
   OfertasVendedorRepositorio,
   PreciosVendedorRepositorio,
@@ -22,6 +23,7 @@ interface PrecioPublicadoDto {
 }
 
 interface MiOfertaDto {
+  combo?: string | null;
   id: number;
   codigo_producto: string;
   nombre_producto: string;
@@ -109,6 +111,7 @@ export class VendedorApi implements PreciosVendedorRepositorio, OfertasVendedorR
       desde: d.desde,
       hasta: d.hasta,
       nota: d.nota,
+      combo: d.combo ?? null,
       estado: d.estado,
       confirmaron: d.confirmaron,
       desmintieron: d.desmintieron,
@@ -122,6 +125,15 @@ export class VendedorApi implements PreciosVendedorRepositorio, OfertasVendedorR
       presentacion: oferta.presentacion,
       horas: oferta.horas,
       nota: oferta.nota,
+    });
+  }
+
+  async publicarCombo(combo: NuevoCombo): Promise<void> {
+    await this.http.post("/vendedor/ofertas/combo", {
+      nombre: combo.nombre,
+      renglones: combo.renglones.map((r) => ({ codigo_producto: r.codigoProducto, monto: r.monto, presentacion: r.presentacion })),
+      horas: combo.horas,
+      nota: combo.nota,
     });
   }
 

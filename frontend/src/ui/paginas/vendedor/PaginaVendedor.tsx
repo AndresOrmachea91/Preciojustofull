@@ -4,6 +4,8 @@ import {
   DURACIONES_OFERTA,
   MAXIMO_OFERTAS_ACTIVAS,
   NOMBRE_UNIDAD_BASE,
+  PRODUCTOS_POR_COMBO,
+  ofertasQueCuentan,
   bs,
   presentacionBase,
   textoVence,
@@ -20,6 +22,7 @@ import { SelectorProducto } from "@/ui/componentes/SelectorProducto";
 import { useCatalogo } from "@/ui/hooks/useCatalogo";
 import { InventarioPuesto } from "@/ui/paginas/vendedor/InventarioPuesto";
 import { MiNegocio } from "@/ui/paginas/vendedor/MiNegocio";
+import { RendimientoPuesto } from "@/ui/paginas/vendedor/RendimientoPuesto";
 import { hrefMercado } from "@/ui/hooks/useRuta";
 
 type Vista = "inventario" | "negocio" | "ofertas" | "precios";
@@ -72,7 +75,10 @@ export function PaginaVendedor({ contenedor, vendedor }: { contenedor: Contenedo
       />
       {vista === "inventario" && <InventarioPuesto contenedor={contenedor} productos={productos} />}
       {vista === "negocio" && (
-        <MiNegocio contenedor={contenedor} mercados={mercados} alGuardar={(p) => setPunto(p.codigoMercado)} />
+        <>
+          <RendimientoPuesto contenedor={contenedor} />
+          <MiNegocio contenedor={contenedor} mercados={mercados} alGuardar={(p) => setPunto(p.codigoMercado)} />
+        </>
       )}
       {vista === "ofertas" && <MisOfertas contenedor={contenedor} productos={productos} />}
       {vista === "precios" && <MisPrecios contenedor={contenedor} productos={productos} />}
@@ -235,7 +241,14 @@ function MisOfertas({ contenedor, productos }: { contenedor: Contenedor; product
   }, [contenedor]);
   useEffect(cargar, [cargar]);
 
-  const activas = ofertas?.filter((o) => o.estado === "activa").length ?? 0;
+  // Un combo entero cuenta como una sola oferta activa (C145).
+  const activas = ofertasQueCuentan(ofertas?.filter((o) => o.estado === "activa") ?? []);
+  const [tipo, setTipo] = useState<"suelta" | "combo">("suelta");
+  const publicado = (texto: string) => {
+    setError(null);
+    setAviso(texto);
+    cargar();
+  };
 
   async function retirar(o: MiOferta) {
     setError(null);
@@ -253,22 +266,31 @@ function MisOfertas({ contenedor, productos }: { contenedor: Contenedor; product
       <div className="candado">
         <p>
           <strong>Las reglas de una oferta:</strong> tiene que ser más barata que el precio que el sistema tiene para su
-          mercado (calculado sin sus propios precios), vence sola y puede tener hasta {MAXIMO_OFERTAS_ACTIVAS} activas.
+          mercado (calculado sin sus propios precios), vence sola y puede tener hasta {MAXIMO_OFERTAS_ACTIVAS} activas
+          (un combo cuenta como una).
           Se muestra como <strong>declarada por usted</strong>, y si dos compradores dicen que no estaba así, se pausa
           hasta que la revisen.
         </p>
       </div>
 
+      <RendimientoPuesto contenedor={contenedor} ofertas={ofertas} />
+
       {activas < MAXIMO_OFERTAS_ACTIVAS ? (
-        <FormularioOferta
-          contenedor={contenedor}
-          productos={productos}
-          alPublicar={(texto) => {
-            setError(null);
-            setAviso(texto);
-            cargar();
-          }}
-        />
+        <>
+          <div className="segmentado" role="group" aria-label="Qué publicar">
+            <button type="button" className="segmentado__opcion" aria-pressed={tipo === "suelta"} onClick={() => setTipo("suelta")}>
+              Oferta de un producto
+            </button>
+            <button type="button" className="segmentado__opcion" aria-pressed={tipo === "combo"} onClick={() => setTipo("combo")}>
+              Combo de {PRODUCTOS_POR_COMBO.minimo} o {PRODUCTOS_POR_COMBO.maximo} productos
+            </button>
+          </div>
+          {tipo === "suelta" ? (
+            <FormularioOferta contenedor={contenedor} productos={productos} alPublicar={publicado} />
+          ) : (
+            <FormularioCombo contenedor={contenedor} productos={productos} alPublicar={publicado} />
+          )}
+        </>
       ) : (
         <p className="estado">Ya tiene {MAXIMO_OFERTAS_ACTIVAS} ofertas activas: retire una o espere a que venza.</p>
       )}
@@ -294,7 +316,8 @@ function MisOfertas({ contenedor, productos }: { contenedor: Contenedor; product
               {ofertas.map((o) => (
                 <tr key={o.id} className={o.estado === "activa" ? undefined : "tabla__fila--inactiva"}>
                   <td>
-                    {o.nombreProducto} a Bs {bs(o.monto)} <span className="tenue">por {o.presentacion}</span>
+                    {o.combo && <span className="chip chip--combo">{o.combo}</span>} {o.nombreProducto} a Bs {bs(o.monto)}{" "}
+                    <span className="tenue">por {o.presentacion}</span>
                     {o.nota && <div className="tenue">«{o.nota}»</div>}
                   </td>
                   <td>
@@ -411,6 +434,145 @@ function FormularioOferta({
       <div className="formulario__botones">
         <button type="submit" className="boton">
           Publicar oferta
+        </button>
+      </div>
+    </form>
+  );
+}
+
+/**
+ * Un combo (C145): 2 o 3 productos en oferta bajo un nombre. Cada precio
+ * tiene que ser más barato que el sistema, igual que una oferta suelta; el
+ * combo entero cuenta como UNA oferta activa y vence junto.
+ */
+function FormularioCombo({
+  contenedor,
+  productos,
+  alPublicar,
+}: {
+  contenedor: Contenedor;
+  productos: readonly Producto[];
+  alPublicar: (texto: string) => void;
+}) {
+  const vacio = { codigoProducto: "", presentacion: "", monto: "" };
+  const [nombre, setNombre] = useState("");
+  const [renglones, setRenglones] = useState([vacio, vacio]);
+  const [horas, setHoras] = useState<number>(48);
+  const [nota, setNota] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const cambiar = (i: number, cambios: Partial<typeof vacio>) =>
+    setRenglones(renglones.map((r, j) => (j === i ? { ...r, ...cambios } : r)));
+
+  async function enviar(evento: FormEvent) {
+    evento.preventDefault();
+    setError(null);
+    try {
+      await contenedor.miPuesto.publicarCombo({
+        nombre,
+        horas,
+        nota,
+        renglones: renglones.map((r) => {
+          const producto = productos.find((p) => p.codigo === r.codigoProducto);
+          return {
+            codigoProducto: r.codigoProducto,
+            monto: Number(r.monto),
+            presentacion: r.presentacion || (producto ? presentacionBase(producto).codigo : ""),
+          };
+        }),
+      });
+      alPublicar(`Combo «${nombre.trim()}» publicado por ${horas} horas: cuenta como una sola oferta.`);
+      setNombre("");
+      setRenglones([vacio, vacio]);
+      setNota("");
+    } catch (e) {
+      setError(textoDeError(e));
+    }
+  }
+
+  return (
+    <form className="formulario formulario--recuadro" onSubmit={(e) => void enviar(e)} aria-label="Publicar un combo">
+      <label className="campo">
+        <span>Nombre del combo</span>
+        <input
+          required
+          maxLength={40}
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+          placeholder="Combo sopa, Para el almuerzo…"
+        />
+      </label>
+      {renglones.map((r, i) => {
+        const producto = productos.find((p) => p.codigo === r.codigoProducto);
+        return (
+          <div key={i} className="formulario__fila formulario__fila--tres combo__renglon">
+            <label className="campo">
+              <span>Producto {i + 1}</span>
+              <select
+                value={r.codigoProducto}
+                onChange={(e) => cambiar(i, { codigoProducto: e.target.value, presentacion: "" })}
+              >
+                <option value="">Elija…</option>
+                {productos.map((p) => (
+                  <option key={p.codigo} value={p.codigo}>
+                    {p.nombre}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="campo">
+              <span>Por</span>
+              <select
+                value={r.presentacion || (producto ? presentacionBase(producto).codigo : "")}
+                disabled={!producto}
+                onChange={(e) => cambiar(i, { presentacion: e.target.value })}
+              >
+                {producto?.presentaciones.map((p) => (
+                  <option key={p.codigo} value={p.codigo}>
+                    {p.nombre}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="campo">
+              <span>Precio de oferta (Bs)</span>
+              <input type="number" min={0} step="0.01" value={r.monto} onChange={(e) => cambiar(i, { monto: e.target.value })} />
+            </label>
+          </div>
+        );
+      })}
+      <div className="formulario__botones">
+        {renglones.length < PRODUCTOS_POR_COMBO.maximo && (
+          <button type="button" className="boton boton--suave" onClick={() => setRenglones([...renglones, vacio])}>
+            + Agregar un tercer producto
+          </button>
+        )}
+        {renglones.length > PRODUCTOS_POR_COMBO.minimo && (
+          <button type="button" className="boton boton--suave" onClick={() => setRenglones(renglones.slice(0, -1))}>
+            Quitar el último
+          </button>
+        )}
+      </div>
+      <div className="formulario__fila">
+        <div className="campo">
+          <span id="duracion-combo">Dura</span>
+          <div className="segmentado" role="group" aria-labelledby="duracion-combo">
+            {DURACIONES_OFERTA.map((h) => (
+              <button key={h} type="button" className="segmentado__opcion" aria-pressed={horas === h} onClick={() => setHoras(h)}>
+                {h} horas
+              </button>
+            ))}
+          </div>
+        </div>
+        <label className="campo">
+          <span>Nota (opcional)</span>
+          <input maxLength={80} value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Para la sopa del domingo" />
+        </label>
+      </div>
+      <MensajeError texto={error} />
+      <div className="formulario__botones">
+        <button type="submit" className="boton">
+          Publicar combo
         </button>
       </div>
     </form>

@@ -558,6 +558,20 @@ class OfertaEntrada(BaseModel):
     nota: str = Field(default="", max_length=80)
 
 
+class RenglonComboEntrada(BaseModel):
+    codigo_producto: str
+    monto: float = Field(gt=0)
+    presentacion: str
+
+
+class ComboEntrada(BaseModel):
+    """C145: 2 o 3 productos en oferta bajo un nombre."""
+    nombre: str = Field(min_length=1, max_length=40)
+    renglones: list[RenglonComboEntrada] = Field(min_length=2, max_length=3)
+    horas: Literal[24, 48, 72] = 48
+    nota: str = Field(default="", max_length=80)
+
+
 class OfertaSalida(BaseModel):
     """Una oferta vigente con su comparación contra el precio del sistema."""
     id: int
@@ -574,6 +588,7 @@ class OfertaSalida(BaseModel):
     desde: datetime
     hasta: datetime
     nota: str
+    combo: str | None = None
     # Contra qué se mide el ahorro: el precio del sistema en ese mercado,
     # sin la voz del casero, y si es observado o estimado.
     precio_sistema: float
@@ -594,6 +609,7 @@ class MiOfertaSalida(BaseModel):
     desde: datetime
     hasta: datetime
     nota: str
+    combo: str | None = None
     estado: Literal["activa", "vencida", "en_revision", "retirada"]
     confirmaron: int
     desmintieron: int

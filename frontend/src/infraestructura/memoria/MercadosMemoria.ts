@@ -13,13 +13,14 @@ import type {
   NuevoArticulo,
   MercadosRepositorio,
   NuevaOferta,
+  NuevoCombo,
   OfertasRepositorio,
   OfertasVendedorRepositorio,
   PrecioRepositorio,
   RevisionOfertasRepositorio,
 } from "@/aplicacion/puertos";
 import {
-  MAXIMO_OFERTAS_ACTIVAS,
+  MAXIMO_OFERTAS_ACTIVAS, ofertasQueCuentan,
   type ArticuloInventario,
   type PuestosDeMercado,
   type EntradaDirectorio,
@@ -50,6 +51,7 @@ interface OfertaGuardada {
   hasta: number;
   nota: string;
   estado: "activa" | "en_revision" | "retirada";
+  combo?: string | null;
 }
 
 const HORA = 3_600_000;
@@ -393,6 +395,7 @@ export class MercadosMemoria
           desde: new Date(o.desde).toISOString(),
           hasta: new Date(o.hasta).toISOString(),
           nota: o.nota,
+          combo: o.combo ?? null,
           estado: o.estado === "activa" && o.hasta <= ahora ? "vencida" : o.estado,
           confirmaron,
           desmintieron,
@@ -401,12 +404,34 @@ export class MercadosMemoria
   }
 
   async publicarOferta(nueva: NuevaOferta): Promise<void> {
+    this.exigirLugarLibre();
+    this.ofertas.push(await this.prepararOferta(nueva, null));
+  }
+
+  async publicarCombo(combo: NuevoCombo): Promise<void> {
+    this.exigirLugarLibre();
+    // Todo se valida antes de guardar: o se publica entero o nada.
+    const preparadas: OfertaGuardada[] = [];
+    for (const r of combo.renglones) {
+      preparadas.push(await this.prepararOferta({ ...r, horas: combo.horas, nota: combo.nota }, combo.nombre));
+    }
+    for (const o of preparadas) this.ofertas.push({ ...o, id: this.siguiente++ });
+  }
+
+  private exigirLugarLibre(): void {
     const yo = this.sesion();
     const ahora = this.ahora();
     const activas = this.ofertas.filter((o) => o.idVendedor === yo && o.estado === "activa" && o.hasta > ahora);
-    if (activas.length >= MAXIMO_OFERTAS_ACTIVAS) {
-      throw new Error("Ya tiene 3 ofertas activas: retire una o espere a que venza. Si todo está en oferta, nada lo está.");
+    if (ofertasQueCuentan(activas.map((o) => ({ id: o.id, combo: o.combo ?? null }))) >= MAXIMO_OFERTAS_ACTIVAS) {
+      throw new Error(
+        "Ya tiene 3 ofertas activas (un combo cuenta como una): retire una o espere a que venza. Si todo está en oferta, nada lo está.",
+      );
     }
+  }
+
+  private async prepararOferta(nueva: NuevaOferta, combo: string | null): Promise<OfertaGuardada> {
+    const yo = this.sesion();
+    const ahora = this.ahora();
     const producto = (await this.catalogo.productos()).find((p) => p.codigo === nueva.codigoProducto);
     const presentacion = producto?.presentaciones.find((p) => p.codigo === nueva.presentacion);
     if (!producto || !presentacion) throw new Error("Ese producto no se vende en esa presentación");
@@ -423,8 +448,9 @@ export class MercadosMemoria
       );
     }
     const suyo = this.registro.find((p) => p.idVendedor === yo);
-    this.ofertas.push({
-      id: this.siguiente++,
+    return {
+      combo,
+      id: combo ? 0 : this.siguiente++,
       idVendedor: yo,
       codigoMercado: mercado,
       numeroPuesto: suyo?.numero ?? null,
@@ -436,7 +462,7 @@ export class MercadosMemoria
       hasta: ahora + nueva.horas * HORA,
       nota: nueva.nota.trim(),
       estado: "activa",
-    });
+    };
   }
 
   async retirarOferta(id: number): Promise<void> {
@@ -532,6 +558,7 @@ export class MercadosMemoria
       desde: new Date(o.desde).toISOString(),
       hasta: new Date(o.hasta).toISOString(),
       nota: o.nota,
+      combo: o.combo ?? null,
       precioSistema: sistema,
       procedenciaSistema: precio.procedencia,
       ahorroPorUnidad: Math.round((sistema - porUnidad) * 100) / 100,

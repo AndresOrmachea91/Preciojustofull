@@ -2,12 +2,13 @@ import type {
   DatosDistribuidora,
   DatosPuesto,
   NuevaOferta,
+  NuevoCombo,
   NuevoArticulo,
   OfertasVendedorRepositorio,
   PreciosVendedorRepositorio,
 } from "@/aplicacion/puertos";
 import {
-  DURACIONES_OFERTA,
+  DURACIONES_OFERTA, PRODUCTOS_POR_COMBO,
   type ArticuloInventario,
   type MiOferta,
   type PrecioPublicado,
@@ -80,6 +81,23 @@ export class MiPuesto {
     }
     if (oferta.nota.length > 80) return Promise.reject(new Error("La nota es de 80 letras como mucho"));
     return this.ofertas.publicarOferta(oferta);
+  }
+
+  /** C145: un combo. Cada producto pasa el mismo candado que una oferta suelta (lo revisa el backend). */
+  publicarCombo(combo: NuevoCombo): Promise<void> {
+    if (!combo.nombre.trim()) return Promise.reject(new Error("Póngale un nombre al combo: «Combo sopa», «Para el almuerzo»…"));
+    const renglones = combo.renglones.filter((r) => r.codigoProducto);
+    if (renglones.length < PRODUCTOS_POR_COMBO.minimo || renglones.length > PRODUCTOS_POR_COMBO.maximo) {
+      return Promise.reject(new Error("Un combo junta de 2 a 3 productos"));
+    }
+    if (new Set(renglones.map((r) => r.codigoProducto)).size !== renglones.length) {
+      return Promise.reject(new Error("Un producto aparece dos veces en el combo"));
+    }
+    if (renglones.some((r) => !(r.monto > 0))) return Promise.reject(new Error("Cada precio tiene que ser mayor a cero"));
+    if (!(DURACIONES_OFERTA as readonly number[]).includes(combo.horas)) {
+      return Promise.reject(new Error("La oferta dura 24, 48 o 72 horas"));
+    }
+    return this.ofertas.publicarCombo({ ...combo, nombre: combo.nombre.trim(), renglones });
   }
 
   retirarOferta(id: number): Promise<void> {

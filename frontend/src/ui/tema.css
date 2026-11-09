@@ -432,6 +432,20 @@ body {
 .casera-lista__clave { font-family: ui-monospace, "SF Mono", Consolas, monospace; letter-spacing: 0.08em; padding: 2px 8px; border-radius: 8px; background: var(--vidrio-fuerte); }
 .casera-lista a { color: var(--jade); font-weight: 600; }
 
+/* --- C145: combos y cómo le va al puesto --------------------------------------- */
+.chip--combo { background: color-mix(in srgb, var(--c-distribuidor) 16%, transparent); color: var(--c-distribuidor); border: 1px solid color-mix(in srgb, var(--c-distribuidor) 40%, transparent); font-weight: 700; }
+.combo__renglon { align-items: end; }
+.rendimiento { margin: 0 0 16px; padding: 14px; border-radius: 18px; background: var(--superficie); border: 1px solid var(--vidrio-borde); box-shadow: var(--sombra-suave); }
+.rendimiento__cabeza { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.rendimiento__cabeza .subseccion { margin: 0; }
+.insignia--ejemplo { background: var(--ambar-claro); color: var(--ambar); border: 1px dashed var(--ambar); }
+.rendimiento__cifras { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+.rendimiento__semana { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; height: 110px; margin: 12px 0 6px; align-items: end; }
+.rendimiento__dia { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; height: 100%; font-size: 0.72rem; }
+.rendimiento__barra { width: 70%; max-width: 34px; border-radius: 8px 8px 3px 3px; background: linear-gradient(180deg, #14b088, #0b8a66); }
+.rendimiento__consejo { margin: 8px 0 4px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--c-oferta) 14%, transparent); border: 1px solid color-mix(in srgb, var(--c-oferta) 40%, transparent); font-size: 0.88rem; }
+.rendimiento__nota { margin: 0; font-size: 0.76rem; }
+
 /* Sin desenfoque en el navegador: superficies casi opacas, para que se lea igual. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   :root { --vidrio: rgba(255, 255, 255, 0.96); --vidrio-fuerte: #fff; }

@@ -56,7 +56,7 @@ def _a_oferta(f: OfertaTabla) -> Oferta:
         id=f.id, id_vendedor=f.id_vendedor, codigo_mercado=f.codigo_mercado, numero_puesto=f.numero_puesto,
         codigo_producto=f.codigo_producto, monto=f.monto, presentacion=Presentacion(f.presentacion),
         desde=_utc(f.desde), hasta=_utc(f.hasta), nota=f.nota or "", estado=EstadoOferta(f.estado),
-        auditoria=_auditoria(f),
+        combo=f.combo, auditoria=_auditoria(f),
     )
 
 
@@ -138,6 +138,7 @@ class OfertasPostgres:
             fila.hasta = oferta.hasta
             fila.nota = oferta.nota
             fila.estado = oferta.estado.value
+            fila.combo = oferta.combo
             s.flush()
             return _a_oferta(fila)
 

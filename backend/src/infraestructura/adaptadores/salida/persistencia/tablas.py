@@ -389,6 +389,8 @@ class OfertaTabla(Base, Auditable):
     hasta = Column(DateTime(timezone=True), nullable=False)
     nota = Column(String(80), nullable=False, default="")
     estado = Column(String(16), nullable=False, default="activa")
+    # C145: el nombre del combo al que pertenece (NULL si es suelta).
+    combo = Column(String(40), nullable=True)
 
     __table_args__ = (
         Index("ix_oferta_vigencia", "estado", "hasta"),

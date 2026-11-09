@@ -48,6 +48,20 @@ def publicar(cuerpo: e.OfertaEntrada, vendedor=Depends(usuario_actual), caso=Dep
     )
 
 
+@router.post("/ofertas/combo", response_model=e.ReporteSalida, status_code=201)
+def publicar_combo(cuerpo: e.ComboEntrada, vendedor=Depends(usuario_actual),
+                   caso=Depends(caso_ofertas_del_casero)):
+    """C145: 2 o 3 productos en oferta juntos. Cada uno tiene que ser más barato que el sistema."""
+    caso.publicar_combo(vendedor, cuerpo.nombre,
+                        [(r.codigo_producto, r.monto, Presentacion(r.presentacion)) for r in cuerpo.renglones],
+                        cuerpo.horas, cuerpo.nota)
+    olvidar()
+    return e.ReporteSalida(
+        aceptado=True,
+        mensaje=f"Combo «{cuerpo.nombre}» publicado por {cuerpo.horas} horas: cuenta como una sola oferta.",
+    )
+
+
 @router.post("/ofertas/{id_oferta}/retirar", status_code=204)
 def retirar(id_oferta: int, vendedor=Depends(usuario_actual), caso=Depends(caso_ofertas_del_casero)):
     caso.retirar(vendedor, id_oferta)

@@ -115,6 +115,10 @@ PUESTOS = [
     ("uruguay", "9", "Abarrotes Uruguay", "abarrotes", "Planta alta"),
 ]
 
+# C145: el nombre del combo según lo que vende el puesto.
+NOMBRES_COMBO = {"verduras": "Combo sopa", "papas": "Combo para el chairo", "frutas": "Combo jugo",
+                 "abarrotes": "Combo de la semana", "carnes": "Combo parrilla", "pescados": "Combo almuerzo"}
+
 # Las notas de las ofertas: lo que el casero diría en su puesto.
 NOTAS_OFERTA = ["Precio de casera", "Hoy llegó fresquito", "Llevando 2 kilos", "Hasta agotar",
                 "Directo de la chacra", "Promo de la semana", "Para la casera madrugadora", "Último lote del día"]
@@ -289,6 +293,28 @@ class Siembra:
             except ErrorDominio:
                 continue
 
+    def _combo(self, vendedor, codigo_mercado: str, clase: str) -> None:
+        """Un combo (C145): dos productos del puesto, a precio de casera. Si ya tiene uno activo, nada."""
+        if any(o.estado == "activa" and o.oferta.combo for o in self.ofertas.mias(vendedor)):
+            return
+        renglones = []
+        for articulo in self.inventario.ver(vendedor):
+            base = self._base(articulo.codigo_producto, codigo_mercado)
+            if base is None or articulo.disponibilidad is Disponibilidad.AGOTADO:
+                continue
+            renglones.append((articulo.codigo_producto, round(base * articulo.presentacion.factor * 0.86, 1),
+                              articulo.presentacion))
+            if len(renglones) == 2:
+                break
+        if len(renglones) < 2:
+            return
+        try:
+            self.ofertas.publicar_combo(vendedor, NOMBRES_COMBO.get(clase, "Combo de la casera"), renglones, 72,
+                                        nota="Llevando los dos")
+            self.cuenta["ofertas"] += 1
+        except ErrorDominio as e:
+            log.warning("  combo en %s: %s", codigo_mercado, e)
+
     def caseros(self) -> None:
         for i, (mercado, numero, nombre, clase, referencia) in enumerate(PUESTOS):
             correo = f"casero{i + 1:02d}@{DOMINIO}"
@@ -304,6 +330,8 @@ class Siembra:
                 # Dos de cada tres caseros tienen alguna oferta; algunos, dos.
                 if i % 3 != 2:
                     self._ofertas(vendedor, mercado, 2 if i % 4 == 0 else 1)
+                if i % 4 == 1:
+                    self._combo(vendedor, mercado, clase)
                 self.cuenta["caseros"] += 1
                 log.info("Puesto %s de %s listo", numero, mercado)
             except ErrorDominio as e:

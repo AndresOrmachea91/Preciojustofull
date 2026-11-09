@@ -63,7 +63,9 @@ export function TarjetaOferta({ oferta, contenedor, usuario, conMercado = true }
           <Icono nombre="oferta" tamano={18} />
         </span>
         <div className="oferta__titulo">
-          <h3 className="oferta__producto">{oferta.nombreProducto}</h3>
+          <h3 className="oferta__producto">
+            {oferta.combo && <span className="chip chip--combo">{oferta.combo}</span>} {oferta.nombreProducto}
+          </h3>
           <p className="oferta__lugar">
             {conMercado ? <a href={hrefMercado(oferta.codigoMercado)}>{oferta.nombreMercado}</a> : null}
             {conMercado && oferta.numeroPuesto ? " · " : null}

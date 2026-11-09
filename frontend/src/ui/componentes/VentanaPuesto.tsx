@@ -57,7 +57,9 @@ export function VentanaPuesto({ mercado, datos, ofertas, codigoProducto, alCambi
           {ofertas.map((o) => (
             <li key={o.id} className="ventana__oferta">
               <span className="ventana__oferta-cinta">★ −{Math.round(o.ahorroRelativo * 100)} %</span>
-              <span className="ventana__oferta-producto">{o.nombreProducto}</span>
+              <span className="ventana__oferta-producto">
+                {o.combo && <span className="chip chip--combo">{o.combo}</span>} {o.nombreProducto}
+              </span>
               <strong className="ventana__monto">
                 Bs {bs(o.monto)}
                 <span className="tenue">/{o.presentacion}</span>

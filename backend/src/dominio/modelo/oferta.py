@@ -30,6 +30,10 @@ DURACIONES_HORAS = (24, 48, 72)
 MAXIMO_ACTIVAS = 3
 DESMENTIDOS_PARA_PAUSAR = 2
 LARGO_MAXIMO_NOTA = 80
+# C145: un combo junta 2 o 3 productos bajo un nombre ("Combo sopa"). Cuenta
+# como UNA oferta activa: así el casero puede armar combos sin pasarse.
+LARGO_MAXIMO_COMBO = 40
+PRODUCTOS_POR_COMBO = (2, 3)
 
 
 class EstadoOferta(str, Enum):
@@ -55,6 +59,8 @@ class Oferta:
     # "Hasta agotar stock", "solo por la mañana". Corta: no es un aviso publicitario.
     nota: str = ""
     estado: EstadoOferta = EstadoOferta.ACTIVA
+    # Nombre del combo al que pertenece; None si es una oferta suelta.
+    combo: str | None = None
     id: int | None = None
     auditoria: Auditoria | None = field(default=None, compare=False)
 
@@ -67,17 +73,21 @@ class Oferta:
         if len(nota) > LARGO_MAXIMO_NOTA:
             raise DatoInvalido(f"La nota pasa de {LARGO_MAXIMO_NOTA} caracteres")
         object.__setattr__(self, "nota", nota)
+        combo = " ".join((self.combo or "").split()) or None
+        if combo and len(combo) > LARGO_MAXIMO_COMBO:
+            raise DatoInvalido(f"El nombre del combo pasa de {LARGO_MAXIMO_COMBO} caracteres")
+        object.__setattr__(self, "combo", combo)
 
     @classmethod
     def nueva(cls, *, id_vendedor: int, codigo_mercado: str, codigo_producto: str, monto: float,
               presentacion: Presentacion, horas: int, ahora: datetime, numero_puesto: str | None = None,
-              nota: str = "") -> Oferta:
+              nota: str = "", combo: str | None = None) -> Oferta:
         if horas not in DURACIONES_HORAS:
             raise DatoInvalido("La oferta dura 24, 48 o 72 horas")
         return cls(
             id_vendedor=id_vendedor, codigo_mercado=codigo_mercado, codigo_producto=codigo_producto,
             monto=monto, presentacion=presentacion, desde=ahora, hasta=ahora + timedelta(hours=horas),
-            numero_puesto=numero_puesto, nota=nota,
+            numero_puesto=numero_puesto, nota=nota, combo=combo,
         )
 
     @property
@@ -123,3 +133,8 @@ def ahorro_frente_al_sistema(precio_oferta: float, precio_sistema: float) -> flo
 def hay_que_pausar(confirmaciones: list[Confirmacion]) -> bool:
     """Dos personas DISTINTAS dijeron que no estaba así."""
     return len({c.id_usuario for c in confirmaciones if not c.la_vio_asi}) >= DESMENTIDOS_PARA_PAUSAR
+
+
+def ofertas_que_cuentan(ofertas: list[Oferta]) -> int:
+    """Cuántas ofertas cuentan para el máximo: un combo entero cuenta como una."""
+    return len({o.combo if o.combo else f"#{o.id}" for o in ofertas})

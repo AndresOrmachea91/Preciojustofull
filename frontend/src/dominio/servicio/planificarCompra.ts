@@ -48,6 +48,8 @@ export interface PlanCompra {
   /** Tramos del recorrido (ida, entre mercados y vuelta) y cuántos se pagan en minibús. */
   readonly tramos: number;
   readonly tramosPagados: number;
+  /** De los pagados, cuántos entran o salen de la Zona Sur (pasaje más caro). */
+  readonly tramosZonaSur: number;
   readonly costoPasajes: number;
   readonly total: number;
   /** Cuántos precios del plan son estimados: nadie los midió en ese lugar. */
@@ -76,6 +78,8 @@ export interface ResultadoPlan {
 export interface OpcionesPlan {
   /** Lo que cuesta un tramo en minibús, en Bs. */
   readonly pasaje: number;
+  /** Un tramo que entra o sale de la Zona Sur (Centro ↔ Sur es más caro). Sin esto, el mismo pasaje. */
+  readonly pasajeZonaSur?: number;
   /** Desde dónde sale la persona; sin esto se cuenta ida y vuelta pagadas. */
   readonly origen: Coordenadas | null;
   readonly maxParadas?: number;
@@ -96,52 +100,65 @@ function conLugar(m: Mercado): m is Mercado & { latitud: number; longitud: numbe
   return m.latitud !== undefined && m.longitud !== undefined;
 }
 
+/** Al sur de Obrajes empieza la Zona Sur (Calacoto, Achumani, Irpavi, Mallasa…). */
+const LATITUD_ZONA_SUR = -16.522;
+
+export function enZonaSur(lugar: Coordenadas | Mercado | null): boolean {
+  if (!lugar) return false;
+  if ("macrodistrito" in lugar && lugar.macrodistrito) {
+    const macro = lugar.macrodistrito.toLowerCase();
+    if (macro === "sur" || macro.includes("zona sur") || macro.includes("mallasa")) return true;
+  }
+  return lugar.latitud !== undefined && lugar.latitud < LATITUD_ZONA_SUR;
+}
+
 function punto(m: Mercado): Coordenadas | null {
   return conLugar(m) ? { latitud: m.latitud, longitud: m.longitud } : null;
 }
 
-/** El recorrido más corto por esas paradas, y cuántos tramos se pagan. */
+/**
+ * El recorrido más barato por esas paradas (y, empatando, el más corto):
+ * cuántos tramos se pagan, cuántos cruzan a la Zona Sur y cuánto cuesta.
+ */
 function recorrido(
   mercados: readonly Mercado[],
   origen: Coordenadas | null,
   aPieKm: number,
-): { orden: Mercado[]; tramos: number; pagados: number; km: number | null } {
-  const ordenes = permutaciones(mercados);
-  let mejor: { orden: Mercado[]; tramos: number; pagados: number; km: number | null } | null = null;
-  for (const orden of ordenes) {
-    const puntos = orden.map(punto);
+  pasaje: number,
+  pasajeSur: number,
+): { orden: Mercado[]; tramos: number; pagados: number; alSur: number; costo: number; km: number | null } {
+  type Ruta = { orden: Mercado[]; tramos: number; pagados: number; alSur: number; costo: number; km: number | null };
+  let mejor: Ruta | null = null;
+  for (const orden of permutaciones(mercados)) {
     let pagados = 0;
+    let alSur = 0;
+    let costo = 0;
     let km = 0;
     let conocido = true;
-    // Entre mercados: se camina si están cerca.
-    for (let i = 1; i < puntos.length; i++) {
-      const a = puntos[i - 1];
-      const b = puntos[i];
-      if (!a || !b) {
-        pagados++;
-        conocido = false;
-        continue;
-      }
-      const d = distanciaKm(a, b);
-      km += d;
-      if (d > aPieKm) pagados++;
+    // Sin saber de dónde sale, se supone que vive en la zona de la primera parada.
+    const salida: Coordenadas | Mercado = origen ?? orden[0]!;
+    const paradas: (Coordenadas | Mercado)[] = [salida, ...orden, salida];
+    for (let i = 1; i < paradas.length; i++) {
+      const a = paradas[i - 1]!;
+      const b = paradas[i]!;
+      const pa = "codigo" in a ? punto(a) : a;
+      const pb = "codigo" in b ? punto(b) : b;
+      const extremo = i === 1 || i === paradas.length - 1;
+      let d: number | null = null;
+      if (pa && pb && (!extremo || origen)) d = distanciaKm(pa, pb);
+      else conocido = false;
+      if (d !== null) km += d;
+      if (d !== null && d <= aPieKm) continue; // se camina
+      pagados++;
+      const cruzaAlSur = enZonaSur(a) !== enZonaSur(b);
+      if (cruzaAlSur) alSur++;
+      costo += cruzaAlSur ? pasajeSur : pasaje;
     }
-    // La ida y la vuelta: sin saber de dónde sale, se cuentan pagadas.
-    for (const extremo of [puntos[0], puntos[puntos.length - 1]]) {
-      if (!origen || !extremo) {
-        pagados++;
-        conocido = false;
-        continue;
-      }
-      const d = distanciaKm(origen, extremo);
-      km += d;
-      if (d > aPieKm) pagados++;
-    }
-    const candidato = { orden, tramos: orden.length + 1, pagados, km: conocido ? km : null };
+    const candidato: Ruta = { orden, tramos: orden.length + 1, pagados, alSur, costo, km: conocido ? km : null };
     if (
       !mejor ||
-      candidato.pagados < mejor.pagados ||
-      (candidato.pagados === mejor.pagados && (candidato.km ?? 0) < (mejor.km ?? 0))
+      candidato.costo < mejor.costo - 1e-9 ||
+      (Math.abs(candidato.costo - mejor.costo) < 1e-9 && (candidato.km ?? 0) < (mejor.km ?? 0))
     ) {
       mejor = candidato;
     }
@@ -216,8 +233,8 @@ export function planificarCompra(
     }
     // Un lugar donde no se compra nada no es parada.
     const usados = mercados.filter((m) => compras.has(m.codigo));
-    const ruta = recorrido(usados, opciones.origen, aPieKm);
-    const costoPasajes = ruta.pagados * opciones.pasaje;
+    const ruta = recorrido(usados, opciones.origen, aPieKm, opciones.pasaje, opciones.pasajeZonaSur ?? opciones.pasaje);
+    const costoPasajes = ruta.costo;
     return {
       paradas: ruta.orden.map((m) => {
         const c = compras.get(m.codigo)!;
@@ -226,6 +243,7 @@ export function planificarCompra(
       costoProductos: redondear(costoProductos),
       tramos: ruta.tramos,
       tramosPagados: ruta.pagados,
+      tramosZonaSur: ruta.alSur,
       costoPasajes: redondear(costoPasajes),
       total: redondear(costoProductos + costoPasajes),
       estimados,

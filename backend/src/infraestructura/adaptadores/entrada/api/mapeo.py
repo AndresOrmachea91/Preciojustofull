@@ -187,7 +187,7 @@ def oferta_a_salida(v) -> e.OfertaSalida:
         nombre_mercado=v.mercado.nombre, numero_puesto=o.numero_puesto,
         nombre_puesto=(v.puesto.nombre or None) if v.puesto else None,
         monto=o.monto, presentacion=o.presentacion.value, precio_por_unidad_base=o.precio_por_unidad_base,
-        desde=o.desde, hasta=o.hasta, nota=o.nota,
+        desde=o.desde, hasta=o.hasta, nota=o.nota, combo=o.combo,
         precio_sistema=v.precio_sistema.rango.centro, procedencia_sistema=v.precio_sistema.procedencia.value,
         ahorro_por_unidad=v.ahorro_por_unidad, ahorro_relativo=v.ahorro_relativo,
         confirmaron=v.confirmaron, desmintieron=v.desmintieron,
@@ -199,7 +199,7 @@ def mi_oferta_a_salida(m) -> e.MiOfertaSalida:
     return e.MiOfertaSalida(
         id=o.id, codigo_producto=o.codigo_producto, nombre_producto=m.nombre_producto, monto=o.monto,
         presentacion=o.presentacion.value, precio_por_unidad_base=o.precio_por_unidad_base,
-        desde=o.desde, hasta=o.hasta, nota=o.nota, estado=m.estado,
+        desde=o.desde, hasta=o.hasta, nota=o.nota, combo=o.combo, estado=m.estado,
         confirmaron=m.confirmaron, desmintieron=m.desmintieron,
     )
 

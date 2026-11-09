@@ -247,6 +247,14 @@ export interface NuevaOferta {
   nota: string;
 }
 
+/** C145: 2 o 3 productos en oferta bajo un nombre, que vencen juntos. */
+export interface NuevoCombo {
+  nombre: string;
+  renglones: { codigoProducto: string; monto: number; presentacion: string }[];
+  horas: number;
+  nota: string;
+}
+
 /** Lo que el VENDEDOR hace con su puesto y sus ofertas. */
 export interface OfertasVendedorRepositorio {
   miPuesto(): Promise<Puesto | null>;
@@ -259,6 +267,7 @@ export interface OfertasVendedorRepositorio {
   quitarArticulo(codigoProducto: string): Promise<void>;
   misOfertas(): Promise<MiOferta[]>;
   publicarOferta(oferta: NuevaOferta): Promise<void>;
+  publicarCombo(combo: NuevoCombo): Promise<void>;
   retirarOferta(id: number): Promise<void>;
 }
 

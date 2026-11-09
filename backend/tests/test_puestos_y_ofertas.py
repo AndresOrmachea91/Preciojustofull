@@ -370,3 +370,35 @@ def test_confirmar_y_publicar_piden_sesion():
         assert cliente.post("/api/v1/vendedor/ofertas", json={
             "codigo_producto": "tomate", "monto": 5, "presentacion": "kilo", "horas": 24,
         }).status_code == 401
+
+
+# --- C145: combos -------------------------------------------------------------------
+
+def test_un_combo_junta_productos_y_cuenta_como_una_sola_oferta(mundo):
+    publicadas = mundo["casero"].publicar_combo(
+        ROSA, "Combo sopa", [("tomate", 1.0, Presentacion.KILO), ("papa", 0.5, Presentacion.KILO)], horas=48)
+    assert {o.combo for o in publicadas} == {"Combo sopa"} and len(publicadas) == 2
+    # El combo ocupa un cupo: quedan dos para ofertas sueltas.
+    mundo["casero"].publicar(ROSA, "arroz", 1.0, Presentacion.KILO, horas=24)
+    mundo["casero"].publicar(ROSA, "tomate", 1.5, Presentacion.KILO, horas=24)
+    with pytest.raises(OfertaNoPermitida, match="un combo cuenta como una"):
+        mundo["casero"].publicar(ROSA, "papa", 0.4, Presentacion.KILO, horas=24)
+    combos = {v.oferta.combo for v in mundo["vigentes"].ejecutar(codigo_mercado="rodriguez")}
+    assert "Combo sopa" in combos
+
+
+def test_un_combo_con_un_precio_inflado_no_se_publica_entero(mundo):
+    with pytest.raises(OfertaNoPermitida, match="no es más barato"):
+        mundo["casero"].publicar_combo(
+            ROSA, "Combo caro", [("tomate", 1.0, Presentacion.KILO), ("papa", 999.0, Presentacion.KILO)], horas=48)
+    assert mundo["casero"].mias(ROSA) == [], "ni el tomate quedó publicado: o va entero o nada"
+
+
+@pytest.mark.parametrize("nombre, renglones", [
+    ("", [("tomate", 1.0), ("papa", 0.5)]),
+    ("Solo uno", [("tomate", 1.0)]),
+    ("Repetido", [("tomate", 1.0), ("tomate", 0.9)]),
+])
+def test_un_combo_mal_armado_se_rechaza(mundo, nombre, renglones):
+    with pytest.raises(DatoInvalido):
+        mundo["casero"].publicar_combo(ROSA, nombre, [(c, m, Presentacion.KILO) for c, m in renglones], horas=48)

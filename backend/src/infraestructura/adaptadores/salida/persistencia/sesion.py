@@ -73,6 +73,9 @@ _COLUMNAS_AGREGADAS = {
     "puesto": {
         "foto": "VARCHAR(80) NULL",
     },
+    "oferta": {
+        "combo": "VARCHAR(40) NULL",
+    },
 }
 
 # Las 5 columnas de Auditable, para las tablas que existían antes de la

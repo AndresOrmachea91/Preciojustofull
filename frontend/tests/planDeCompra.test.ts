@@ -91,6 +91,20 @@ describe("planificarCompra", () => {
     expect(r.faltantes.map((f) => f.codigoProducto)).toEqual(["tomate"]);
   });
 
+  it("ir del Centro a la Zona Sur cuesta el pasaje más caro (Bs 3 y Bs 3,50)", () => {
+    const ACHUMANI = mercado("achumani", -16.5305, -68.0745, { macrodistrito: "Sur" });
+    const centro = { latitud: -16.4958, longitud: -68.1336 };
+    const precios = new Map([["papa", [p(ACHUMANI, 4)]]]);
+    const alSur = planificarCompra([papa], precios, { pasaje: 3, pasajeZonaSur: 3.5, origen: centro });
+    expect(alSur.mejor!.tramosZonaSur).toBe(2);       // ida y vuelta cruzan a la Zona Sur
+    expect(alSur.mejor!.costoPasajes).toBe(7);
+    const enElCentro = planificarCompra([papa], new Map([["papa", [p(RODRIGUEZ, 4)]]]), {
+      pasaje: 3, pasajeZonaSur: 3.5, origen: centro,
+    });
+    expect(enElCentro.mejor!.costoPasajes).toBe(6);   // Bs 3 la ida y Bs 3 la vuelta
+    expect(enElCentro.mejor!.tramosZonaSur).toBe(0);
+  });
+
   it("sin ningún precio no inventa un plan", () => {
     const r = planificarCompra([papa], new Map(), { pasaje: 1.5, origen: null });
     expect(r.mejor).toBeNull();

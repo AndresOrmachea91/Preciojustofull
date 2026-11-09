@@ -722,6 +722,8 @@ export interface Oferta {
   readonly desde: string;
   readonly hasta: string;
   readonly nota: string;
+  /** C145: el combo al que pertenece ("Combo sopa"); null si es suelta. */
+  readonly combo: string | null;
   /** El precio del sistema en ese mercado, por unidad base, y si es observado o estimado. */
   readonly precioSistema: number;
   readonly procedenciaSistema: Procedencia;
@@ -745,6 +747,8 @@ export interface MiOferta {
   readonly desde: string;
   readonly hasta: string;
   readonly nota: string;
+  /** C145: el combo al que pertenece; null si es suelta. */
+  readonly combo: string | null;
   readonly estado: EstadoMiOferta;
   readonly confirmaron: number;
   readonly desmintieron: number;
@@ -774,6 +778,13 @@ export interface ResultadoConfirmacion {
 /** Cuánto dura una oferta: vence sola. */
 export const DURACIONES_OFERTA = [24, 48, 72] as const;
 export const MAXIMO_OFERTAS_ACTIVAS = 3;
+/** C145: un combo junta de 2 a 3 productos y cuenta como UNA oferta activa. */
+export const PRODUCTOS_POR_COMBO = { minimo: 2, maximo: 3 } as const;
+
+/** Cuántas ofertas activas cuentan para el máximo: un combo entero cuenta como una. */
+export function ofertasQueCuentan(ofertas: readonly { id: number; combo: string | null }[]): number {
+  return new Set(ofertas.map((o) => o.combo ?? `#${o.id}`)).size;
+}
 
 /** El precio de un producto en un lugar, y cuánto se aparta de la ciudad. */
 export interface PrecioDeProducto {

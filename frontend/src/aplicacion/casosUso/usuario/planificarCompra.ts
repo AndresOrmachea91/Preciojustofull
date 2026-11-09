@@ -8,10 +8,12 @@ import {
 } from "@/dominio/servicio/planificarCompra";
 
 /**
- * Tarifa del minibús en La Paz por tramo, en Bs. Es solo el valor con que
- * arranca la pantalla: la persona la cambia si paga otra.
+ * Pasaje del minibús en La Paz por tramo, en Bs: 3 dentro de la ciudad y 3,50
+ * si el tramo entra o sale de la Zona Sur (Centro ↔ Sur). Son los valores con
+ * que arranca la pantalla: la persona los cambia si paga otra cosa.
  */
-export const PASAJE_POR_DEFECTO = 1.5;
+export const PASAJE_POR_DEFECTO = 3;
+export const PASAJE_ZONA_SUR = 3.5;
 
 /**
  * Caso de uso (C144): dónde comprar la lista para gastar menos, contando el
@@ -24,9 +26,9 @@ export class PlanificarCompra {
   async ejecutar(
     items: readonly ItemLista[],
     productos: readonly Producto[],
-    opciones: { pasaje: number; origen: Coordenadas | null },
+    opciones: { pasaje: number; pasajeZonaSur?: number; origen: Coordenadas | null },
   ): Promise<ResultadoPlan> {
-    if (!(opciones.pasaje >= 0)) throw new Error("El pasaje tiene que ser un monto en Bs, 0 o más.");
+    if (!(opciones.pasaje >= 0) || !((opciones.pasajeZonaSur ?? 0) >= 0)) throw new Error("El pasaje tiene que ser un monto en Bs, 0 o más.");
     const necesidades: Necesidad[] = items.flatMap((item) => {
       const producto = productos.find((p) => p.codigo === item.codigoProducto);
       return producto

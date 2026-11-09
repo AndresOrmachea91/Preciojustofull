@@ -94,6 +94,7 @@ export function aArticulo(d: ArticuloDto): ArticuloInventario {
 }
 
 export interface OfertaDto {
+  combo?: string | null;
   id: number;
   codigo_producto: string;
   nombre_producto: string;
@@ -200,6 +201,7 @@ export function aOferta(d: OfertaDto): Oferta {
     desde: d.desde,
     hasta: d.hasta,
     nota: d.nota,
+    combo: d.combo ?? null,
     precioSistema: d.precio_sistema,
     procedenciaSistema: d.procedencia_sistema,
     ahorroPorUnidad: d.ahorro_por_unidad,

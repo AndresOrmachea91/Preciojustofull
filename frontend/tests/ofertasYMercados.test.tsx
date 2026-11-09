@@ -31,7 +31,7 @@ afterEach(cleanup);
 const oferta = (cambios: Partial<Oferta> = {}): Oferta => ({
   id: 1, codigoProducto: "tomate", nombreProducto: "Tomate", unidadBase: "kg", codigoMercado: "rodriguez",
   nombreMercado: "Mercado Rodríguez", numeroPuesto: "14", nombrePuesto: "Verduras", monto: 12, presentacion: "kilo",
-  precioPorUnidadBase: 12, desde: "2026-10-18T10:00:00Z", hasta: "2026-10-19T10:00:00Z", nota: "",
+  precioPorUnidadBase: 12, desde: "2026-10-18T10:00:00Z", hasta: "2026-10-19T10:00:00Z", nota: "", combo: null,
   precioSistema: 14.35, procedenciaSistema: "observado", ahorroPorUnidad: 2.35, ahorroRelativo: 0.1638,
   confirmaron: 0, desmintieron: 0, ...cambios,
 });
