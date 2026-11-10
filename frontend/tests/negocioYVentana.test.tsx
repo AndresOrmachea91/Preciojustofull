@@ -38,7 +38,7 @@ async function ingresarComoVendedora() {
 describe("nombres del puesto", () => {
   const puesto: Puesto = {
     id: 1, codigoMercado: "rodriguez", numero: "14", nombre: "Verduras Rosa", rubros: [], referencia: "",
-    registrado: true, foto: null, esLocal: false,
+    registrado: true, foto: null, esLocal: false, celular: null,
   };
   it("un puesto se nombra por su número; el local de una distribuidora, por su nombre", () => {
     expect(nombreDelPuesto(puesto)).toBe("Puesto 14 · Verduras Rosa");

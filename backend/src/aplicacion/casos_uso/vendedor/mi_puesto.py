@@ -62,7 +62,8 @@ class MiPuestoCasoUso:
             )
         actual = self._puestos.del_vendedor(vendedor.id)
         nuevo = Puesto(codigo_mercado=mercado.codigo, numero=numero, nombre=nombre, rubros=_rubros(rubros),
-                       referencia=referencia, id_vendedor=vendedor.id, foto=actual.foto if actual else None)
+                       referencia=referencia, id_vendedor=vendedor.id, foto=actual.foto if actual else None,
+                       celular=actual.celular if actual else None)
         if nuevo.es_local:
             raise DatoInvalido("Ese número está reservado: use el número de su puesto")
         if actual is not None and actual.codigo_mercado != mercado.codigo:
@@ -84,7 +85,7 @@ class MiPuestoCasoUso:
 
     def registrar_distribuidora(self, vendedor: Usuario, *, nombre: str, zona: str, macrodistrito: str = "",
                                 latitud: float | None, longitud: float | None, rubros: list[str],
-                                referencia: str = "") -> Puesto:
+                                referencia: str = "", celular: str = "") -> Puesto:
         """Una distribuidora: su propio punto en el mapa, con el local como único puesto."""
         exigir(vendedor, Permiso.PUBLICAR_PRECIO_PROPIO)
         nombre = " ".join((nombre or "").split())
@@ -110,7 +111,7 @@ class MiPuestoCasoUso:
             actual = None
         local = Puesto(codigo_mercado=codigo, numero=NUMERO_LOCAL, nombre=nombre, rubros=_rubros(rubros),
                        referencia=referencia, id_vendedor=vendedor.id, foto=actual.foto if actual else None,
-                       id=actual.id if actual else None)
+                       id=actual.id if actual else None, celular=celular or None)
         guardado = self._puestos.guardar(local)
         self._asignar_punto(vendedor, codigo)
         return guardado

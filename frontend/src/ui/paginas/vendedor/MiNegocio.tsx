@@ -68,6 +68,7 @@ function FormularioNegocio({
   const [referencia, setReferencia] = useState(puesto?.referencia ?? "");
   const [rubros, setRubros] = useState<string[]>([...(puesto?.rubros ?? [])]);
   const [zona, setZona] = useState(distribuidoraActual?.zona ?? "");
+  const [celular, setCelular] = useState(puesto?.celular ?? "");
   const [ubicacion, setUbicacion] = useState<{ latitud: number; longitud: number } | null>(
     distribuidoraActual?.latitud !== undefined && distribuidoraActual.longitud !== undefined
       ? { latitud: distribuidoraActual.latitud, longitud: distribuidoraActual.longitud }
@@ -100,6 +101,7 @@ function FormularioNegocio({
               longitud: ubicacion?.longitud ?? Number.NaN,
               rubros,
               referencia,
+              celular,
             });
       alGuardar(guardado);
       setAviso(`Guardado: ${nombreDelPuesto(guardado)}. Ya aparece en el mapa y en la ficha del mercado.`);
@@ -165,6 +167,17 @@ function FormularioNegocio({
               <input maxLength={128} value={zona} onChange={(e) => setZona(e.target.value)} placeholder="Villa Fátima" />
             </label>
           </div>
+          <label className="campo">
+            <span>Teléfono de contacto (celular o fijo)</span>
+            <input
+              inputMode="tel"
+              maxLength={20}
+              value={celular}
+              onChange={(e) => setCelular(e.target.value)}
+              placeholder="71234567"
+            />
+            <small className="tenue">Los compradores lo ven para llamarla o escribirle por WhatsApp.</small>
+          </label>
           <div className="campo">
             <span>Toque el mapa donde está la distribuidora</span>
             <MapaSelectorUbicacion

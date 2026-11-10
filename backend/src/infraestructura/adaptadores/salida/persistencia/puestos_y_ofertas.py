@@ -40,6 +40,7 @@ def _a_puesto(f: PuestoTabla) -> Puesto:
         id=f.id, codigo_mercado=f.codigo_mercado, numero=f.numero, nombre=f.nombre or "",
         rubros=tuple(Categoria(r) for r in (f.rubros or "").split(",") if r),
         referencia=f.referencia or "", id_vendedor=f.id_vendedor, foto=f.foto, auditoria=_auditoria(f),
+        celular=f.celular,
     )
 
 
@@ -99,6 +100,7 @@ class PuestosPostgres:
             fila.referencia = puesto.referencia
             fila.id_vendedor = puesto.id_vendedor
             fila.foto = puesto.foto
+            fila.celular = puesto.celular
             s.flush()
             return _a_puesto(fila)
 

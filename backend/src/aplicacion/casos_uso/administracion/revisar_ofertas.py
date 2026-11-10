@@ -54,6 +54,9 @@ class RevisarOfertas:
     def _decidir(self, actor: Usuario, id_oferta: int, reactivar: bool) -> Oferta:
         exigir(actor, Permiso.VALIDAR_REPORTES)
         oferta = self._ofertas.obtener(id_oferta)
-        if oferta is None or oferta.estado is not EstadoOferta.EN_REVISION:
+        # Reactivar: solo lo que estaba pausado. Dar de baja (C146): también una
+        # oferta activa que el administrador ve engañosa. Nada se borra: queda «retirada».
+        permitidos = {EstadoOferta.EN_REVISION} if reactivar else {EstadoOferta.EN_REVISION, EstadoOferta.ACTIVA}
+        if oferta is None or oferta.estado not in permitidos:
             raise OfertaNoEncontrada(id_oferta)
         return self._ofertas.guardar(oferta.reactivar() if reactivar else oferta.retirar())

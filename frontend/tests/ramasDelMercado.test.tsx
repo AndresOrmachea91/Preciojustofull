@@ -101,7 +101,7 @@ describe("VentanaPuesto", () => {
   const datos: PuestoConInventario = {
     puesto: {
       id: 1, codigoMercado: "lanza", numero: "B-12", nombre: "Verduras Doña Elena", rubros: ["hortaliza"],
-      referencia: "Segundo piso", registrado: true, foto: null, esLocal: false,
+      referencia: "Segundo piso", registrado: true, foto: null, esLocal: false, celular: null,
     },
     articulos: [
       { codigoProducto: "cebolla", nombreProducto: "Cebolla", categoria: "hortaliza", monto: 6, presentacion: "kg",

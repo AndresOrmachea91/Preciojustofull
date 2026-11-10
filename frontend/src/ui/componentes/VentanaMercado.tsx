@@ -13,6 +13,7 @@ import {
 } from "@/dominio/modelo";
 import type { Contenedor } from "@/infraestructura/contenedor";
 import { Icono } from "@/ui/componentes/Iconos";
+import { ContactoPuesto } from "@/ui/componentes/ContactoPuesto";
 import { hrefMercado } from "@/ui/hooks/useRuta";
 
 // En la ventana del mapa entra poco: unos puestos con unos precios. El resto, en la ficha.
@@ -100,6 +101,7 @@ export function VentanaMercado({ contenedor, marcador, producto, alCambiarTamano
               )}
               <div className="ventana__detalle">
                 <strong>{nombreDelPuesto(puesto)}</strong>
+                <ContactoPuesto puesto={puesto} />
                 {articulos.length > 0 ? (
                   <ul className="ventana__articulos">
                     {articulos.map((a) => (

@@ -402,3 +402,16 @@ def test_un_combo_con_un_precio_inflado_no_se_publica_entero(mundo):
 def test_un_combo_mal_armado_se_rechaza(mundo, nombre, renglones):
     with pytest.raises(DatoInvalido):
         mundo["casero"].publicar_combo(ROSA, nombre, [(c, m, Presentacion.KILO) for c, m in renglones], horas=48)
+
+
+# --- C146: el administrador da de baja ofertas activas -------------------------------
+
+def test_el_administrador_da_de_baja_una_oferta_activa_sin_borrarla(mundo):
+    oferta = mundo["casero"].publicar(ROSA, "tomate", 10.0, Presentacion.KILO, horas=24)
+    mundo["revisar"].retirar(ADMIN, oferta.id)
+    assert mundo["ofertas"].obtener(oferta.id).estado is EstadoOferta.RETIRADA
+    assert all(v.oferta.id != oferta.id for v in mundo["vigentes"].ejecutar(codigo_mercado="rodriguez"))
+    # Reactivar sigue siendo solo para lo que estaba pausado.
+    otra = mundo["casero"].publicar(ROSA, "tomate", 9.0, Presentacion.KILO, horas=24)
+    with pytest.raises(OfertaNoEncontrada):
+        mundo["revisar"].reactivar(ADMIN, otra.id)

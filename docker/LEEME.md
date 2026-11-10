@@ -72,6 +72,15 @@ datos), se saca con:
 
     docker compose exec -T db pg_dump -U preciojusto -d preciojusto --schema-only --no-owner --no-privileges > modelo_fisico.sql
 
+## Ver la base con nombres sencillos
+
+    docker compose exec -T db psql -U preciojusto -d preciojusto < docker/consultas_sencillas.sql
+
+Crea el esquema `consultas` con 18 vistas de nombre simple (`consultas.precios`,
+`consultas.lugares_de_venta`, `consultas.listas`…), que en Navicat se ven como
+tablas. El sistema no las usa; se quitan con `DROP SCHEMA consultas CASCADE;`.
+La lista completa está en `docs/BASE_DE_DATOS.md`.
+
 ## Copiar desde Neon
 
 `herramientas\copiar_desde_neon.cmd` lee la cadena de Neon de `backend\.env`,

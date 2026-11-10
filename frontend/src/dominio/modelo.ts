@@ -700,6 +700,19 @@ export interface Puesto {
   readonly foto: string | null;
   /** El local entero de una distribuidora: no tiene número de puesto. */
   readonly esLocal: boolean;
+  /** C146: teléfono de contacto (celular de 8 dígitos o fijo de 7), si lo puso. */
+  readonly celular: string | null;
+}
+
+/** Enlace para llamar: tel:+591… */
+export function enlaceLlamar(telefono: string): string {
+  return `tel:+591${telefono}`;
+}
+
+/** Enlace de WhatsApp, solo para celulares (8 dígitos que empiezan en 6 o 7). */
+export function enlaceWhatsapp(telefono: string, texto = ""): string | null {
+  if (!/^[67]\d{7}$/.test(telefono)) return null;
+  return `https://wa.me/591${telefono}${texto ? `?text=${encodeURIComponent(texto)}` : ""}`;
 }
 
 /**

@@ -72,6 +72,7 @@ _COLUMNAS_AGREGADAS = {
     },
     "puesto": {
         "foto": "VARCHAR(80) NULL",
+        "celular": "VARCHAR(16) NULL",
     },
     "oferta": {
         "combo": "VARCHAR(40) NULL",

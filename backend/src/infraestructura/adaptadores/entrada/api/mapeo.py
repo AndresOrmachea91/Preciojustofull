@@ -153,7 +153,7 @@ def puesto_a_salida(p, registrado: bool = True) -> e.PuestoSalida:
     return e.PuestoSalida(
         id=p.id, codigo_mercado=p.codigo_mercado, numero=p.numero, nombre=p.nombre,
         rubros=[r.value for r in p.rubros], referencia=p.referencia, registrado=registrado,
-        foto=url_foto(p.foto), es_local=p.es_local,
+        foto=url_foto(p.foto), es_local=p.es_local, celular=p.celular,
     )
 
 

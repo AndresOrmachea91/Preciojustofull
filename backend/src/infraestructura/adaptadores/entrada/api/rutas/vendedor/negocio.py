@@ -31,6 +31,7 @@ def registrar_distribuidora(cuerpo: e.DistribuidoraEntrada, vendedor=Depends(usu
     local = caso.registrar_distribuidora(
         vendedor, nombre=cuerpo.nombre, zona=cuerpo.zona, macrodistrito=cuerpo.macrodistrito,
         latitud=cuerpo.latitud, longitud=cuerpo.longitud, rubros=cuerpo.rubros, referencia=cuerpo.referencia,
+        celular=cuerpo.celular,
     )
     olvidar()
     return puesto_a_salida(local)

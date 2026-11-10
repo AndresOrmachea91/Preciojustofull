@@ -27,6 +27,25 @@ LARGO_MAXIMO_NUMERO = 16
 LARGO_MAXIMO_NOMBRE = 80
 LARGO_MAXIMO_REFERENCIA = 160
 _NUMERO_VALIDO = re.compile(r"^[A-Z0-9][A-Z0-9 \-/]*$")
+# C146: el teléfono para contactar a un proveedor. Celular de Bolivia (8
+# dígitos, empieza en 6 o 7) o fijo de La Paz (7 dígitos, empieza en 2).
+_CELULAR = re.compile(r"^[67]\d{7}$")
+_FIJO = re.compile(r"^2\d{6}$")
+
+
+def telefono_de_contacto(texto: str | None) -> str | None:
+    """'+591 712-34567' → '71234567'. Vacío → None. Otra cosa: error."""
+    digitos = re.sub(r"[\s\-().]", "", texto or "")
+    if not digitos:
+        return None
+    if digitos.startswith("+591"):
+        digitos = digitos[4:]
+    elif digitos.startswith("591") and len(digitos) in (10, 11):
+        digitos = digitos[3:]
+    if _CELULAR.match(digitos) or _FIJO.match(digitos):
+        return digitos
+    raise DatoInvalido("El teléfono tiene que ser un celular de 8 dígitos (empieza en 6 o 7) "
+                       "o un fijo de 7 dígitos que empieza en 2")
 
 
 def normalizar_numero(numero: str) -> str:
@@ -63,6 +82,8 @@ class Puesto:
     foto: str | None = None
     id: int | None = None
     auditoria: Auditoria | None = field(default=None, compare=False)
+    # C146: teléfono de contacto (lo pone la distribuidora para que la llamen).
+    celular: str | None = None
 
     def __post_init__(self):
         object.__setattr__(self, "numero", normalizar_numero(self.numero))
@@ -74,6 +95,7 @@ class Puesto:
         if len(referencia) > LARGO_MAXIMO_REFERENCIA:
             raise DatoInvalido(f"La referencia pasa de {LARGO_MAXIMO_REFERENCIA} caracteres")
         object.__setattr__(self, "referencia", referencia)
+        object.__setattr__(self, "celular", telefono_de_contacto(self.celular))
         # Sin repetidos y en un orden estable: el orden del catálogo.
         unicos = tuple(c for c in Categoria if c in set(self.rubros))
         object.__setattr__(self, "rubros", unicos)

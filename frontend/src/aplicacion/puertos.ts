@@ -230,6 +230,8 @@ export interface DatosDistribuidora {
   longitud: number;
   rubros: string[];
   referencia: string;
+  /** C146: teléfono para que los compradores la contacten. */
+  celular: string;
 }
 
 export interface NuevoArticulo {

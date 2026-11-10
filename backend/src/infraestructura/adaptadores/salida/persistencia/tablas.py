@@ -342,6 +342,8 @@ class PuestoTabla(Base, Auditable):
     id_vendedor = Column(Integer, ForeignKey("usuario.id"), nullable=True)
     # Nombre del archivo de la foto (C137); la imagen vive en el almacén de fotos, no en la base.
     foto = Column(String(80), nullable=True)
+    # C146: teléfono de contacto del proveedor.
+    celular = Column(String(16), nullable=True)
 
     __table_args__ = (Index("ix_puesto_mercado", "codigo_mercado"),)
 

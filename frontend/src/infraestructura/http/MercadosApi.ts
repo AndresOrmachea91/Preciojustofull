@@ -60,6 +60,7 @@ export interface PuestoDto {
   registrado?: boolean;
   foto?: string | null;
   es_local?: boolean;
+  celular?: string | null;
 }
 
 export interface ArticuloDto {
@@ -182,6 +183,7 @@ export function aPuesto(d: PuestoDto): Puesto {
     registrado: d.registrado ?? true,
     foto: d.foto ?? null,
     esLocal: d.es_local ?? false,
+    celular: d.celular ?? null,
   };
 }
 

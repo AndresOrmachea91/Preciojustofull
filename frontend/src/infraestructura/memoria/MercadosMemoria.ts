@@ -62,9 +62,9 @@ const MERCADO_DE_LA_DEMO = "rodriguez";
 // La vendedora de la demo (Rosa, id 2) tiene el 14 del Rodríguez; el 22 lo
 // registró el administrador y todavía no tiene dueño.
 const PUESTOS: (Puesto & { idVendedor: number | null })[] = [
-  { id: 1, codigoMercado: "rodriguez", numero: "14", nombre: "Verduras Doña Rosa", rubros: ["hortaliza", "fruta"], referencia: "Pasillo de verduras, frente a la puerta 2", registrado: true, foto: null, esLocal: false, idVendedor: 2 },
-  { id: 2, codigoMercado: "rodriguez", numero: "22", nombre: "Papas del Norte", rubros: ["tuberculo"], referencia: "", registrado: true, foto: null, esLocal: false, idVendedor: null },
-  { id: 3, codigoMercado: "lanza", numero: "3", nombre: "Abarrotes Mary", rubros: ["abarrote"], referencia: "Planta baja, entrada por la Figueroa", registrado: true, foto: null, esLocal: false, idVendedor: 98 },
+  { id: 1, codigoMercado: "rodriguez", numero: "14", nombre: "Verduras Doña Rosa", rubros: ["hortaliza", "fruta"], referencia: "Pasillo de verduras, frente a la puerta 2", registrado: true, foto: null, esLocal: false, idVendedor: 2, celular: null },
+  { id: 2, codigoMercado: "rodriguez", numero: "22", nombre: "Papas del Norte", rubros: ["tuberculo"], referencia: "", registrado: true, foto: null, esLocal: false, idVendedor: null, celular: null },
+  { id: 3, codigoMercado: "lanza", numero: "3", nombre: "Abarrotes Mary", rubros: ["abarrote"], referencia: "Planta baja, entrada por la Figueroa", registrado: true, foto: null, esLocal: false, idVendedor: 98, celular: null },
 ];
 
 // Lo que tiene cada puesto de la demo (por id de puesto): no todos venden lo mismo.
@@ -297,7 +297,7 @@ export class MercadosMemoria
       throw new Error(`Ya existe un puesto en este mercado con el código ${numero}`);
     }
     const suyo = this.registro.find((p) => p.idVendedor === yo) ?? ocupado;
-    const nuevo = { id: suyo?.id ?? this.registro.length + 1, codigoMercado: mercado, numero, nombre: datos.nombre, rubros: datos.rubros, referencia: datos.referencia, registrado: true, foto: suyo?.foto ?? null, esLocal: false, idVendedor: yo };
+    const nuevo = { id: suyo?.id ?? this.registro.length + 1, codigoMercado: mercado, numero, nombre: datos.nombre, rubros: datos.rubros, referencia: datos.referencia, registrado: true, foto: suyo?.foto ?? null, esLocal: false, idVendedor: yo, celular: suyo?.celular ?? null };
     if (suyo) Object.assign(suyo, nuevo);
     else this.registro.push(nuevo);
     const { idVendedor: _, ...puesto } = nuevo;
@@ -309,7 +309,7 @@ export class MercadosMemoria
     if (!datos.nombre.trim()) throw new Error("La distribuidora necesita un nombre");
     const codigo = `dist_${datos.nombre.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_")}`;
     const suyo = this.registro.find((p) => p.idVendedor === yo);
-    const nuevo = { id: suyo?.id ?? this.registro.length + 1, codigoMercado: codigo, numero: "LOCAL", nombre: datos.nombre.trim(), rubros: datos.rubros, referencia: datos.referencia, registrado: true, foto: suyo?.foto ?? null, esLocal: true, idVendedor: yo };
+    const nuevo = { id: suyo?.id ?? this.registro.length + 1, codigoMercado: codigo, numero: "LOCAL", nombre: datos.nombre.trim(), rubros: datos.rubros, referencia: datos.referencia, registrado: true, foto: suyo?.foto ?? null, esLocal: true, idVendedor: yo, celular: datos.celular?.replace(/\D/g, "").replace(/^591/, "") || null };
     if (suyo) Object.assign(suyo, nuevo);
     else this.registro.push(nuevo);
     const { idVendedor: _, ...puesto } = nuevo;
@@ -497,8 +497,11 @@ export class MercadosMemoria
     this.enRevision(id).estado = "activa";
   }
 
+  /** C146: el administrador da de baja una oferta pausada o activa. Nada se borra: queda «retirada». */
   async retirarOfertaRevisada(id: number): Promise<void> {
-    this.enRevision(id).estado = "retirada";
+    const oferta = this.ofertas.find((o) => o.id === id && (o.estado === "en_revision" || o.estado === "activa"));
+    if (!oferta) throw new Error(`No existe la oferta ${id}`);
+    oferta.estado = "retirada";
   }
 
   // --- auxiliares ------------------------------------------------------------------

@@ -19,6 +19,7 @@ import {
   type Usuario,
 } from "@/dominio/modelo";
 import type { Contenedor } from "@/infraestructura/contenedor";
+import { ContactoPuesto } from "@/ui/componentes/ContactoPuesto";
 import { Icono } from "@/ui/componentes/Iconos";
 import { MensajeError, textoDeError } from "@/ui/componentes/Mensajes";
 import { Pestanas } from "@/ui/componentes/Pestanas";
@@ -340,6 +341,7 @@ function TarjetaPuesto({
         <div>
           <h3 className="puesto__nombre">{titulo}</h3>
           {puesto.referencia && <p className="tenue">{puesto.referencia}</p>}
+          <ContactoPuesto puesto={puesto} />
           {!puesto.registrado && <p className="tenue">Visto en el levantamiento de campo; el casero todavía no lo registró.</p>}
         </div>
       </header>

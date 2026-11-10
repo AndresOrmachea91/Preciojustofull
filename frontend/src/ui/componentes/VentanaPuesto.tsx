@@ -12,6 +12,7 @@ import {
   type PuestoConInventario,
 } from "@/dominio/modelo";
 import { Icono } from "@/ui/componentes/Iconos";
+import { ContactoPuesto } from "@/ui/componentes/ContactoPuesto";
 import { hrefPuesto } from "@/ui/hooks/useRuta";
 
 interface Props {
@@ -50,6 +51,7 @@ export function VentanaPuesto({ mercado, datos, ofertas, codigoProducto, alCambi
         <strong className="ventana__nombre">{nombreDelPuesto(puesto)}</strong>
         <span className="tenue">{dondeEsta(mercado, puesto)}</span>
         {puesto.referencia && <span className="tenue ventana__referencia">{puesto.referencia}</span>}
+        <ContactoPuesto puesto={puesto} />
       </header>
 
       {ofertas.length > 0 && (

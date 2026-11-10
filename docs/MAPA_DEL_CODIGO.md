@@ -262,3 +262,6 @@ sin ella, memoria". Ningún caso de uso sabe cuál le tocó.
 | Ofertas en combo (C145)         | `PRODUCTOS_POR_COMBO` y `ofertasQueCuentan` en `dominio/modelo.ts`; `FormularioCombo` en `ui/paginas/vendedor/PaginaVendedor.tsx`; backend `publicar_combo` en `casos_uso/vendedor/ofertas.py` (POST /vendedor/ofertas/combo) |
 | Visitas de ejemplo (C145)       | `dominio/servicio/rendimientoDeEjemplo.ts`, `ui/paginas/vendedor/RendimientoPuesto.tsx` |
 | Explicar con F12 y /docs        | [EXPLICAR_CON_F12.md](EXPLICAR_CON_F12.md) |
+| Teléfono del proveedor (C146)   | `telefono_de_contacto` en `dominio/modelo/puesto.py`; `ui/componentes/ContactoPuesto.tsx` |
+| Dar de baja ofertas (C146)      | `RevisarOfertas.retirar` (acepta activas); `OfertasVigentes` en `ui/paginas/administracion/OfertasEnRevision.tsx` |
+| Nombres sencillos (C146)        | `docker/consultas_sencillas.sql` (esquema `consultas`) |

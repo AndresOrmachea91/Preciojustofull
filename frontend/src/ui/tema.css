@@ -446,6 +446,11 @@ body {
 .rendimiento__consejo { margin: 8px 0 4px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--c-oferta) 14%, transparent); border: 1px solid color-mix(in srgb, var(--c-oferta) 40%, transparent); font-size: 0.88rem; }
 .rendimiento__nota { margin: 0; font-size: 0.76rem; }
 
+/* --- C146: contacto del proveedor --------------------------------------------- */
+.contacto { display: inline-flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 2px; }
+.contacto__enlace { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; text-decoration: none; color: var(--jade); background: var(--jade-claro); border: 1px solid color-mix(in srgb, var(--jade) 40%, transparent); }
+.contacto__enlace--whatsapp { color: #fff; background: #1faa53; border-color: #1faa53; }
+
 /* Sin desenfoque en el navegador: superficies casi opacas, para que se lea igual. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   :root { --vidrio: rgba(255, 255, 255, 0.96); --vidrio-fuerte: #fff; }

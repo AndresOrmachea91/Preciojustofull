@@ -293,6 +293,7 @@ Un puesto **dentro** de un mercado. Se identifica como lo dice la gente: "el 14 
 | `rubros` | varchar(128) | `"hortaliza,fruta"`: qué vende. |
 | `referencia` | varchar(160) | "Entrada por la Max Paredes, al fondo". |
 | `id_vendedor` | integer, FK a `usuario` | El dueño. Un vendedor tiene un solo puesto (`uq_puesto_vendedor_vigente`). |
+| `celular` | varchar(16), puede ser NULL | (C146) Teléfono de contacto que pone la distribuidora: celular de 8 dígitos o fijo de 7. Los compradores lo ven para llamar o escribir por WhatsApp. |
 
 ### `oferta` (0 filas todavía)
 La rebaja que declara un casero. **No** es una observación: el motor de fusión no la lee, para que una rebaja que elige el vendedor no mueva el precio de referencia.
@@ -360,3 +361,37 @@ Si el esquema sigue creciendo, el paso siguiente natural es Alembic, que lleva v
 **Modelo físico para Navicat:** `pg_dump --schema-only` deja la estructura en
 SQL (ver `docker/LEEME.md`, sección Navicat). Navicat también lo dibuja
 conectándose a la base de Docker (`127.0.0.1:5433`) con "Reverse Schema to Model".
+
+---
+
+## Nombres sencillos para revisar la base (esquema `consultas`)
+
+Para mirar la base sin nombres técnicos hay 18 vistas en el esquema
+`consultas` (archivo `docker/consultas_sencillas.sql`). Muestran los mismos
+datos, al día, con nombres en palabras simples. El sistema sigue usando las
+tablas de `public`: las vistas son solo para mirar. La de cuentas no muestra
+la contraseña cifrada.
+
+| Vista (nombre sencillo) | Tabla real | Qué guarda |
+|---|---|---|
+| `consultas.precios` | `observacion_precio` | Todos los precios: SIIP, campo, caseras y gente |
+| `consultas.lugares_de_venta` | `mercado` | Mercados, sectores, distribuidoras y mayoristas |
+| `consultas.productos` | `producto` | El catálogo |
+| `consultas.cuentas` | `usuario` | Las cuentas (sin contraseña) |
+| `consultas.vendedores` | `vendedor` | Qué cuentas venden y dónde |
+| `consultas.roles` | `rol` | Comprador, vendedor y administrador |
+| `consultas.permisos` | `permiso` | Lo que se puede hacer |
+| `consultas.permisos_de_cada_rol` | `rol_permiso` | Qué puede hacer cada rol |
+| `consultas.fuentes_de_precios` | `fuente` | De dónde salen los precios |
+| `consultas.recolecciones` | `corrida_fuente` | Cada bajada de precios del SIIP |
+| `consultas.llamadas_al_siip` | `intento_fuente` | Cada llamada al SIIP |
+| `consultas.precios_reportados` | `reporte_precio` | Lo que reporta la gente para revisar |
+| `consultas.listas` | `lista_compras` | Las listas de compra de cada persona |
+| `consultas.productos_de_cada_lista` | `item_lista_compras` | Qué lleva cada lista |
+| `consultas.puestos` | `puesto` | Puestos y locales, con el teléfono del proveedor |
+| `consultas.inventario` | `inventario_puesto` | Lo que tiene cada puesto y si le queda |
+| `consultas.ofertas` | `oferta` | Ofertas y combos |
+| `consultas.opiniones_de_ofertas` | `confirmacion_oferta` | «Lo vi así» / «no estaba así» |
+
+Las columnas de auditoría se llaman igual en todas: `creado_el`,
+`creado_por`, `cambiado_el`, `cambiado_por` y `dado_de_baja`.

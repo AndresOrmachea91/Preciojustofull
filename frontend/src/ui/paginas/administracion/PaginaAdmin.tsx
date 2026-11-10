@@ -43,7 +43,7 @@ export function PaginaAdmin({ contenedor, usuario }: { contenedor: Contenedor; u
     { id: "puntos", texto: "Mercados y distribuidores", visible: verCatalogo },
     { id: "productos", texto: "Productos", visible: verCatalogo },
     { id: "reportes", texto: "Reportes por revisar", visible: verReportes },
-    { id: "ofertas", texto: "Ofertas en revisión", visible: verReportes },
+    { id: "ofertas", texto: "Ofertas", visible: verReportes },
     { id: "campo", texto: "Planilla de campo", visible: verCampo },
     { id: "salud", texto: "Salud del sistema", visible: verSalud },
     { id: "auditoria", texto: "Auditoría", visible: verAuditoria },

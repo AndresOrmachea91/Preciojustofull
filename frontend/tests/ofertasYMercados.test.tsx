@@ -173,7 +173,7 @@ describe("ofertas de hoy", () => {
     expect(await within(tomate).findByText(/queda pausada hasta que la revisen/)).toBeDefined();
 
     irA("Administración");
-    fireEvent.click(await screen.findByRole("tab", { name: "Ofertas en revisión" }));
+    fireEvent.click(await screen.findByRole("tab", { name: "Ofertas" }));
     const tabla = await screen.findByRole("table", { name: "Ofertas en revisión" });
     expect(within(tabla).getByText(/2 dijeron que no/)).toBeDefined();
     fireEvent.click(within(tabla).getByRole("button", { name: "Reactivar" }));

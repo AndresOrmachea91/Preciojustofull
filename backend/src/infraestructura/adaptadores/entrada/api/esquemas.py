@@ -494,6 +494,8 @@ class DistribuidoraEntrada(BaseModel):
     longitud: float
     rubros: list[str] = Field(default_factory=list, max_length=8)
     referencia: str = Field(default="", max_length=160)
+    # C146: para que los compradores la llamen o le escriban por WhatsApp.
+    celular: str = Field(default="", max_length=20)
 
 
 class FotoEntrada(BaseModel):
@@ -537,6 +539,8 @@ class PuestoSalida(BaseModel):
     foto: str | None = None
     # True: es el local de una distribuidora, no un puesto con número.
     es_local: bool = False
+    # Teléfono de contacto, si lo puso (C146).
+    celular: str | None = None
 
 
 class PuestoConInventarioSalida(BaseModel):

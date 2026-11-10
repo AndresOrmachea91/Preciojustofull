@@ -36,6 +36,9 @@ En **Mercados** está arriba el resumen: cuántos mercados tiene el sistema, en 
 
 ### Ofertas de hoy
 
+Si una oferta es de una distribuidora con teléfono, en su ventana aparecen los botones para llamar o escribirle por WhatsApp.
+
+
 En el menú, **Ofertas de hoy** muestra las rebajas que publicaron los caseros (los combos llevan una etiqueta violeta con su nombre). Solo aparecen si de verdad son más baratas que el precio de ese mercado, y vencen solas en uno a tres días. Si fue y la oferta no estaba así, toque **No estaba así**: cuando dos personas lo dicen, la oferta se pausa hasta que la revisen.
 
 ### Crear una cuenta y armar listas
@@ -79,7 +82,7 @@ Si no tiene correo, el administrador la puede registrar en su mismo puesto: entr
 La primera vez el sistema le pregunta **¿Dónde vende?**:
 
 - **Puesto en un mercado:** elija su mercado, escriba el número de su puesto (14, B-3…), un nombre si quiere ("Verduras Doña Rosa") y cómo encontrarlo ("pasillo de verduras, frente a la puerta 2"). Marque qué vende.
-- **Distribuidora:** escriba el nombre y la zona, y toque en el mapa dónde está. Su distribuidora aparece como un punto propio en el mapa.
+- **Distribuidora:** escriba el nombre, la zona y un **teléfono de contacto** (celular o fijo), y toque en el mapa dónde está. Su distribuidora aparece como un punto propio en el mapa, y los compradores ven los botones **Llamar** y **WhatsApp**.
 
 Después puede cambiar estos datos cuando quiera en la pestaña **Mi negocio**.
 
@@ -134,7 +137,7 @@ Entre con su cuenta de administrador y vaya a **Administración**. Las pestañas
 | **Mercados y distribuidores** | Dar de alta, editar o dar de baja un mercado, un sector de mercado, una distribuidora o un mayorista, con su lugar en el mapa. Los supermercados y otras cadenas ya no forman parte del sistema. |
 | **Productos** | El catálogo: nombre, categoría, cuántos días dura y en qué presentaciones se vende. |
 | **Reportes por revisar** | Los precios que mandó la gente. Al aprobar uno, entra al cálculo. Al rechazarlo, escriba el motivo. |
-| **Ofertas en revisión** | Las ofertas que dos compradores desmintieron. Puede reactivarlas o retirarlas. |
+| **Ofertas** | Arriba, las ofertas que dos compradores desmintieron: puede reactivarlas o retirarlas. Abajo, **todas las ofertas vigentes**, con buscador: si una es engañosa, toque **Dar de baja** y deja de mostrarse en el momento. Nada se borra: queda como «retirada» en la auditoría. |
 | **Planilla de campo** | Arriba, la **próxima ronda sugerida**: qué productos medir primero y en qué mercados, con una planilla lista para llenar. Abajo, para subir la planilla llena (CSV): primero **Revisar sin guardar** y después **Importar**. |
 | **Salud del sistema** | Si el recolector del boletín oficial corrió, si hubo datos nuevos y si el último respaldo se pudo restaurar. |
 | **Auditoría** | Quién creó, cambió o eliminó cada dato, y cuándo. |

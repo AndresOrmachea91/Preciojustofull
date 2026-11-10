@@ -116,3 +116,24 @@ def test_la_foto_que_no_es_imagen_se_rechaza_y_las_rutas_piden_sesion(cliente):
     assert cliente.get(f"{API}/vendedor/inventario").status_code == 401
     for ruta in ("/vendedor/distribuidora", "/vendedor/puesto/foto", "/vendedor/inventario"):
         assert cliente.put(f"{API}{ruta}", json={}).status_code == 401
+
+
+# --- C146: el teléfono del proveedor ------------------------------------------------
+
+def test_la_distribuidora_deja_su_telefono_y_los_compradores_lo_ven(cliente):
+    sesion = _casera(cliente)
+    r = cliente.put(f"{API}/vendedor/distribuidora", headers=sesion, json={
+        "nombre": "Distribuidora El Sol", "zona": "Villa Fátima", "latitud": -16.48, "longitud": -68.12,
+        "rubros": ["abarrote"], "celular": "+591 712-34567"})
+    assert r.status_code == 200, r.text
+    assert r.json()["celular"] == "71234567"
+    codigo = r.json()["codigo_mercado"]
+    puestos = cliente.get(f"{API}/mercados/{codigo}/puestos").json()["puestos"]
+    assert puestos[0]["puesto"]["celular"] == "71234567"
+
+
+def test_un_telefono_que_no_es_de_bolivia_se_rechaza(cliente):
+    sesion = _casera(cliente)
+    r = cliente.put(f"{API}/vendedor/distribuidora", headers=sesion, json={
+        "nombre": "Distribuidora El Sol", "zona": "", "latitud": -16.48, "longitud": -68.12, "celular": "12345"})
+    assert r.status_code in (400, 422), r.text
