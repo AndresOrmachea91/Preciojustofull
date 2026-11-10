@@ -30,7 +30,7 @@ GRUPO = {
     "Catálogos": ["rol", "permiso", "rol_permiso", "fuente", "producto", "mercado"],
     "Precios y recolección": ["observacion_precio", "corrida_fuente", "intento_fuente"],
     "Personas y operación": ["usuario", "vendedor", "reporte_precio", "lista_compras", "item_lista_compras",
-                             "puesto", "oferta", "confirmacion_oferta"],
+                             "puesto", "inventario_puesto", "oferta", "confirmacion_oferta"],
 }
 COLOR = {"Catálogos": "#A9D08E", "Precios y recolección": "#9DC3E6", "Personas y operación": "#F4B183"}
 
@@ -47,7 +47,7 @@ def entidad(t, color):
     return f'  {t} [label=<<table border="0" cellborder="1" cellspacing="0" cellpadding="3" bgcolor="white">{"".join(filas)}</table>>];'
 
 out = ['digraph ER {', '  graph [rankdir=LR, splines=true, nodesep=0.3, ranksep=1.4, newrank=true, fontname="Arial", pad=0.4,',
-       '         labelloc=t, fontsize=22, label=<<b>PrecioJusto Bolivia — Modelo Entidad Relación</b><br/><br/><font point-size="12">Base de datos PostgreSQL · 19 entidades · generado del esquema real</font>>];',
+       f'         labelloc=t, fontsize=22, label=<<b>PrecioJusto Bolivia — Modelo Entidad Relación</b><br/><br/><font point-size="12">Base de datos PostgreSQL · {len(cols)} entidades · generado del esquema real</font>>];',
        '  node [shape=plain, fontname="Arial", fontsize=10];',
        '  edge [fontname="Arial", fontsize=8, color="#3a3a3a", arrowsize=0.8];']
 for g, tablas in GRUPO.items():

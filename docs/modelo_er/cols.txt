@@ -42,6 +42,18 @@ intento_fuente|creado_por|character varying|NO|9
 intento_fuente|modificado_en|timestamp with time zone|YES|10
 intento_fuente|modificado_por|character varying|YES|11
 intento_fuente|eliminado|boolean|NO|12
+inventario_puesto|id|integer|NO|1
+inventario_puesto|id_puesto|integer|NO|2
+inventario_puesto|codigo_producto|character varying|NO|3
+inventario_puesto|monto|double precision|NO|4
+inventario_puesto|presentacion|character varying|NO|5
+inventario_puesto|disponibilidad|character varying|NO|6
+inventario_puesto|actualizado_en|timestamp with time zone|NO|7
+inventario_puesto|creado_en|timestamp with time zone|NO|8
+inventario_puesto|creado_por|character varying|NO|9
+inventario_puesto|modificado_en|timestamp with time zone|YES|10
+inventario_puesto|modificado_por|character varying|YES|11
+inventario_puesto|eliminado|boolean|NO|12
 item_lista_compras|id|integer|NO|1
 item_lista_compras|id_lista|integer|NO|2
 item_lista_compras|codigo_producto|character varying|NO|3
@@ -121,6 +133,7 @@ oferta|creado_por|character varying|NO|14
 oferta|modificado_en|timestamp with time zone|YES|15
 oferta|modificado_por|character varying|YES|16
 oferta|eliminado|boolean|NO|17
+oferta|combo|character varying|YES|18
 permiso|codigo|character varying|NO|1
 permiso|descripcion|character varying|NO|2
 permiso|creado_en|timestamp with time zone|NO|3
@@ -152,6 +165,8 @@ puesto|creado_por|character varying|NO|9
 puesto|modificado_en|timestamp with time zone|YES|10
 puesto|modificado_por|character varying|YES|11
 puesto|eliminado|boolean|NO|12
+puesto|foto|character varying|YES|13
+puesto|celular|character varying|YES|14
 reporte_precio|id|integer|NO|1
 reporte_precio|codigo_producto|character varying|NO|2
 reporte_precio|codigo_mercado|character varying|NO|3
