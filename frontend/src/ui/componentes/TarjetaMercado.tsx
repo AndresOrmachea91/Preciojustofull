@@ -1,5 +1,5 @@
 import type { PrecioEnMercado } from "@/dominio/modelo";
-import { esPrecioViejo, etiquetaTipo, explicacionProcedencia, publicaRango, textoAntiguedad } from "@/dominio/modelo";
+import { bs, esPrecioViejo, etiquetaTipo, explicacionProcedencia, publicaRango, textoAntiguedad } from "@/dominio/modelo";
 import { Confianza } from "@/ui/componentes/Confianza";
 import { Procedencia } from "@/ui/componentes/Procedencia";
 
@@ -36,11 +36,11 @@ export function TarjetaMercado({ item, destacado = false, empataCon = [] }: Prop
       <p className="tarjeta__precio">
         {rango ? (
           <>
-            Bs {precio.rango.minimo.toFixed(2)} <span className="tenue">a</span>{" "}
-            {precio.rango.maximo.toFixed(2)}
+            Bs {bs(precio.rango.minimo)} <span className="tenue">a</span>{" "}
+            {bs(precio.rango.maximo)}
           </>
         ) : (
-          <>Bs {precio.rango.centro.toFixed(2)}</>
+          <>Bs {bs(precio.rango.centro)}</>
         )}
         <span className="tarjeta__unidad"> por {precio.unidad}</span>
       </p>
@@ -60,8 +60,10 @@ export function TarjetaMercado({ item, destacado = false, empataCon = [] }: Prop
 
       {empataCon.length > 0 && (
         <p className="tarjeta__nota tarjeta__nota--empate">
-          Empata con {empataCon.join(" y ")}: la diferencia es menor que el margen de error, así que no hay un
-          ganador claro.
+          {empataCon.length <= 2
+            ? `Empata con ${empataCon.join(" y ")}`
+            : `Empata con ${empataCon[0]} y otros ${empataCon.length - 1} lugares`}
+          : la diferencia es menor que el margen de error, así que no hay un ganador claro.
         </p>
       )}
     </article>

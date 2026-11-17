@@ -23,7 +23,7 @@ function nombreMes(periodo: string): string {
 }
 
 function bs(valor: number): string {
-  return `Bs ${valor.toFixed(2)}`;
+  return `Bs ${valor.toFixed(2).replace(".", ",")}`;
 }
 
 /** Marcas "redondas" del eje: 1, 2, 2,5 o 5 por potencia de 10. */

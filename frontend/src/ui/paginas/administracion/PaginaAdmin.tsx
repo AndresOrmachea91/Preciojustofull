@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 
-import {
+import { bs,
   NOMBRE_ROL,
   ROLES,
   puede,
+  sinTildes,
   type Auditoria,
   type EstadoReporte,
   type Mercado,
@@ -37,13 +38,28 @@ export function PaginaAdmin({ contenedor, usuario }: { contenedor: Contenedor; u
   const verSalud = puede(usuario, "ver_salud");
   const [pestana, setPestana] = useState<Pestana>(verUsuarios ? "usuarios" : verReportes ? "reportes" : "puntos");
 
-  const pestanas: { id: Pestana; texto: string; visible: boolean }[] = [
+  // Lo que espera una decisión del administrador: se ve en la pestaña sin tener que entrar a buscarlo.
+  const [porRevisar, setPorRevisar] = useState({ reportes: 0, ofertas: 0 });
+  useEffect(() => {
+    if (!verReportes) return;
+    let vigente = true;
+    void Promise.all([
+      contenedor.administrar.reportes("pendiente").then((l) => l.length, () => 0),
+      contenedor.revisarOfertas.pendientes().then((l) => l.length, () => 0),
+    ]).then(([reportes, ofertas]) => vigente && setPorRevisar({ reportes, ofertas }));
+    return () => {
+      vigente = false;
+    };
+    // Se vuelve a contar al cambiar de pestaña: ahí es donde se aprueba o se retira.
+  }, [contenedor, verReportes, pestana]);
+
+  const pestanas: { id: Pestana; texto: string; visible: boolean; pendientes?: number }[] = [
     { id: "usuarios", texto: "Usuarios", visible: verUsuarios },
     { id: "caseras", texto: "Registrar casera", visible: verUsuarios },
     { id: "puntos", texto: "Mercados y distribuidores", visible: verCatalogo },
     { id: "productos", texto: "Productos", visible: verCatalogo },
-    { id: "reportes", texto: "Reportes por revisar", visible: verReportes },
-    { id: "ofertas", texto: "Ofertas", visible: verReportes },
+    { id: "reportes", texto: "Reportes por revisar", visible: verReportes, pendientes: porRevisar.reportes },
+    { id: "ofertas", texto: "Ofertas", visible: verReportes, pendientes: porRevisar.ofertas },
     { id: "campo", texto: "Planilla de campo", visible: verCampo },
     { id: "salud", texto: "Salud del sistema", visible: verSalud },
     { id: "auditoria", texto: "Auditoría", visible: verAuditoria },
@@ -79,6 +95,8 @@ function Usuarios({ contenedor, yo }: { contenedor: Contenedor; yo: Usuario }) {
   const [puntos, setPuntos] = useState<Mercado[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
+  const [texto, setTexto] = useState("");
+  const [rol, setRol] = useState<Rol | "todos">("todos");
 
   // Los puestos y tiendas que se le pueden asignar a un vendedor.
   useEffect(() => {
@@ -121,6 +139,13 @@ function Usuarios({ contenedor, yo }: { contenedor: Contenedor; yo: Usuario }) {
     if (nueva) void aplicar(contenedor.administrar.restablecerContrasena(u.id, nueva), "Contraseña restablecida.");
   }
 
+  const visibles = useMemo(() => {
+    const buscado = sinTildes(texto.trim());
+    return (lista ?? []).filter(
+      (u) => (rol === "todos" || u.rol === rol) && (!buscado || sinTildes(`${u.nombre} ${u.correo}`).includes(buscado)),
+    );
+  }, [lista, texto, rol]);
+
   return (
     <>
       <NuevoUsuario
@@ -139,8 +164,32 @@ function Usuarios({ contenedor, yo }: { contenedor: Contenedor; yo: Usuario }) {
         Mostrar también las cuentas eliminadas
       </label>
 
+      <div className="barra-filtros">
+        <input
+          className="barra__buscar"
+          type="search"
+          placeholder="Buscar por nombre o correo"
+          aria-label="Buscar cuentas"
+          value={texto}
+          onChange={(e) => setTexto(e.target.value)}
+        />
+        <div className="segmentado" role="group" aria-label="Filtrar por rol">
+          {(["todos", ...ROLES] as const).map((r) => (
+            <button key={r} type="button" className="segmentado__opcion" aria-pressed={rol === r} onClick={() => setRol(r)}>
+              {r === "todos" ? "Todos" : NOMBRE_ROL[r]}
+            </button>
+          ))}
+        </div>
+        {lista && (
+          <span className="tenue">
+            {visibles.length} de {lista.length} cuentas
+          </span>
+        )}
+      </div>
+
       {!lista && !error && <p className="estado">Cargando cuentas…</p>}
-      {lista && (
+      {lista && visibles.length === 0 && <p className="estado">Ninguna cuenta coincide con la búsqueda.</p>}
+      {lista && visibles.length > 0 && (
         <div className="tabla-envoltura">
           <table className="tabla">
             <thead>
@@ -155,7 +204,7 @@ function Usuarios({ contenedor, yo }: { contenedor: Contenedor; yo: Usuario }) {
               </tr>
             </thead>
             <tbody>
-              {lista.map((u) =>
+              {visibles.map((u) =>
                 u.auditoria?.eliminado ? (
                   <FilaEliminada key={u.id} usuario={u} />
                 ) : (
@@ -259,14 +308,20 @@ function Usuarios({ contenedor, yo }: { contenedor: Contenedor; yo: Usuario }) {
 
 /** Quién creó la fila y quién la cambió por última vez, con su fecha. */
 function CeldaAuditoria({ auditoria: a }: { auditoria: Auditoria }) {
+  // En la tabla va solo la fecha; quién lo hizo y la hora salen al pasar el cursor
+  // (y completos en la pestaña Auditoría). Así cada cuenta ocupa un solo renglón.
+  const dia = (iso: string) => new Date(iso).toLocaleDateString("es-BO", { day: "2-digit", month: "2-digit", year: "2-digit" });
+  const detalle =
+    `Creada por ${a.creadoPor} · ${fechaCorta(a.creadoEn)}` +
+    (a.modificadoEn ? `
+${a.eliminado ? "Eliminada" : "Modificada"} por ${a.modificadoPor} · ${fechaCorta(a.modificadoEn)}` : "");
   return (
-    <span className="auditoria-celda">
-      <span>
-        Creada por {a.creadoPor} · {fechaCorta(a.creadoEn)}
-      </span>
+    <span className="auditoria-celda" title={detalle}>
+      <span>Creada {dia(a.creadoEn)}</span>
       {a.modificadoEn && (
         <span className="tenue">
-          {a.eliminado ? "Eliminada" : "Modificada"} por {a.modificadoPor} · {fechaCorta(a.modificadoEn)}
+          {/* Quién eliminó una cuenta se ve siempre: es lo que se busca en esa fila. */}
+          {a.eliminado ? `Eliminada por ${a.modificadoPor} · ${dia(a.modificadoEn)}` : `Cambió ${dia(a.modificadoEn)}`}
         </span>
       )}
     </span>
@@ -457,7 +512,7 @@ function Reportes({ contenedor }: { contenedor: Contenedor }) {
               <span className={`estado-reporte estado-reporte--${r.estado}`}>{r.estado}</span>
             </div>
             <p className="tarjeta__precio">
-              Bs {r.monto.toFixed(2)} <span className="tarjeta__unidad">por {r.unidad.toLowerCase()}</span>
+              Bs {bs(r.monto)} <span className="tarjeta__unidad">por {r.unidad.toLowerCase()}</span>
             </p>
             {r.motivoRechazo && <p className="tarjeta__nota">Motivo: {r.motivoRechazo}</p>}
             {r.estado === "pendiente" && (

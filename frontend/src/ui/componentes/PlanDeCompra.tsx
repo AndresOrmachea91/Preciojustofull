@@ -17,7 +17,12 @@ import type { Contenedor } from "@/infraestructura/contenedor";
 import { MensajeError, textoDeError } from "@/ui/componentes/Mensajes";
 import { hrefMercado, hrefPuesto } from "@/ui/hooks/useRuta";
 
-const unidad = (codigo: string) => (NOMBRE_UNIDAD_BASE as Record<string, string>)[codigo]?.toLowerCase() ?? codigo;
+const nombreUnidad = (codigo: string) => (NOMBRE_UNIDAD_BASE as Record<string, string>)[codigo]?.toLowerCase() ?? codigo;
+/** "2 kilos", "1 kilo", "11,5 kilos": la unidad en plural cuando no es exactamente uno. */
+const unidad = (codigo: string, cuanto = 1) => {
+  const n = nombreUnidad(codigo);
+  return cuanto === 1 || n.endsWith("s") ? n : `${n}${/[aeiou]$/.test(n) ? "s" : "es"}`;
+};
 const cantidad = (x: number) => (Number.isInteger(x) ? String(x) : x.toFixed(2).replace(/0$/, "").replace(".", ","));
 
 /**
@@ -152,6 +157,7 @@ function ResultadoDelPlan({
             ? `Conviene repartir la compra en ${mejor.paradas.length} mercados`
             : `Conviene comprar todo en ${mejor.paradas[0]!.mercado.nombre}`}
         </p>
+        {(reparte || repartir) && (
         <div className="plan__balance">
           <Cifra
             etiqueta="Gana en precios"
@@ -174,11 +180,12 @@ function ResultadoDelPlan({
             />
           )}
         </div>
+        )}
         <p className="tenue plan__explica">
           {reparte
             ? `Frente a comprar todo en ${unSoloLugar?.paradas[0]?.mercado.nombre ?? "un solo lugar"}.`
             : !repartir
-              ? "Ningún reparto entre mercados baja el total."
+              ? "Es el único lugar con toda su lista al mejor precio: repartir la compra no baja el total."
               : ahorroRepartiendo > 0
                 ? `Ir también a ${otros} ahorraría apenas Bs ${bs(ahorroRepartiendo)} después del pasaje: no vale otra vuelta por tan poco.`
                 : `Ir también a ${otros} ahorraría en precios, pero el pasaje se come ese ahorro.`}
@@ -314,7 +321,7 @@ function ParadaDelPlan({ contenedor, parada, numero }: { contenedor: Contenedor;
             <span>
               {c.necesidad.nombre}{" "}
               <span className="tenue">
-                · {cantidad(c.necesidad.cantidadBase)} {unidad(c.necesidad.unidad)} a Bs {bs(c.precioUnidad)}
+                · {cantidad(c.necesidad.cantidadBase)} {unidad(c.necesidad.unidad, c.necesidad.cantidadBase)} a Bs {bs(c.precioUnidad)}
                 {c.procedencia === "estimado" ? " (estimado)" : ""}
               </span>
             </span>

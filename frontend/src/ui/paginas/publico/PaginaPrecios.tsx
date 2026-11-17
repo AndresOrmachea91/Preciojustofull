@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import type { Oferta, PrecioEnMercado, Producto, Usuario } from "@/dominio/modelo";
-import {
+import { bs,
   agruparPorPrecio,
   empatan,
   esPrecioViejo,
@@ -143,6 +143,12 @@ export function PaginaPrecios({ contenedor, usuario = null }: { contenedor: Cont
   const opciones = comparativa.datos?.opciones.map(escalar) ?? [];
   const minoristas = opciones.filter((o) => o.mercado.nivelPrecio === "minorista");
   const mayoristas = opciones.filter((o) => o.mercado.nivelPrecio === "mayorista");
+  // La respuesta corta, al lado del mapa: los tres lugares más baratos donde alguien midió el precio.
+  // Van por precio; si el dato ya tiene más de una semana, la fila lo dice.
+  const masBaratos = minoristas
+    .filter((o) => o.precio.procedencia === "observado")
+    .sort((x, y) => x.precio.rango.centro - y.precio.rango.centro)
+    .slice(0, 3);
 
   return (
     <>
@@ -253,7 +259,7 @@ export function PaginaPrecios({ contenedor, usuario = null }: { contenedor: Cont
                       <span className="tenue">{textoDistancia(distanciaKm)}</span>
                       {precio && (
                         <span className="cercanos__precio">
-                          Bs {precio.rango.centro.toFixed(2)}
+                          Bs {bs(precio.rango.centro)}
                           <span className="tenue"> /{precio.unidad}</span>
                         </span>
                       )}
@@ -321,6 +327,8 @@ export function PaginaPrecios({ contenedor, usuario = null }: { contenedor: Cont
               ofertas={ofertas.filter((o) => o.codigoMercado === seleccionado)}
               contenedor={contenedor}
               usuario={usuario}
+              masBaratos={masBaratos}
+              alElegir={setSeleccionado}
             />
           </div>
           <LeyendaMapa />
@@ -362,7 +370,7 @@ export function PaginaPrecios({ contenedor, usuario = null }: { contenedor: Cont
           {ahorroPosible(minoristas) > 0 && (
             <p className="ahorro">
               Entre el más barato y el más caro hay{" "}
-              <strong>Bs {ahorroPosible(minoristas).toFixed(2)}</strong> de diferencia.
+              <strong>Bs {bs(ahorroPosible(minoristas))}</strong> de diferencia.
             </p>
           )}
           {minoristas.some((o) => publicaRango(o.mercado.tipo)) && (
@@ -450,10 +458,10 @@ function TarjetaGrupo({ items }: { items: readonly PrecioEnMercado[] }) {
       <p className="tarjeta__precio">
         {rango ? (
           <>
-            Bs {precio.rango.minimo.toFixed(2)} <span className="tenue">a</span> {precio.rango.maximo.toFixed(2)}
+            Bs {bs(precio.rango.minimo)} <span className="tenue">a</span> {bs(precio.rango.maximo)}
           </>
         ) : (
-          <>Bs {precio.rango.centro.toFixed(2)}</>
+          <>Bs {bs(precio.rango.centro)}</>
         )}
         <span className="tarjeta__unidad"> por {precio.unidad}</span>
       </p>

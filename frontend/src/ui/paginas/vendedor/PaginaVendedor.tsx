@@ -137,10 +137,10 @@ function MisPrecios({ contenedor, productos }: { contenedor: Contenedor; product
                 <tr key={p.codigoProducto}>
                   <td>{p.nombreProducto}</td>
                   <td>
-                    Bs {p.monto.toFixed(2)} <span className="tenue">por {p.presentacion}</span>
+                    Bs {bs(p.monto)} <span className="tenue">por {p.presentacion}</span>
                   </td>
                   <td className="tenue">
-                    Bs {p.precioPorUnidadBase.toFixed(2)} por {NOMBRE_UNIDAD_BASE[p.unidadBase].toLowerCase()}
+                    Bs {bs(p.precioPorUnidadBase)} por {NOMBRE_UNIDAD_BASE[p.unidadBase].toLowerCase()}
                   </td>
                   <td className="tenue">{new Date(p.publicadoEn).toLocaleDateString("es-BO")}</td>
                 </tr>
@@ -178,7 +178,7 @@ function FormularioPrecio({
     }
     try {
       await contenedor.miPuesto.publicar({ codigoProducto, monto: Number(monto), presentacion: presentacionElegida });
-      alPublicar(`Publicado: ${producto?.nombre} a Bs ${Number(monto).toFixed(2)} por ${presentacionElegida}.`);
+      alPublicar(`Publicado: ${producto?.nombre} a Bs ${bs(Number(monto))} por ${presentacionElegida}.`);
       setMonto("");
     } catch (e) {
       setError(textoDeError(e));

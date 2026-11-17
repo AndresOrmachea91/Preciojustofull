@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.infraestructura.adaptadores.entrada.api import esquemas as e
+from src.infraestructura.adaptadores.entrada.api.cache_fichas import recordar
 from src.infraestructura.adaptadores.entrada.api.dependencias import (
     caso_comparar_mercados, caso_consultar_precio, caso_evaluar_estimador, caso_historial_precio,
     caso_precios_referenciales,
@@ -55,14 +56,15 @@ def confiabilidad(caso=Depends(caso_evaluar_estimador)):
 @router.get("/referencia", response_model=list[e.PrecioReferencialSalida])
 def referencia(caso=Depends(caso_precios_referenciales)):
     """Los precios referenciales de La Paz: cada producto, al consumidor y por mayor, sin ajuste de lugar."""
-    return [
+    # Son 45 productos por dos niveles: se guarda dos minutos, como las fichas de mercado.
+    return recordar("referencia", lambda: [
         e.PrecioReferencialSalida(
             producto=producto_a_salida(r.producto),
             consumidor=precio_a_salida(r.consumidor) if r.consumidor else None,
             mayorista=precio_a_salida(r.mayorista) if r.mayorista else None,
         )
         for r in caso.ejecutar()
-    ]
+    ])
 
 
 @router.get("/{codigo_producto}/comparar", response_model=list[e.PrecioEnMercadoSalida])

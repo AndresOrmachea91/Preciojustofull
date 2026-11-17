@@ -44,7 +44,10 @@ def ofertas(mercado: str | None = Query(default=None), producto: str | None = Qu
     Las ofertas vigentes que de verdad son más baratas que el precio del
     sistema (sin la voz del casero). Primero el mayor ahorro relativo.
     """
-    return [oferta_a_salida(v) for v in caso.ejecutar(mercado, producto)]
+    # Comparar cada oferta con el precio del sistema recorre los precios de su mercado: se
+    # guarda igual que las fichas. Publicar, retirar o confirmar una oferta la olvida al instante.
+    return recordar(f"ofertas:{mercado}:{producto}",
+                    lambda: [oferta_a_salida(v) for v in caso.ejecutar(mercado, producto)])
 
 
 @router.get("/verificaciones", response_model=e.PlanVerificacionSalida)

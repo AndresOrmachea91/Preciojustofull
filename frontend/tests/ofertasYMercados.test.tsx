@@ -141,7 +141,7 @@ describe("entrar a un mercado", () => {
 
   it("desde el mapa se entra al mercado", async () => {
     render(<App />);
-    const entrar = await screen.findByText("Toque un punto del mapa para ver su precio y de dónde sale.");
+    const entrar = await screen.findByText(/Toque un(o| punto del mapa)/);
     expect(entrar).toBeDefined();
     expect(screen.getByText(/Estrella dorada: un casero tiene una oferta/)).toBeDefined();
   });

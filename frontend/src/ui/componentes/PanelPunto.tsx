@@ -1,8 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 
-import type { MarcadorMapa, Oferta, Precio, Presentacion, Producto, Usuario } from "@/dominio/modelo";
+import type { MarcadorMapa, Oferta, Precio, PrecioEnMercado, Presentacion, Producto, Usuario } from "@/dominio/modelo";
 import type { Contenedor } from "@/infraestructura/contenedor";
-import {
+import { bs,
   esPrecioViejo,
   etiquetaNivel,
   etiquetaTipo,
@@ -39,6 +39,9 @@ interface Props {
   readonly ofertas?: readonly Oferta[];
   readonly contenedor?: Contenedor;
   readonly usuario?: Usuario | null;
+  /** Los lugares donde alguien lo midió, del más barato al más caro: la respuesta a "¿dónde conviene?". */
+  readonly masBaratos?: readonly PrecioEnMercado[];
+  readonly alElegir?: (codigoMercado: string) => void;
 }
 
 /** Lo que se ve al lado del mapa: el resumen del producto, o el punto elegido con su precio y de dónde sale. */
@@ -50,8 +53,10 @@ export function PanelPunto({
   ofertas = [],
   contenedor,
   usuario = null,
+  masBaratos = [],
+  alElegir,
 }: Props) {
-  if (!marcador) return <PanelResumen producto={producto} resumen={resumen} />;
+  if (!marcador) return <PanelResumen producto={producto} resumen={resumen} masBaratos={masBaratos} alElegir={alElegir} />;
 
   const { mercado, precio } = marcador;
   const rango = publicaRango(mercado.tipo);
@@ -78,10 +83,10 @@ export function PanelPunto({
           <p className="panel__monto">
             {rango ? (
               <>
-                Bs {precio.rango.minimo.toFixed(2)} <span className="panel__a">a</span> {precio.rango.maximo.toFixed(2)}
+                Bs {bs(precio.rango.minimo)} <span className="panel__a">a</span> {bs(precio.rango.maximo)}
               </>
             ) : (
-              <>Bs {precio.rango.centro.toFixed(2)}</>
+              <>Bs {bs(precio.rango.centro)}</>
             )}
             <span className="tenue"> por {precio.unidad}</span>
           </p>
@@ -136,7 +141,17 @@ export function PanelPunto({
 }
 
 /** Antes de elegir un punto: qué tan medido está este producto y cómo usar el mapa. */
-function PanelResumen({ producto, resumen }: { producto: Producto | null; resumen: ResumenDelMapa | null }) {
+function PanelResumen({
+  producto,
+  resumen,
+  masBaratos,
+  alElegir,
+}: {
+  producto: Producto | null;
+  resumen: ResumenDelMapa | null;
+  masBaratos: readonly PrecioEnMercado[];
+  alElegir: ((codigoMercado: string) => void) | undefined;
+}) {
   const total = resumen ? resumen.estimados + resumen.observados : 0;
   const referencia = resumen?.referencia ?? null;
   return (
@@ -144,7 +159,7 @@ function PanelResumen({ producto, resumen }: { producto: Producto | null; resume
       <h2 className="panel__nombre">{producto?.nombre ?? "Precios de La Paz"}</h2>
       {referencia && (
         <p className="panel__monto">
-          Bs {referencia.rango.minimo.toFixed(2)} <span className="panel__a">a</span> {referencia.rango.maximo.toFixed(2)}
+          Bs {bs(referencia.rango.minimo)} <span className="panel__a">a</span> {bs(referencia.rango.maximo)}
           <span className="tenue"> por {referencia.unidad}</span>
         </p>
       )}
@@ -162,10 +177,41 @@ function PanelResumen({ producto, resumen }: { producto: Producto | null; resume
         </div>
       )}
 
-      <ol className="panel__pasos">
-        <li>Toque un punto del mapa para ver su precio y de dónde sale.</li>
-        <li>Si lo vio en ese lugar, diga a cuánto: así deja de ser un estimado.</li>
-      </ol>
+      {masBaratos.length > 0 ? (
+        <section className="baratos" aria-labelledby="titulo-baratos">
+          <h3 id="titulo-baratos" className="baratos__titulo">
+            Dónde está más barato
+          </h3>
+          <ol className="baratos__lista">
+            {masBaratos.map(({ mercado, precio }, i) => (
+              <li key={mercado.codigo}>
+                <button type="button" className="baratos__lugar" onClick={() => alElegir?.(mercado.codigo)}>
+                  <span className="baratos__puesto" aria-hidden="true">
+                    {i + 1}
+                  </span>
+                  <span className="baratos__nombre">
+                    {mercado.nombre}
+                    <span className="tenue">
+                      {mercado.macrodistrito || mercado.zona} ·{" "}
+                      {esPrecioViejo(precio) ? `${textoAntiguedad(precio)}, pudo cambiar` : "medido esta semana"}
+                    </span>
+                  </span>
+                  <span className="baratos__precio">
+                    Bs {bs(precio.rango.centro)}
+                    <span className="tenue">/{precio.unidad}</span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ol>
+          <p className="tenue baratos__nota">Solo lugares donde alguien midió el precio. Toque uno para verlo en el mapa.</p>
+        </section>
+      ) : (
+        <p className="tenue panel__ayuda">
+          Todavía nadie midió este producto en un mercado: en todos se estima igual. Toque un punto del mapa y, si lo
+          vio ahí, diga a cuánto.
+        </p>
+      )}
 
       {resumen && resumen.ofertas > 0 && (
         <p className="panel__ofertas">

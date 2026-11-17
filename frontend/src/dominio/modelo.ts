@@ -121,7 +121,7 @@ export function etiquetaConfianza(nivel: NivelConfianza): string {
   const etiquetas: Record<NivelConfianza, string> = {
     verificado: "Verificado en campo",
     alto: "Fuente oficial",
-    medio: "Estimado",
+    medio: "Confianza media",
     bajo: "Dato único sin contraste",
   };
   return etiquetas[nivel];

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { lecturaDelSesgo, porcentaje, type EvaluacionEstimador, type PlanDeVerificacion } from "@/dominio/modelo";
+import { bs, lecturaDelSesgo, porcentaje, type EvaluacionEstimador, type PlanDeVerificacion } from "@/dominio/modelo";
 import type { Contenedor } from "@/infraestructura/contenedor";
 import { MensajeError, textoDeError } from "@/ui/componentes/Mensajes";
 import { QueFaltaMedir, VariacionPorProducto } from "@/ui/componentes/PlanVerificacion";
@@ -140,12 +140,12 @@ export function PaginaConfiabilidad({ contenedor }: { contenedor: Contenedor }) 
                         <td>{c.nombreProducto}</td>
                         <td>{c.nombreMercado}</td>
                         <td>{c.periodo}</td>
-                        <td>Bs {c.observado.toFixed(2)}</td>
+                        <td>Bs {bs(c.observado)}</td>
                         <td>
-                          Bs {c.estimado.toFixed(2)}
+                          Bs {bs(c.estimado)}
                           <span className="tenue">
                             {" "}
-                            ({c.estimadoMinimo.toFixed(2)}–{c.estimadoMaximo.toFixed(2)})
+                            ({bs(c.estimadoMinimo)}–{bs(c.estimadoMaximo)})
                           </span>
                         </td>
                         <td className={c.dentroDelRango ? undefined : "confiabilidad__fuera"}>

@@ -1,3 +1,4 @@
+import { bs } from "@/dominio/modelo";
 import { useEffect, useState } from "react";
 
 import type { ReporteEnRevision } from "@/dominio/modelo";
@@ -42,7 +43,7 @@ export function MisReportes({ contenedor }: { contenedor: Contenedor }) {
               <span className={`estado-reporte estado-reporte--${r.estado}`}>{QUE_PASO[r.estado]}</span>
             </div>
             <p className="tarjeta__precio">
-              Bs {r.monto.toFixed(2)} <span className="tarjeta__unidad">por {r.unidad.toLowerCase()}</span>
+              Bs {bs(r.monto)} <span className="tarjeta__unidad">por {r.unidad.toLowerCase()}</span>
             </p>
             {r.motivoRechazo && <p className="tarjeta__nota">Motivo: {r.motivoRechazo}</p>}
           </article>

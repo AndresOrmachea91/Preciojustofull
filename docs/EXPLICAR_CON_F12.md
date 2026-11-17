@@ -167,3 +167,19 @@ ofertas (`/vendedor/ofertas`, `/vendedor/ofertas/combo`,
 **Administrador:** usuarios (`/admin/usuarios`, `/admin/usuarios/caseras`),
 reportes, mercados, productos, auditoría, planilla de campo, salud y ofertas
 en revisión (todas bajo `/admin/…`).
+
+## 7. Qué mostrar de la velocidad (C147)
+
+En F12 → **Red**, la columna **Tiempo** y la columna **Tamaño** cuentan dos mejoras del servidor:
+
+- **Memoria corta.** `ofertas`, `precios/referencia`, `mercados/directorio` y la ficha de cada mercado se
+  calculan una vez y se guardan dos minutos. Por eso responden en milésimas de segundo en vez de dos
+  segundos. Cuando una casera publica una oferta o cambia un precio, lo guardado se olvida al instante
+  y ella ve su cambio sin esperar. El código está en
+  `backend/src/infraestructura/adaptadores/entrada/api/cache_fichas.py`.
+- **Respuestas comprimidas.** Al tocar una consulta, en **Encabezados de respuesta** aparece
+  `content-encoding: gzip`. La lista de ofertas pesa unos 34 KB y viaja en menos de 4 KB, que es lo que
+  se nota en un celular con datos móviles. Se enciende en una línea de `main.py` (`GZipMiddleware`).
+
+Para verlo en vivo: recargue con F5 mirando la pestaña Red y compare el tiempo de `ofertas` con el de
+`comparar`, que no se guarda porque cambia con cada producto.

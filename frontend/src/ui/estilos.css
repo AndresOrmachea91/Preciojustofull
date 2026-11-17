@@ -716,3 +716,45 @@ a { text-underline-offset: 0.18em; }
 .compartir__texto .subseccion { margin: 0; }
 .compartir__botones { display: flex; flex-wrap: wrap; gap: 8px; }
 .puesto--resaltado { border-color: var(--jade); box-shadow: 0 0 0 3px var(--jade-claro); }
+
+/* --- La respuesta corta junto al mapa: dónde está más barato --- */
+.baratos { display: flex; flex-direction: column; gap: 8px; }
+.baratos__titulo { margin: 0; font-size: 0.95rem; color: var(--tinta); }
+.baratos__lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.baratos__lugar { width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 10px; border: 1px solid var(--borde); border-radius: 12px; background: var(--superficie, #fff); text-align: left; cursor: pointer; font: inherit; color: inherit; transition: border-color 0.15s ease, background-color 0.15s ease; }
+.baratos__lugar:hover, .baratos__lugar:focus-visible { border-color: var(--jade); background: var(--jade-claro); }
+.baratos__puesto { flex: none; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; background: var(--jade-claro); color: var(--jade); font-size: 0.8rem; font-weight: 700; }
+.baratos__lista li:first-child .baratos__puesto { background: var(--jade); color: var(--superficie); }
+.baratos__nombre { flex: 1; min-width: 0; display: flex; flex-direction: column; font-weight: 600; font-size: 0.92rem; line-height: 1.25; }
+.baratos__nombre .tenue { font-weight: 400; font-size: 0.78rem; }
+.baratos__precio { flex: none; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.baratos__precio .tenue { font-weight: 400; font-size: 0.8rem; }
+.baratos__nota { margin: 0; font-size: 0.78rem; }
+.panel__ayuda { margin: 0; font-size: 0.88rem; }
+
+/* --- Lista de compras: los lugares incompletos no compiten con los completos --- */
+.ranking__aviso { margin: 14px 0 2px; font-size: 0.82rem; color: var(--ambar); }
+.ranking--incompletos .ranking__fila::before { content: "·"; }
+.ranking--incompletos .ranking__fila strong { font-weight: 500; }
+.ranking--incompletos .ranking__total, .ranking--incompletos .ranking__fila:first-child .ranking__total { color: var(--tenue); font-weight: 400; }
+
+/* --- Pestañas: en pantalla ancha se ven todas (dos filas si hace falta); en el celular se deslizan --- */
+@media (min-width: 720px) { .pestanas { flex-wrap: wrap; overflow: visible; } }
+.pestanas__pestana { white-space: nowrap; flex: none; }
+.pestanas__pendientes { display: inline-grid; place-items: center; min-width: 20px; height: 20px; margin-left: 7px; padding: 0 6px; border-radius: 999px; background: var(--peligro); color: var(--sobre-peligro, #fff); font-size: 0.72rem; font-weight: 700; line-height: 1; }
+.barra-filtros { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin: 12px 0; }
+.barra-filtros .barra__buscar { flex: 1 1 240px; max-width: 420px; }
+
+/* Un enlace sin clase propia nunca queda en el azul del navegador. */
+:where(.app__contenido) a:where(:not([class])) { color: var(--jade); }
+
+/* --- Tablas de administración: una cuenta por renglón, sin celdas que se estiren --- */
+.auditoria-celda span { white-space: nowrap; }
+.tabla td select { max-width: 210px; }
+.tabla .tabla__acciones { flex-wrap: nowrap; }
+.tabla .tabla__acciones .boton { padding: 6px 10px; font-size: 0.82rem; }
+
+/* Una pantalla vacía siempre ofrece a dónde seguir. */
+.estado--vacio p { margin: 0 0 12px; }
+.estado__acciones { display: flex; flex-wrap: wrap; gap: 8px; }
+.estado__acciones .boton { text-decoration: none; }

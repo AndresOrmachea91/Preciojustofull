@@ -3,6 +3,8 @@ export interface Pestana<T extends string> {
   readonly id: T;
   readonly texto: string;
   readonly visible?: boolean;
+  /** Cuántas cosas esperan ahí (reportes por revisar, ofertas pausadas). Con 0 no se muestra. */
+  readonly pendientes?: number;
 }
 
 interface Props<T extends string> {
@@ -26,6 +28,11 @@ export function Pestanas<T extends string>({ pestanas, activa, onCambiar }: Prop
             onClick={() => onCambiar(p.id)}
           >
             {p.texto}
+            {!!p.pendientes && (
+              <span className="pestanas__pendientes" aria-hidden="true" title={`${p.pendientes} por revisar`}>
+                {p.pendientes}
+              </span>
+            )}
           </button>
         ))}
     </div>

@@ -5,14 +5,18 @@ FastAPI es un detalle del borde: se puede reemplazar sin tocar el dominio
 ni los casos de uso. Eso es lo que la arquitectura hexagonal compra.
 """
 import logging
+import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from src.infraestructura.adaptadores.entrada.api.dependencias import asegurar_admin_inicial
+from src.infraestructura.adaptadores.entrada.api.dependencias import (
+    asegurar_admin_inicial, caso_directorio_mercados, caso_ofertas_vigentes, caso_precios_referenciales,
+)
 from src.infraestructura.adaptadores.entrada.api.rutas import cuentas
 from src.infraestructura.adaptadores.entrada.api.rutas.administracion import (
     auditoria as admin_auditoria, campo_y_salud as admin_campo_y_salud, catalogo as admin_catalogo,
@@ -38,6 +42,24 @@ log = logging.getLogger(__name__)
 INTERFAZ = Path(__file__).resolve().parents[6] / "frontend" / "dist"
 
 
+def _precalentar() -> None:
+    """
+    Deja listas las consultas pesadas (ofertas, precios referenciales y
+    directorio) antes de que llegue la primera visita: así ni siquiera quien
+    abre la página recién arrancado el servidor espera el cálculo.
+    """
+    tareas = (
+        ("directorio", lambda: mercados_y_ofertas.directorio(caso_directorio_mercados())),
+        ("ofertas", lambda: mercados_y_ofertas.ofertas(None, None, caso_ofertas_vigentes())),
+        ("referencia", lambda: precios.referencia(caso_precios_referenciales())),
+    )
+    for nombre, calcular in tareas:
+        try:
+            calcular()
+        except Exception:  # noqa: BLE001 — es una ayuda: si falla, se calcula en la primera visita
+            log.exception("No se pudo precalentar %s", nombre)
+
+
 @asynccontextmanager
 async def ciclo_de_vida(_: FastAPI):
     # Un fallo acá no debe tumbar la API pública de precios: se registra y
@@ -46,6 +68,9 @@ async def ciclo_de_vida(_: FastAPI):
         asegurar_admin_inicial()
     except Exception:
         log.exception("No se pudo crear el administrador inicial")
+    # Solo con base de datos: en memoria (pruebas, demo sin instalar nada) todo es instantáneo.
+    if config.base_datos_url:
+        threading.Thread(target=_precalentar, daemon=True).start()
     yield
 
 
@@ -72,6 +97,9 @@ app.add_middleware(
 )
 
 app.add_middleware(ActorPorPeticion)
+# Las listas de precios pesan 40–60 KB en JSON: comprimidas viajan en una quinta parte,
+# que es lo que se nota en un celular con datos móviles.
+app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 # Rutas agrupadas por quién las usa (ver rutas/<rol>/).
 # Públicas: no piden sesión.

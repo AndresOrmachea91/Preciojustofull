@@ -60,10 +60,20 @@ export function PaginaOfertas({ contenedor, usuario }: { contenedor: Contenedor;
       <MensajeError texto={error} />
       {!ofertas && !error && <p className="estado">Buscando ofertas…</p>}
       {ofertas && ofertas.length === 0 && (
-        <p className="estado">
-          Hoy no hay ofertas vigentes. Los caseros las publican desde «Mi puesto», y solo aparecen si son más baratas
-          que el precio del sistema.
-        </p>
+        <div className="estado estado--vacio">
+          <p>
+            Hoy no hay ofertas vigentes. Los caseros las publican desde «Mi puesto», y solo aparecen si son más baratas
+            que el precio del sistema.
+          </p>
+          <div className="estado__acciones">
+            <a className="boton" href="#/precios">
+              Ver los precios en el mapa
+            </a>
+            <a className="boton boton--suave" href="#/mercados">
+              Entrar a un mercado
+            </a>
+          </div>
+        </div>
       )}
       {ofertas && ofertas.length > 0 && visibles.length === 0 && <p className="estado">Ninguna oferta coincide.</p>}
 

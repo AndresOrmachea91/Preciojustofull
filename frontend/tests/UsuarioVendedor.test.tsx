@@ -43,7 +43,7 @@ describe("usuario", () => {
     fireEvent.click(within(tarjeta).getByRole("button", { name: "¿Dónde conviene?" }));
     const cotizacion = await within(tarjeta).findByLabelText("Dónde conviene comprar esta lista");
     // 2 arrobas = 23 kg: el más barato de la memoria es Villa Fátima (6,78 Bs/kg).
-    expect(within(cotizacion).getAllByRole("listitem")[0].textContent).toMatch(/Mercado Villa Fátima.*Bs 155\.94/);
+    expect(within(cotizacion).getAllByRole("listitem")[0].textContent).toMatch(/Mercado Villa Fátima.*Bs 155,94/);
     // El mayorista va aparte: no compite con los precios de consumidor final.
     const mayorista = within(cotizacion).getByRole("list", { name: "Precio mayorista de esta lista" });
     expect(within(mayorista).getByText("Distribuidora Central")).toBeDefined();
@@ -64,7 +64,7 @@ describe("usuario", () => {
     // El más nuevo va primero (el vecino de la demo ya tenía un reporte de tomate).
     const [reporte] = await screen.findAllByRole("article", { name: "Reporte de Tomate" });
     expect(within(reporte).getByText("Esperando revisión")).toBeDefined();
-    expect(reporte.textContent).toMatch(/Bs 7\.50 por libra/);
+    expect(reporte.textContent).toMatch(/Bs 7,50 por libra/);
   });
 
   it("un usuario común no ve «Mi puesto»", async () => {
@@ -87,7 +87,7 @@ describe("vendedor", () => {
 
     const tabla = await screen.findByRole("table", { name: "Mis precios publicados" });
     const fila = within(tabla).getByText("Papa holandesa").closest("tr")!;
-    expect(fila.textContent).toMatch(/Bs 80\.00 por arroba/);
-    expect(fila.textContent).toMatch(/Bs 6\.96 por kilo/);   // 80 / 11,5
+    expect(fila.textContent).toMatch(/Bs 80,00 por arroba/);
+    expect(fila.textContent).toMatch(/Bs 6,96 por kilo/);   // 80 / 11,5
   });
 });

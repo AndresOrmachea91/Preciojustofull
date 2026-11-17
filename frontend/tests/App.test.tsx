@@ -24,8 +24,12 @@ describe("App sobre React 19", () => {
     expect(screen.getByRole("heading", { name: "PrecioJusto" })).toBeDefined();
 
     await waitFor(() => {
-      expect(screen.getByText("Mercado Villa Fátima")).toBeDefined();
+      expect(document.querySelector(".tarjeta")?.textContent).toContain("Mercado Villa Fátima");
     });
+
+    // La respuesta corta va junto al mapa: los lugares medidos, del más barato al más caro.
+    expect(screen.getByRole("heading", { name: "Dónde está más barato" })).toBeDefined();
+    expect(document.querySelector(".baratos__lugar")?.textContent).toContain("Mercado Villa Fátima");
 
     // El adaptador en memoria devuelve el tomate más barato en Villa Fátima.
     // Cinco de consumidor final y un mayorista aparte, que no compite.
@@ -41,7 +45,7 @@ describe("App sobre React 19", () => {
   it("cambia de producto sin que el componente conozca el origen de datos", async () => {
     render(<App />);
 
-    await waitFor(() => expect(screen.getByText("Mercado Villa Fátima")).toBeDefined());
+    await waitFor(() => expect(document.querySelector(".tarjeta")?.textContent).toContain("Mercado Villa Fátima"));
 
     await elegirProducto("Arroz de primera");
 

@@ -164,8 +164,39 @@ function Ranking({
   nombre: (codigo: string) => string;
   etiqueta?: string;
 }) {
+  // Un lugar al que le falta un producto sale "más barato" solo porque suma menos cosas:
+  // va aparte y sin número, para que nadie lo lea como el ganador.
+  const completos = costos.filter((c) => c.faltantes.length === 0);
+  const incompletos = costos.filter((c) => c.faltantes.length > 0);
   return (
-    <ol className="ranking" aria-label={etiqueta}>
+    <>
+      {completos.length > 0 && <FilasRanking costos={completos} nombre={nombre} etiqueta={etiqueta} />}
+      {incompletos.length > 0 && (
+        <>
+          <p className="ranking__aviso">
+            {completos.length > 0 ? "No tienen toda su lista" : "Ningún lugar tiene toda su lista"}: el total de estos
+            lugares no cuenta lo que les falta.
+          </p>
+          <FilasRanking costos={incompletos} nombre={nombre} incompletos />
+        </>
+      )}
+    </>
+  );
+}
+
+function FilasRanking({
+  costos,
+  nombre,
+  etiqueta,
+  incompletos = false,
+}: {
+  costos: readonly CostoCanasta[];
+  nombre: (codigo: string) => string;
+  etiqueta?: string | undefined;
+  incompletos?: boolean;
+}) {
+  return (
+    <ol className={`ranking${incompletos ? " ranking--incompletos" : ""}`} aria-label={etiqueta}>
       {costos.map((c) => (
         <li key={c.codigoMercado} className="ranking__fila">
           <span>
@@ -181,7 +212,7 @@ function Ranking({
               <span className="ranking__faltan"> · sin precio de {c.faltantes.map(nombre).join(", ")}</span>
             )}
           </span>
-          <span className="ranking__total">Bs {c.costoTotal.toFixed(2)}</span>
+          <span className="ranking__total">Bs {bs(c.costoTotal)}</span>
         </li>
       ))}
     </ol>
@@ -312,13 +343,13 @@ function ResumenAhorro({ resultado }: { resultado: CotizacionLista["minoristas"]
     <div className="ahorro ahorro--resumen">
       {empatanConElMejor.length === 0 ? (
         <p>
-          Ahorra <strong>Bs {ahorro.toFixed(2)}</strong> yendo a <strong>{mejor.nombreMercado}</strong> (Bs{" "}
-          {mejor.costoTotal.toFixed(2)}) en vez de {masCaro.nombreMercado} (Bs {masCaro.costoTotal.toFixed(2)}).
+          Ahorra <strong>Bs {bs(ahorro)}</strong> yendo a <strong>{mejor.nombreMercado}</strong> (Bs{" "}
+          {bs(mejor.costoTotal)}) en vez de {masCaro.nombreMercado} (Bs {bs(masCaro.costoTotal)}).
         </p>
       ) : (
         <p>
           <strong>{empatados.join(", ")}</strong> empatan: la diferencia entre ellos es menor que el margen de error.
-          Cualquiera de ellos ahorra hasta <strong>Bs {ahorro.toFixed(2)}</strong> frente a {masCaro.nombreMercado}.
+          Cualquiera de ellos ahorra hasta <strong>Bs {bs(ahorro)}</strong> frente a {masCaro.nombreMercado}.
         </p>
       )}
       {estimados > 0 && (
