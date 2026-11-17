@@ -20,6 +20,9 @@ services:
     volumes:
       # Desde la versión 18 la imagen guarda los datos bajo /var/lib/postgresql.
       - datos_pg:/var/lib/postgresql
+      # El script de inicio: Docker lo corre una sola vez, cuando la base nace vacía,
+      # y deja creadas las tablas y las vistas de nombres sencillos.
+      - ./docker/init:/docker-entrypoint-initdb.d:ro
     # Solo desde esta máquina (127.0.0.1), en el 5433 para no chocar con el
     # PostgreSQL instalado en Windows, que usa el 5432. Sirve para mirar la
     # base con pgAdmin o DBeaver.

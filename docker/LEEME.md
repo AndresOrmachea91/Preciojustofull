@@ -92,3 +92,14 @@ locales se conservan mientras Neon no tenga tabla de usuarios.
 
     docker compose exec -T respaldos sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" pg_restore -h db -U "$POSTGRES_USER" -d "$POSTGRES_DB" --clean --if-exists --no-owner /respaldos/preciojusto_AAAA-MM-DD_HHMM.dump'
     docker compose restart app
+
+## El script de inicio de la base
+
+`docker/init/01_esquema.sql` crea la estructura completa (18 tablas y el esquema `consultas` con sus
+vistas). `docker-compose.yml` lo monta en `/docker-entrypoint-initdb.d`, la carpeta que la imagen de
+PostgreSQL ejecuta una sola vez cuando el volumen de datos está vacío. Con una base que ya existe no
+hace nada. No trae datos ni contraseñas.
+
+Para verla desde un IDE (IntelliJ, DataGrip, VS Code): host `localhost`, puerto `5433`, base y usuario
+`preciojusto`, y la contraseña de `POSTGRES_PASSWORD` en `docker/.env`. Hay consultas listas para
+mostrar en `docs/consultas_para_mostrar.sql`.
