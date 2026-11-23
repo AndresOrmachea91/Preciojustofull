@@ -183,3 +183,17 @@ En F12 → **Red**, la columna **Tiempo** y la columna **Tamaño** cuentan dos m
 
 Para verlo en vivo: recargue con F5 mirando la pestaña Red y compare el tiempo de `ofertas` con el de
 `comparar`, que no se guarda porque cambia con cada producto.
+
+## 8. El inventario con cantidades y el mercado por pasillos (C148)
+
+Entre como casera (por ejemplo `casero01@demo.preciojusto.bo`) y abra F12 → **Red** en «Mi puesto»:
+
+| Lo que hace | Consulta | Código del servidor |
+|---|---|---|
+| Abre su inventario | `GET /api/v1/vendedor/inventario/reporte`: «Su puesto hoy», alertas y sugerencias | `rutas/vendedor/negocio.py` → `aplicacion/casos_uso/vendedor/reporte_inventario.py` |
+| Toca «Vendí 1» o «Llegaron 10» | `POST /api/v1/vendedor/inventario/{producto}/ajustar` con `{"cambio": -1}` | `rutas/vendedor/negocio.py` → `InventarioDelPuesto.ajustar` |
+| Anota cuánto le queda | `PUT /api/v1/vendedor/inventario` con `cantidad` y `minimo` | `aplicacion/casos_uso/vendedor/inventario.py` |
+| Un comprador entra a un mercado | `GET /api/v1/mercados/{codigo}/puestos`: cada puesto con `cantidad` por producto | `rutas/publico/mercados_y_ofertas.py` |
+
+La sugerencia de precio compara con lo que cuesta ese producto en su mismo mercado **sin contar los precios de ella
+misma**. En la base, la cantidad y el aviso están en `inventario_puesto.cantidad` y `inventario_puesto.minimo`.
