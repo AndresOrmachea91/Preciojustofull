@@ -91,7 +91,7 @@ caja("rep", X2, 8.35, W2, 1.25, "precios_reportados", "lo que manda la gente, pe
      "#FFFDF7", "reporte_precio")
 caja("listas", X2, 6.7, W2, 1.25, "listas · productos_de_cada_lista", "la lista de cada persona y lo que lleva",
      "#FFFDF7", "lista_compras · item_lista_compras")
-caja("puestos", X2, 5.0, W2, 1.25, "puestos · inventario", "el puesto, su teléfono y «hay / queda poco / se acabó»",
+caja("puestos", X2, 5.0, W2, 1.25, "puestos · inventario", "el puesto, su teléfono y cuánto le queda de cada producto",
      "#FFFDF7", "puesto · inventario_puesto")
 caja("ofertas", X2, 3.3, W2, 1.25, "ofertas · opiniones_de_ofertas", "ofertas, combos y los «lo vi así»",
      "#FFFDF7", "oferta · confirmacion_oferta")
@@ -106,7 +106,7 @@ caja("plan", 18.3, 6.0, 5.8, 2.3, "Plan de compra",
 
 # --- 4. Se muestran ------------------------------------------------------------------
 caja("ref", 25.85, 14.9, 6.9, 1.45, "Precios referenciales", "el precio de la ciudad y su historial")
-caja("mapa", 25.85, 12.1, 6.9, 1.85, "Mapa de precios", "pines por lugar; al tocar un mercado,\nsus puestos en ramas con su inventario\ny la estrella de las ofertas")
+caja("mapa", 25.85, 12.1, 6.9, 1.85, "Mapa de precios", "pines por lugar; al tocar un mercado,\nel mercado en miniatura con sus pasillos\ny la estrella de las ofertas")
 caja("listasv", 25.85, 8.3, 6.9, 1.45, "Mis listas", "dónde conviene comprar y a qué caseras ir")
 caja("ofhoy", 25.85, 4.6, 6.9, 1.45, "Ofertas de hoy", "ofertas y combos vigentes")
 caja("admv", 25.85, 1.8, 6.9, 1.9, "Administración", "revisa precios reportados y ofertas,\nmira la salud (recolecciones) y la auditoría,\nregistra caseras y da de baja")
