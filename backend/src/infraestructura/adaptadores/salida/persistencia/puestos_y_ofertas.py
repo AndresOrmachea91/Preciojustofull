@@ -49,6 +49,7 @@ def _a_articulo(f: InventarioPuestoTabla) -> ArticuloInventario:
         id=f.id, id_puesto=f.id_puesto, codigo_producto=f.codigo_producto, monto=f.monto,
         presentacion=Presentacion(f.presentacion), disponibilidad=Disponibilidad(f.disponibilidad),
         actualizado_en=_utc(f.actualizado_en), auditoria=_auditoria(f),
+        cantidad=f.cantidad, minimo=f.minimo,
     )
 
 
@@ -234,6 +235,8 @@ class InventarioPostgres:
             fila.presentacion = articulo.presentacion.value
             fila.disponibilidad = articulo.disponibilidad.value
             fila.actualizado_en = articulo.actualizado_en or datetime.now(timezone.utc)
+            fila.cantidad = articulo.cantidad
+            fila.minimo = articulo.minimo
             s.flush()
             return _a_articulo(fila)
 

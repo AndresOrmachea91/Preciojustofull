@@ -13,6 +13,7 @@ import {
   type MiOferta,
   type PrecioPublicado,
   type Puesto,
+  type ReporteInventario,
 } from "@/dominio/modelo";
 
 /** El vendedor publica los precios de su puesto, registra el puesto y maneja sus ofertas. */
@@ -66,6 +67,15 @@ export class MiPuesto {
 
   quitarArticulo(codigoProducto: string): Promise<void> {
     return this.ofertas.quitarArticulo(codigoProducto);
+  }
+
+  ajustarCantidad(codigoProducto: string, cambio: number): Promise<ArticuloInventario> {
+    if (!Number.isFinite(cambio) || cambio === 0) return Promise.reject(new Error("Diga cuánto vendió o cuánto llegó"));
+    return this.ofertas.ajustarCantidad(codigoProducto, cambio);
+  }
+
+  reporteInventario(): Promise<ReporteInventario> {
+    return this.ofertas.reporteInventario();
   }
 
   misOfertas(): Promise<MiOferta[]> {

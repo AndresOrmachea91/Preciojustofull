@@ -142,7 +142,9 @@ CREATE TABLE public.inventario_puesto (
     creado_por character varying(255) NOT NULL,
     modificado_en timestamp with time zone,
     modificado_por character varying(255),
-    eliminado boolean NOT NULL
+    eliminado boolean NOT NULL,
+    cantidad double precision,
+    minimo double precision
 );
 
 

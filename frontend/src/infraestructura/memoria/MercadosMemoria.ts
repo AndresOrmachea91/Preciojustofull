@@ -20,7 +20,8 @@ import type {
   RevisionOfertasRepositorio,
 } from "@/aplicacion/puertos";
 import {
-  MAXIMO_OFERTAS_ACTIVAS, ofertasQueCuentan,
+  MAXIMO_OFERTAS_ACTIVAS, disponibilidadPara, ofertasQueCuentan,
+  type ReporteInventario,
   type ArticuloInventario,
   type PuestosDeMercado,
   type EntradaDirectorio,
@@ -68,16 +69,19 @@ const PUESTOS: (Puesto & { idVendedor: number | null })[] = [
 ];
 
 // Lo que tiene cada puesto de la demo (por id de puesto): no todos venden lo mismo.
-type ArticuloGuardado = { codigoProducto: string; monto: number; presentacion: string; factor: number; disponibilidad: ArticuloInventario["disponibilidad"] };
+type ArticuloGuardado = {
+  codigoProducto: string; monto: number; presentacion: string; factor: number;
+  disponibilidad: ArticuloInventario["disponibilidad"]; cantidad?: number | null; minimo?: number | null;
+};
 const INVENTARIO: Record<number, ArticuloGuardado[]> = {
   1: [
-    { codigoProducto: "tomate", monto: 13, presentacion: "kilo", factor: 1, disponibilidad: "hay" },
-    { codigoProducto: "papa", monto: 85, presentacion: "arroba", factor: 11.5, disponibilidad: "poco" },
+    { codigoProducto: "tomate", monto: 13, presentacion: "kilo", factor: 1, disponibilidad: "hay", cantidad: 24, minimo: 5 },
+    { codigoProducto: "papa", monto: 85, presentacion: "arroba", factor: 11.5, disponibilidad: "poco", cantidad: 2, minimo: 3 },
   ],
-  2: [{ codigoProducto: "papa", monto: 80, presentacion: "arroba", factor: 11.5, disponibilidad: "hay" }],
+  2: [{ codigoProducto: "papa", monto: 80, presentacion: "arroba", factor: 11.5, disponibilidad: "hay", cantidad: 14, minimo: 3 }],
   3: [
-    { codigoProducto: "arroz", monto: 8.2, presentacion: "kilo", factor: 1, disponibilidad: "hay" },
-    { codigoProducto: "papa", monto: 84, presentacion: "arroba", factor: 11.5, disponibilidad: "agotado" },
+    { codigoProducto: "arroz", monto: 8.2, presentacion: "kilo", factor: 1, disponibilidad: "hay", cantidad: 40, minimo: 8 },
+    { codigoProducto: "papa", monto: 84, presentacion: "arroba", factor: 11.5, disponibilidad: "agotado", cantidad: 0, minimo: 3 },
   ],
 };
 
@@ -340,12 +344,49 @@ export class MercadosMemoria
     if (!producto || !presentacion) throw new Error("Elija el producto y su presentación");
     const id = suyo.id ?? 0;
     const lista = this.inventarios.get(id) ?? [];
-    const nuevo = { codigoProducto: a.codigoProducto, monto: a.monto, presentacion: a.presentacion, factor: presentacion.factor, disponibilidad: a.disponibilidad };
+    const cantidad = a.cantidad ?? null;
+    const minimo = a.minimo ?? null;
+    const disponibilidad = cantidad === null ? a.disponibilidad : disponibilidadPara(cantidad, minimo);
+    const nuevo = { codigoProducto: a.codigoProducto, monto: a.monto, presentacion: a.presentacion, factor: presentacion.factor, disponibilidad, cantidad, minimo };
     const i = lista.findIndex((x) => x.codigoProducto === a.codigoProducto);
     if (i >= 0) lista[i] = nuevo;
     else lista.push(nuevo);
     this.inventarios.set(id, lista);
     return (await this.articulos(id)).find((x) => x.codigoProducto === a.codigoProducto)!;
+  }
+
+  async ajustarCantidad(codigoProducto: string, cambio: number): Promise<ArticuloInventario> {
+    const suyo = this.registro.find((p) => p.idVendedor === this.sesion());
+    if (!suyo) throw new Error("Primero registre su puesto: el inventario es de su puesto");
+    const id = suyo.id ?? 0;
+    const articulo = (this.inventarios.get(id) ?? []).find((x) => x.codigoProducto === codigoProducto);
+    if (!articulo) throw new Error("Ese producto no está en su puesto");
+    articulo.cantidad = Math.max(0, Math.round(((articulo.cantidad ?? 0) + cambio) * 100) / 100);
+    articulo.disponibilidad = disponibilidadPara(articulo.cantidad, articulo.minimo ?? null);
+    return (await this.articulos(id)).find((x) => x.codigoProducto === codigoProducto)!;
+  }
+
+  /** En la demo sin servidor no hay precio del mercado con que comparar: solo las alertas. */
+  async reporteInventario(): Promise<ReporteInventario> {
+    const articulos = await this.inventario();
+    const renglones = articulos.map((a) => ({
+      articulo: a,
+      sugerencia: { tipo: "sin_referencia" as const, texto: "Todavía no hay un precio del mercado para comparar.", precioSugerido: null, precioMercado: null, diferencia: null },
+      alertas: a.disponibilidad === "agotado" ? ["Se acabó: los compradores lo ven como agotado."]
+        : a.disponibilidad === "poco" ? ["Queda poco: conviene reponer."] : [],
+    }));
+    const conCantidad = articulos.filter((a) => a.cantidad !== null);
+    return {
+      renglones,
+      productos: articulos.length,
+      conCantidad: conCantidad.length,
+      valorTotal: Math.round(conCantidad.reduce((t, a) => t + (a.cantidad ?? 0) * a.monto, 0) * 100) / 100,
+      agotados: articulos.filter((a) => a.disponibilidad === "agotado").length,
+      quedaPoco: articulos.filter((a) => a.disponibilidad === "poco").length,
+      paraRevisarPrecio: 0,
+      sinActualizar: 0,
+      consejos: ["Anote cuánto le queda de cada producto: el sistema le avisará antes de que se acabe."],
+    };
   }
 
   async quitarArticulo(codigoProducto: string): Promise<void> {
@@ -371,6 +412,8 @@ export class MercadosMemoria
           unidadBase: producto.unidadBase,
           disponibilidad: a.disponibilidad,
           actualizadoEn: null,
+          cantidad: a.cantidad ?? null,
+          minimo: a.minimo ?? null,
         },
       ];
     });

@@ -220,6 +220,16 @@ def _monto(base: float, presentacion: Presentacion, azar: random.Random, mayoris
     return max(paso, round(round(monto / paso) * paso, 2))
 
 
+def _cantidad(disponibilidad: Disponibilidad, azar: random.Random) -> tuple[float, float]:
+    """Cuánto le queda, coherente con lo que ya decía («poco» queda por debajo del aviso)."""
+    minimo = float(azar.choice([3, 4, 5, 6]))
+    if disponibilidad is Disponibilidad.AGOTADO:
+        return 0.0, minimo
+    if disponibilidad is Disponibilidad.POCO:
+        return float(azar.randint(1, int(minimo))), minimo
+    return float(azar.randint(int(minimo) + 4, 40)), minimo
+
+
 def _disponibilidad(azar: random.Random) -> Disponibilidad:
     tiro = azar.random()
     return Disponibilidad.AGOTADO if tiro < 0.07 else Disponibilidad.POCO if tiro < 0.22 else Disponibilidad.HAY
@@ -250,7 +260,16 @@ class Siembra:
 
     def _cargar_inventario(self, vendedor, codigo_mercado: str, clases: list[str], mayorista: bool) -> None:
         # El primero de cada surtido es lo que nunca falta en ese puesto (el tomate en las verduras).
-        tiene = {a.codigo_producto for a in self.inventario.ver(vendedor)}
+        actuales = self.inventario.ver(vendedor)
+        tiene = {a.codigo_producto for a in actuales}
+        # Lo que ya estaba sin cantidad (sembrado antes de C148) recibe cuánto le queda,
+        # para que el reporte y el plano del mercado muestren existencias.
+        for articulo in actuales:
+            if articulo.cantidad is None:
+                cantidad, minimo = _cantidad(articulo.disponibilidad, self.azar)
+                self.inventario.guardar(vendedor, articulo.codigo_producto, articulo.monto, articulo.presentacion,
+                                        articulo.disponibilidad, cantidad, minimo)
+                self.cuenta["articulos"] += 1
         estrellas = [SURTIDO[clase][1][0] for clase in clases]
         resto = [c for clase in clases for c in SURTIDO[clase][1][1:]]
         elegidos = [] if tiene else self.azar.sample(resto, k=min(len(resto), self.azar.randint(3, 6)))
@@ -261,8 +280,10 @@ class Siembra:
                 continue
             presentacion = _presentacion_para(producto, mayorista, self.azar)
             try:
+                disponibilidad = _disponibilidad(self.azar)
+                cantidad, minimo = _cantidad(disponibilidad, self.azar)
                 self.inventario.guardar(vendedor, codigo, _monto(base, presentacion, self.azar, mayorista),
-                                        presentacion, _disponibilidad(self.azar))
+                                        presentacion, disponibilidad, cantidad, minimo)
                 self.cuenta["articulos"] += 1
             except ErrorDominio as e:
                 log.warning("  %s en %s: %s", codigo, codigo_mercado, e)

@@ -11,6 +11,7 @@ precio nuevo.
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import replace
 from datetime import datetime, timezone
 
 from src.aplicacion.casos_uso.cuentas.permisos import exigir
@@ -42,7 +43,8 @@ class InventarioDelPuesto:
         return sorted(self._inventario.del_puesto(puesto.id), key=lambda a: a.codigo_producto)
 
     def guardar(self, vendedor: Usuario, codigo_producto: str, monto: float, presentacion: Presentacion,
-                disponibilidad: Disponibilidad = Disponibilidad.HAY) -> ArticuloInventario:
+                disponibilidad: Disponibilidad = Disponibilidad.HAY, cantidad: float | None = None,
+                minimo: float | None = None) -> ArticuloInventario:
         puesto = self._puesto(vendedor)
         producto = self._productos.obtener(codigo_producto)
         if producto is None:
@@ -51,14 +53,36 @@ class InventarioDelPuesto:
             raise PresentacionInvalida(f"{producto.nombre} no se vende por {presentacion.value}")
         anterior = next((a for a in self._inventario.del_puesto(puesto.id) if a.codigo_producto == codigo_producto),
                         None)
+        # Con la cantidad a la vista, el estado sale de ella: no hay que acordarse de marcar "se acabó".
+        if cantidad is not None:
+            disponibilidad = ArticuloInventario.disponibilidad_para(cantidad, minimo)
         articulo = self._inventario.guardar(ArticuloInventario(
             id_puesto=puesto.id, codigo_producto=codigo_producto, monto=round(monto, 2), presentacion=presentacion,
             disponibilidad=disponibilidad, actualizado_en=self._ahora(), id=anterior.id if anterior else None,
+            cantidad=None if cantidad is None else round(cantidad, 2),
+            minimo=None if minimo is None else round(minimo, 2),
         ))
         precio_nuevo = anterior is None or (anterior.monto, anterior.presentacion) != (articulo.monto, presentacion)
         if self._publicar is not None and precio_nuevo and disponibilidad.se_puede_comprar:
             self._publicar.ejecutar(vendedor, codigo_producto, articulo.monto, presentacion)
         return articulo
+
+    def ajustar(self, vendedor: Usuario, codigo_producto: str, cambio: float) -> ArticuloInventario:
+        """
+        "Vendí 2" (cambio negativo) o "llegaron 10" (positivo), en un toque. La
+        cantidad nunca baja de cero y el estado se recalcula; el precio no cambia,
+        así que no se publica nada nuevo.
+        """
+        puesto = self._puesto(vendedor)
+        articulo = next((a for a in self._inventario.del_puesto(puesto.id) if a.codigo_producto == codigo_producto),
+                        None)
+        if articulo is None:
+            raise ProductoNoEncontrado(codigo_producto)
+        cantidad = max(0.0, round((articulo.cantidad or 0.0) + cambio, 2))
+        return self._inventario.guardar(replace(
+            articulo, cantidad=cantidad, actualizado_en=self._ahora(),
+            disponibilidad=ArticuloInventario.disponibilidad_para(cantidad, articulo.minimo),
+        ))
 
     def quitar(self, vendedor: Usuario, codigo_producto: str) -> None:
         puesto = self._puesto(vendedor)

@@ -1136,6 +1136,82 @@ export interface ArticuloInventario {
   readonly unidadBase: UnidadBase;
   readonly disponibilidad: Disponibilidad;
   readonly actualizadoEn: string | null;
+  /** C148: cuánto le queda, en la misma presentación del precio (12 arrobas). null: no lo lleva. */
+  readonly cantidad: number | null;
+  /** Desde cuánto avisar que queda poco. */
+  readonly minimo: number | null;
+}
+
+/** Con la cantidad a la vista el estado sale solo: 0 se acabó, hasta el mínimo queda poco. */
+export function disponibilidadPara(cantidad: number, minimo: number | null): Disponibilidad {
+  if (cantidad <= 0) return "agotado";
+  if (minimo !== null && cantidad <= minimo) return "poco";
+  return "hay";
+}
+
+/** "12 arrobas", "1 kilo", "2,5 kilos". */
+export function textoCantidad(cantidad: number, presentacion: string): string {
+  const n = Number.isInteger(cantidad) ? String(cantidad) : cantidad.toFixed(1).replace(".", ",");
+  const p = presentacion.toLowerCase();
+  const plural = cantidad === 1 || p.endsWith("s") ? p : p + (/[aeiou]$/.test(p) ? "s" : "es");
+  return n + " " + plural;
+}
+
+/** Qué tan lleno está, de 0 a 1, para la barrita: seis veces el aviso se toma como "lleno". */
+export function nivelExistencia(a: Pick<ArticuloInventario, "cantidad" | "minimo">): number | null {
+  if (a.cantidad === null) return null;
+  const lleno = Math.max((a.minimo ?? 5) * 6, 1);
+  return Math.max(0, Math.min(1, a.cantidad / lleno));
+}
+
+export interface SugerenciaPrecio {
+  readonly tipo: "bajar" | "subir" | "en_linea" | "sin_referencia";
+  readonly texto: string;
+  readonly precioSugerido: number | null;
+  readonly precioMercado: number | null;
+  readonly diferencia: number | null;
+}
+
+export interface RenglonReporte {
+  readonly articulo: ArticuloInventario;
+  readonly sugerencia: SugerenciaPrecio;
+  readonly alertas: readonly string[];
+}
+
+/** C148: lo que la casera tiene que revisar hoy y una sugerencia de precio por producto. */
+export interface ReporteInventario {
+  readonly renglones: readonly RenglonReporte[];
+  readonly productos: number;
+  readonly conCantidad: number;
+  readonly valorTotal: number;
+  readonly agotados: number;
+  readonly quedaPoco: number;
+  readonly paraRevisarPrecio: number;
+  readonly sinActualizar: number;
+  readonly consejos: readonly string[];
+}
+
+// Un dibujito por producto: se reconoce de un vistazo, sin leer.
+const ICONO_PRODUCTO: readonly [RegExp, string][] = [
+  [/papa|yuca|oca/, "\u{1F954}"], [/tomate/, "\u{1F345}"], [/cebolla/, "\u{1F9C5}"], [/zanahoria/, "\u{1F955}"],
+  [/locoto|aji/, "\u{1F336}\uFE0F"], [/choclo|maiz/, "\u{1F33D}"], [/haba|arveja|vainita|frejol/, "\u{1FADB}"],
+  [/pimenton/, "\u{1FAD1}"], [/zapallo/, "\u{1F383}"], [/lechuga|acelga|espinaca|perejil/, "\u{1F96C}"],
+  [/ajo/, "\u{1F9C4}"], [/banana|platano|guineo/, "\u{1F34C}"], [/manzana/, "\u{1F34E}"],
+  [/naranja|mandarina/, "\u{1F34A}"], [/limon/, "\u{1F34B}"], [/pina/, "\u{1F34D}"], [/papaya/, "\u{1F348}"],
+  [/uva/, "\u{1F347}"], [/frutilla/, "\u{1F353}"], [/sandia/, "\u{1F349}"], [/durazno/, "\u{1F351}"],
+  [/arroz/, "\u{1F35A}"], [/fideo/, "\u{1F35D}"], [/aceite|manteca/, "\u{1FAD9}"], [/azucar/, "\u{1F36C}"],
+  [/harina|quinua|trigo/, "\u{1F33E}"], [/mani/, "\u{1F95C}"], [/leche/, "\u{1F95B}"], [/queso/, "\u{1F9C0}"],
+  [/pollo/, "\u{1F357}"], [/res|carne|cerdo/, "\u{1F969}"], [/huevo/, "\u{1F95A}"],
+  [/trucha|pejerrey|pacu|surubi|pescado|sabalo/, "\u{1F41F}"], [/pan/, "\u{1F35E}"],
+];
+const ICONO_CATEGORIA: Record<string, string> = {
+  hortaliza: "\u{1F96C}", tuberculo: "\u{1F954}", fruta: "\u{1F34E}", carne: "\u{1F969}", pescado: "\u{1F41F}",
+  lacteo: "\u{1F95B}", abarrote: "\u{1F6D2}",
+};
+
+export function iconoProducto(codigo: string, categoria = ""): string {
+  const c = sinTildes(codigo);
+  return ICONO_PRODUCTO.find(([r]) => r.test(c))?.[1] ?? ICONO_CATEGORIA[categoria] ?? "\u{1F9FA}";
 }
 
 export interface PuestoConInventario {

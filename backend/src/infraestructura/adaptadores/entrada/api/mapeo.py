@@ -162,6 +162,31 @@ def articulo_a_salida(a, producto) -> e.ArticuloSalida:
         codigo_producto=a.codigo_producto, nombre_producto=producto.nombre, categoria=producto.categoria.value,
         monto=a.monto, presentacion=a.presentacion.value, precio_por_unidad_base=round(a.precio_por_unidad_base, 4),
         unidad_base=producto.unidad_base.value, disponibilidad=a.disponibilidad.value, actualizado_en=a.actualizado_en,
+        cantidad=a.cantidad, minimo=a.minimo,
+    )
+
+
+def reporte_inventario_a_salida(r) -> e.ReporteInventarioSalida:
+    def articulo(x):
+        return e.ArticuloSalida(
+            codigo_producto=x.articulo.codigo_producto, nombre_producto=x.nombre_producto, categoria=x.categoria,
+            monto=x.articulo.monto, presentacion=x.articulo.presentacion.value,
+            precio_por_unidad_base=round(x.articulo.precio_por_unidad_base, 4), unidad_base=x.unidad_base,
+            disponibilidad=x.articulo.disponibilidad.value, actualizado_en=x.articulo.actualizado_en,
+            cantidad=x.articulo.cantidad, minimo=x.articulo.minimo,
+        )
+    return e.ReporteInventarioSalida(
+        renglones=[e.RenglonReporteSalida(
+            articulo=articulo(x),
+            sugerencia=e.SugerenciaSalida(tipo=x.sugerencia.tipo, texto=x.sugerencia.texto,
+                                          precio_sugerido=x.sugerencia.precio_sugerido,
+                                          precio_mercado=x.sugerencia.precio_mercado,
+                                          diferencia=x.sugerencia.diferencia),
+            alertas=list(x.alertas),
+        ) for x in r.renglones],
+        productos=r.productos, con_cantidad=r.con_cantidad, valor_total=r.valor_total, agotados=r.agotados,
+        queda_poco=r.queda_poco, para_revisar_precio=r.para_revisar_precio, sin_actualizar=r.sin_actualizar,
+        consejos=r.consejos,
     )
 
 

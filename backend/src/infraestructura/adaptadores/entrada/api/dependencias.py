@@ -64,6 +64,7 @@ from src.aplicacion.casos_uso.precios.ficha_mercado import DirectorioMercados, F
 from src.aplicacion.casos_uso.precios.priorizar_verificaciones import PriorizarVerificaciones
 from src.aplicacion.casos_uso.precios.puestos_del_mercado import PuestosDelMercado
 from src.aplicacion.casos_uso.vendedor.inventario import InventarioDelPuesto
+from src.aplicacion.casos_uso.vendedor.reporte_inventario import ReporteDelInventario
 from src.infraestructura.adaptadores.salida.fotos.almacen_local import AlmacenFotosLocal
 from src.aplicacion.casos_uso.usuario.confirmar_oferta import ConfirmarOferta
 from src.aplicacion.casos_uso.administracion.revisar_ofertas import RevisarOfertas
@@ -334,6 +335,11 @@ def caso_registrar_casera() -> RegistrarCasera:
 def caso_inventario() -> InventarioDelPuesto:
     p, _, _ = _repositorios()
     return InventarioDelPuesto(p, _puestos_y_ofertas()[0], _inventario(), caso_publicar_precio())
+
+
+def caso_reporte_inventario() -> ReporteDelInventario:
+    p, m, o = _repositorios()
+    return ReporteDelInventario(p, m, o, obtener_motor(), _puestos_y_ofertas()[0], _inventario(), reloj=hoy_en_bolivia)
 
 
 def caso_puestos_del_mercado() -> PuestosDelMercado:

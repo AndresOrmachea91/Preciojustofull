@@ -77,6 +77,10 @@ _COLUMNAS_AGREGADAS = {
     "oferta": {
         "combo": "VARCHAR(40) NULL",
     },
+    "inventario_puesto": {
+        "cantidad": "FLOAT NULL",
+        "minimo": "FLOAT NULL",
+    },
 }
 
 # Las 5 columnas de Auditable, para las tablas que existían antes de la

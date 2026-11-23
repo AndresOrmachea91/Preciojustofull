@@ -105,9 +105,9 @@ describe("VentanaPuesto", () => {
     },
     articulos: [
       { codigoProducto: "cebolla", nombreProducto: "Cebolla", categoria: "hortaliza", monto: 6, presentacion: "kg",
-        precioPorUnidadBase: 6, unidadBase: "kg", disponibilidad: "poco", actualizadoEn: null },
+        precioPorUnidadBase: 6, unidadBase: "kg", disponibilidad: "poco", actualizadoEn: null, cantidad: 3, minimo: 4 },
       { codigoProducto: "tomate", nombreProducto: "Tomate", categoria: "hortaliza", monto: 8.5, presentacion: "kg",
-        precioPorUnidadBase: 8.5, unidadBase: "kg", disponibilidad: "hay", actualizadoEn: null },
+        precioPorUnidadBase: 8.5, unidadBase: "kg", disponibilidad: "hay", actualizadoEn: null, cantidad: 20, minimo: 4 },
     ],
     total: 2,
   };

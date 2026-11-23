@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import App from "@/ui/App";
 import "@/ui/estilos.css";
 import "@/ui/tema.css";
+import "@/ui/mercado-vivo.css";
 
 const contenedor = document.getElementById("root");
 if (!contenedor) throw new Error("Falta el elemento #root en index.html");

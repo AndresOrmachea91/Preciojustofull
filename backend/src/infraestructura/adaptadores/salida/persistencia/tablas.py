@@ -365,6 +365,9 @@ class InventarioPuestoTabla(Base, Auditable):
     # hay, poco o agotado.
     disponibilidad = Column(String(12), nullable=False, default="hay")
     actualizado_en = Column(DateTime(timezone=True), nullable=False)
+    # Cuánto le queda y desde cuánto avisar (C148), en la presentación del precio. Opcionales.
+    cantidad = Column(Float, nullable=True)
+    minimo = Column(Float, nullable=True)
 
     __table_args__ = (Index("ix_inventario_puesto", "id_puesto"),)
 

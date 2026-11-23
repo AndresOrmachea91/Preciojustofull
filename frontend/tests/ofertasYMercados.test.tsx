@@ -127,13 +127,16 @@ describe("entrar a un mercado", () => {
     window.dispatchEvent(new HashChangeEvent("hashchange"));
     expect(await screen.findByRole("heading", { name: "Mercado Rodríguez" })).toBeDefined();
     expect(screen.getByRole("link", { name: "Mercado Rodríguez - sector cubierto" })).toBeDefined();
+    // Se entra al mercado como se camina: pasillos con sus puestos (C148).
+    expect(screen.getByRole("tab", { name: /El mercado · 2 puestos/, selected: true })).toBeDefined();
+    expect(await screen.findByRole("heading", { name: /Pasillo de verduras/ })).toBeDefined();
+    fireEvent.click(await screen.findByRole("button", { name: /^Puesto 14 · Verduras Doña Rosa.*con oferta/ }));
+    const detalle = screen.getByRole("article", { name: "Detalle de Puesto 14 · Verduras Doña Rosa" });
+    expect(within(detalle).getByRole("article", { name: "Oferta de Tomate" })).toBeDefined();
+
+    fireEvent.click(screen.getByRole("tab", { name: /Precios/ }));
     const papas = screen.getByRole("table", { name: "Precios de Tubérculo" });
     expect(within(papas).getByText("Papa holandesa")).toBeDefined();
-
-    fireEvent.click(screen.getByRole("tab", { name: /Puestos/ }));
-    const puesto = screen.getByRole("article", { name: "Puesto 14 · Verduras Doña Rosa" });
-    expect(within(puesto).getByText(/Pasillo de verduras/)).toBeDefined();
-    expect(within(puesto).getByRole("article", { name: "Oferta de Tomate" })).toBeDefined();
 
     fireEvent.click(screen.getByRole("tab", { name: /Ofertas/ }));
     expect(screen.getByText(/menos por kilo que el precio observado de Mercado Rodríguez/)).toBeDefined();

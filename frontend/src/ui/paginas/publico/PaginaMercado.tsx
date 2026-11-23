@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   bs,
@@ -10,16 +10,13 @@ import {
   sinTildes,
   textoAntiguedad,
   textoDiferenciaCiudad,
-  textoDisponibilidad,
-  nombreDelPuesto,
-  type ArticuloInventario,
   type FichaMercado,
   type PrecioDeProducto,
-  type PuestoEnFicha,
+  type PuestoConInventario,
   type Usuario,
 } from "@/dominio/modelo";
 import type { Contenedor } from "@/infraestructura/contenedor";
-import { ContactoPuesto } from "@/ui/componentes/ContactoPuesto";
+import { DetallePuesto, PlanoMercado, type PuestoDelPlano } from "@/ui/componentes/PlanoMercado";
 import { Icono } from "@/ui/componentes/Iconos";
 import { MensajeError, textoDeError } from "@/ui/componentes/Mensajes";
 import { Pestanas } from "@/ui/componentes/Pestanas";
@@ -27,7 +24,7 @@ import { Procedencia } from "@/ui/componentes/Procedencia";
 import { TarjetaOferta } from "@/ui/componentes/TarjetaOferta";
 import { hrefDe, hrefMercado, useParametroDeRuta } from "@/ui/hooks/useRuta";
 
-type Vista = "precios" | "puestos" | "ofertas";
+type Vista = "puestos" | "precios" | "ofertas";
 
 /**
  * Entrar a un mercado (C134): el precio de cada producto en ese lugar, con
@@ -40,7 +37,7 @@ export function PaginaMercado({ contenedor, usuario }: { contenedor: Contenedor;
   const puestoBuscado = useParametroDeRuta("puesto");
   const [ficha, setFicha] = useState<FichaMercado | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [vista, setVista] = useState<Vista>("precios");
+  const [vista, setVista] = useState<Vista>("puestos");
 
   useEffect(() => {
     let vigente = true;
@@ -54,11 +51,15 @@ export function PaginaMercado({ contenedor, usuario }: { contenedor: Contenedor;
     };
   }, [contenedor, codigo]);
 
-  // Al pasar de un mercado a otro (un sector, por ejemplo) se vuelve a los precios.
+  // Al pasar de un mercado a otro (un sector, por ejemplo) se vuelve al mercado con sus puestos.
   useEffect(() => {
     setFicha(null);
-    setVista(puestoBuscado ? "puestos" : "precios");
+    setVista("puestos");
   }, [codigo, puestoBuscado]);
+  // Un lugar sin puestos registrados abre directo en sus precios.
+  useEffect(() => {
+    if (ficha && ficha.puestos.length === 0 && !puestoBuscado) setVista("precios");
+  }, [ficha, puestoBuscado]);
 
   return (
     <section aria-labelledby="titulo-mercado" className="ficha">
@@ -72,8 +73,8 @@ export function PaginaMercado({ contenedor, usuario }: { contenedor: Contenedor;
           <Cabecera ficha={ficha} />
           <Pestanas<Vista>
             pestanas={[
+              { id: "puestos", texto: `El mercado · ${ficha.puestos.length} ${ficha.puestos.length === 1 ? "puesto" : "puestos"}` },
               { id: "precios", texto: `Precios (${ficha.precios.length})` },
-              { id: "puestos", texto: `Puestos (${ficha.puestos.length})` },
               { id: "ofertas", texto: `Ofertas (${ficha.ofertas.length})` },
             ]}
             activa={vista}
@@ -275,128 +276,53 @@ function Puestos({
   usuario: Usuario | null;
   resaltado?: string;
 }) {
-  // El inventario de cada puesto (C137): lo que tiene hoy, con su disponibilidad.
-  const [inventarios, setInventarios] = useState<Map<string, readonly ArticuloInventario[]>>(new Map());
+  // El inventario de cada puesto (C137, C148): lo que tiene hoy y cuánto le queda.
+  const [inventarios, setInventarios] = useState<Map<string, PuestoConInventario>>(new Map());
+  const [elegido, setElegido] = useState<string | null>(resaltado ? resaltado.toUpperCase() : null);
   useEffect(() => {
     let vigente = true;
     contenedor.mercados.puestos(ficha.mercado.codigo).then(
-      (d) => vigente && setInventarios(new Map(d.puestos.map((x) => [`${x.puesto.codigoMercado}:${x.puesto.numero}`, x.articulos]))),
+      (d) => vigente && setInventarios(new Map(d.puestos.map((x) => [x.puesto.numero, x]))),
       () => undefined,
     );
     return () => {
       vigente = false;
     };
   }, [contenedor, ficha.mercado.codigo]);
+  useEffect(() => setElegido(resaltado ? resaltado.toUpperCase() : null), [resaltado]);
+
+  const puestos: PuestoDelPlano[] = useMemo(
+    () =>
+      ficha.puestos.map((p) => {
+        const inv = inventarios.get(p.puesto.numero);
+        return { puesto: p.puesto, articulos: inv?.articulos ?? [], total: inv?.total ?? 0, ofertas: p.ofertas, precios: p.precios };
+      }),
+    [ficha.puestos, inventarios],
+  );
 
   if (ficha.puestos.length === 0) {
     return (
-      <p className="estado">
-        Todavía no hay puestos registrados en este lugar. Si usted vende aquí, cree su cuenta de vendedor y registre su
-        puesto desde «Mi puesto»: su foto, sus precios y sus ofertas van a aparecer en el mapa.
-      </p>
+      <div className="estado estado--vacio">
+        <p>
+          Todavía no hay puestos registrados en este lugar. Si usted vende aquí, cree su cuenta y registre su puesto desde
+          «Mi puesto»: su foto, sus precios y sus ofertas van a aparecer aquí y en el mapa.
+        </p>
+        <div className="estado__acciones">
+          <a className="boton" href="#/registrarse">
+            Registrar mi puesto gratis
+          </a>
+        </div>
+      </div>
     );
   }
+  const actual = puestos.find((p) => p.puesto.numero === elegido) ?? null;
   return (
-    <div className="puestos">
-      {ficha.puestos.map((p) => (
-        <TarjetaPuesto
-          key={p.puesto.numero}
-          item={p}
-          articulos={inventarios.get(`${p.puesto.codigoMercado}:${p.puesto.numero}`) ?? []}
-          contenedor={contenedor}
-          usuario={usuario}
-          resaltado={resaltado !== "" && resaltado.toUpperCase() === p.puesto.numero}
-        />
-      ))}
+    <div className="mercado-vivo">
+      <p className="tenue mercado-vivo__ayuda">
+        Toque un puesto para ver qué tiene, a cuánto y cuánto le queda. El color del toldo dice qué vende.
+      </p>
+      <PlanoMercado puestos={puestos} seleccionado={elegido} alElegir={(n) => setElegido(n === elegido ? null : n)} />
+      {actual && <DetallePuesto item={actual} contenedor={contenedor} usuario={usuario} alCerrar={() => setElegido(null)} />}
     </div>
-  );
-}
-
-function TarjetaPuesto({
-  item,
-  articulos,
-  contenedor,
-  usuario,
-  resaltado = false,
-}: {
-  item: PuestoEnFicha;
-  articulos: readonly ArticuloInventario[];
-  contenedor: Contenedor;
-  usuario: Usuario | null;
-  resaltado?: boolean;
-}) {
-  const { puesto, precios, ofertas } = item;
-  const titulo = nombreDelPuesto(puesto);
-  const tarjeta = useRef<HTMLElement>(null);
-  useEffect(() => {
-    if (resaltado) tarjeta.current?.scrollIntoView?.({ block: "center" });
-  }, [resaltado]);
-  return (
-    <article ref={tarjeta} className={`puesto${resaltado ? " puesto--resaltado" : ""}`} aria-label={titulo}>
-      {puesto.foto && <img className="puesto__foto" src={puesto.foto} alt={`Foto de ${titulo}`} loading="lazy" />}
-      <header className="puesto__cabeza">
-        <span className="puesto__numero" aria-hidden="true">
-          {puesto.esLocal ? <Icono nombre="caja" tamano={20} /> : puesto.numero}
-        </span>
-        <div>
-          <h3 className="puesto__nombre">{titulo}</h3>
-          {puesto.referencia && <p className="tenue">{puesto.referencia}</p>}
-          <ContactoPuesto puesto={puesto} />
-          {!puesto.registrado && <p className="tenue">Visto en el levantamiento de campo; el casero todavía no lo registró.</p>}
-        </div>
-      </header>
-      {puesto.rubros.length > 0 && (
-        <p className="puesto__rubros">
-          {puesto.rubros.map((r) => (
-            <span key={r} className="chip">
-              {nombreCategoria(r)}
-            </span>
-          ))}
-        </p>
-      )}
-      {articulos.length > 0 && (
-        <ul className="puesto__precios" aria-label={`Lo que tiene hoy ${titulo}`}>
-          {articulos.map((a) => (
-            <li key={a.codigoProducto} className={a.disponibilidad === "agotado" ? "puesto__agotado" : undefined}>
-              <span>{a.nombreProducto}</span>
-              <span className="tabla__numero">
-                Bs {bs(a.monto)} <span className="tenue">por {a.presentacion}</span>
-              </span>
-              <span className="tenue">
-                declarado por el casero
-                {a.disponibilidad !== "hay" && (
-                  <>
-                    {" · "}
-                    <span className={`disponible disponible--${a.disponibilidad}`}>{textoDisponibilidad(a.disponibilidad)}</span>
-                  </>
-                )}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-      {articulos.length === 0 && precios.length > 0 && (
-        <ul className="puesto__precios">
-          {precios.map((p) => (
-            <li key={p.codigoProducto}>
-              <span>{p.nombreProducto}</span>
-              <span className="tabla__numero">
-                Bs {bs(p.monto)} <span className="tenue">por {p.unidad}</span>
-              </span>
-              <span className="tenue">
-                {p.fuente === "campo" ? "medido en campo" : "declarado por el casero"}
-                {p.fecha && ` el ${fechaDiaMes(p.fecha)}`}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-      {articulos.length === 0 && precios.length === 0 && ofertas.length === 0 && (
-        <p className="tenue">Sin precios publicados todavía.</p>
-      )}
-      {ofertas.map((o) => (
-        <TarjetaOferta key={o.id} oferta={o} contenedor={contenedor} usuario={usuario} conMercado={false} />
-      ))}
-    </article>
   );
 }

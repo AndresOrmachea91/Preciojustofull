@@ -7,6 +7,8 @@ del puesto y el inventario.
     GET    /api/v1/vendedor/inventario
     PUT    /api/v1/vendedor/inventario
     DELETE /api/v1/vendedor/inventario/{codigo_producto}
+    POST   /api/v1/vendedor/inventario/{codigo_producto}/ajustar   «vendí 2» o «llegaron 10» (C148)
+    GET    /api/v1/vendedor/inventario/reporte                      qué revisar hoy y sugerencias de precio
 """
 import base64
 import binascii
@@ -17,8 +19,12 @@ from src.dominio.excepciones import DatoInvalido
 from src.dominio.modelo import Disponibilidad, Presentacion
 from src.infraestructura.adaptadores.entrada.api import esquemas as e
 from src.infraestructura.adaptadores.entrada.api.cache_fichas import olvidar
-from src.infraestructura.adaptadores.entrada.api.dependencias import caso_inventario, caso_mi_puesto
-from src.infraestructura.adaptadores.entrada.api.mapeo import articulo_a_salida, puesto_a_salida
+from src.infraestructura.adaptadores.entrada.api.dependencias import (
+    caso_inventario, caso_mi_puesto, caso_reporte_inventario,
+)
+from src.infraestructura.adaptadores.entrada.api.mapeo import (
+    articulo_a_salida, puesto_a_salida, reporte_inventario_a_salida,
+)
 from src.infraestructura.adaptadores.entrada.api.seguridad import usuario_actual
 
 router = APIRouter(prefix="/vendedor", tags=["vendedor"])
@@ -55,6 +61,21 @@ def ver_inventario(vendedor=Depends(usuario_actual), caso=Depends(caso_inventari
     return [articulo_a_salida(a, caso.producto(a.codigo_producto)) for a in caso.ver(vendedor)]
 
 
+@router.get("/inventario/reporte", response_model=e.ReporteInventarioSalida)
+def reporte_inventario(vendedor=Depends(usuario_actual), caso=Depends(caso_reporte_inventario)):
+    """Lo que conviene revisar hoy: agotados, lo que se acaba y una sugerencia de precio por producto."""
+    return reporte_inventario_a_salida(caso.ejecutar(vendedor))
+
+
+@router.post("/inventario/{codigo_producto}/ajustar", response_model=e.ArticuloSalida)
+def ajustar_cantidad(codigo_producto: str, cuerpo: e.AjusteEntrada, vendedor=Depends(usuario_actual),
+                     caso=Depends(caso_inventario)):
+    """Suma o resta a lo que le queda, en un toque. El estado (hay, poco, se acabó) se recalcula solo."""
+    articulo = caso.ajustar(vendedor, codigo_producto, cuerpo.cambio)
+    olvidar()
+    return articulo_a_salida(articulo, caso.producto(articulo.codigo_producto))
+
+
 @router.put("/inventario", response_model=e.ArticuloSalida)
 def guardar_articulo(cuerpo: e.ArticuloEntrada, vendedor=Depends(usuario_actual), caso=Depends(caso_inventario)):
     """Precio y disponibilidad de un producto del puesto. Si el precio cambia, se publica como declarado."""
@@ -63,7 +84,7 @@ def guardar_articulo(cuerpo: e.ArticuloEntrada, vendedor=Depends(usuario_actual)
     except ValueError:
         raise DatoInvalido(f"Presentación desconocida: {cuerpo.presentacion}") from None
     articulo = caso.guardar(vendedor, cuerpo.codigo_producto, cuerpo.monto, presentacion,
-                            Disponibilidad(cuerpo.disponibilidad))
+                            Disponibilidad(cuerpo.disponibilidad), cuerpo.cantidad, cuerpo.minimo)
     olvidar()
     return articulo_a_salida(articulo, caso.producto(articulo.codigo_producto))
 

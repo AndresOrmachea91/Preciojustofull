@@ -73,6 +73,8 @@ export interface ArticuloDto {
   unidad_base: UnidadBase;
   disponibilidad: Disponibilidad;
   actualizado_en: string | null;
+  cantidad?: number | null;
+  minimo?: number | null;
 }
 
 interface PuestosDelMercadoDto {
@@ -91,6 +93,8 @@ export function aArticulo(d: ArticuloDto): ArticuloInventario {
     unidadBase: d.unidad_base,
     disponibilidad: d.disponibilidad,
     actualizadoEn: d.actualizado_en,
+    cantidad: d.cantidad ?? null,
+    minimo: d.minimo ?? null,
   };
 }
 

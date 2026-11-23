@@ -38,6 +38,7 @@ import type {
   PlanDeVerificacion,
   ArticuloInventario,
   Disponibilidad,
+  ReporteInventario,
   PuestosDeMercado,
   PrecioReferencial,
   NuevaCasera,
@@ -239,6 +240,9 @@ export interface NuevoArticulo {
   monto: number;
   presentacion: string;
   disponibilidad: Disponibilidad;
+  /** C148: cuánto le queda y desde cuánto avisar. Si viene la cantidad, el estado sale solo. */
+  cantidad?: number | null;
+  minimo?: number | null;
 }
 
 export interface NuevaOferta {
@@ -267,6 +271,9 @@ export interface OfertasVendedorRepositorio {
   inventario(): Promise<ArticuloInventario[]>;
   guardarArticulo(articulo: NuevoArticulo): Promise<ArticuloInventario>;
   quitarArticulo(codigoProducto: string): Promise<void>;
+  /** «Vendí 2» es -2; «llegaron 10» es 10. */
+  ajustarCantidad(codigoProducto: string, cambio: number): Promise<ArticuloInventario>;
+  reporteInventario(): Promise<ReporteInventario>;
   misOfertas(): Promise<MiOferta[]>;
   publicarOferta(oferta: NuevaOferta): Promise<void>;
   publicarCombo(combo: NuevoCombo): Promise<void>;

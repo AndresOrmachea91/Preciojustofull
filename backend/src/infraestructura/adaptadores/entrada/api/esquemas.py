@@ -512,6 +512,14 @@ class ArticuloEntrada(BaseModel):
     monto: float = Field(gt=0)
     presentacion: str = Field(min_length=1, max_length=16)
     disponibilidad: DisponibilidadTexto = "hay"
+    # Cuánto le queda y desde cuánto avisar (C148). Si viene la cantidad, el estado se calcula solo.
+    cantidad: float | None = Field(default=None, ge=0, le=100_000)
+    minimo: float | None = Field(default=None, ge=0, le=100_000)
+
+
+class AjusteEntrada(BaseModel):
+    """«Vendí 2» es -2; «llegaron 10» es 10."""
+    cambio: float = Field(ge=-100_000, le=100_000)
 
 
 class ArticuloSalida(BaseModel):
@@ -524,6 +532,34 @@ class ArticuloSalida(BaseModel):
     unidad_base: str
     disponibilidad: DisponibilidadTexto
     actualizado_en: datetime | None
+    cantidad: float | None = None
+    minimo: float | None = None
+
+
+class SugerenciaSalida(BaseModel):
+    tipo: Literal["bajar", "subir", "en_linea", "sin_referencia"]
+    texto: str
+    precio_sugerido: float | None
+    precio_mercado: float | None
+    diferencia: float | None
+
+
+class RenglonReporteSalida(BaseModel):
+    articulo: ArticuloSalida
+    sugerencia: SugerenciaSalida
+    alertas: list[str]
+
+
+class ReporteInventarioSalida(BaseModel):
+    renglones: list[RenglonReporteSalida]
+    productos: int
+    con_cantidad: int
+    valor_total: float
+    agotados: int
+    queda_poco: int
+    para_revisar_precio: int
+    sin_actualizar: int
+    consejos: list[str]
 
 
 class PuestoSalida(BaseModel):

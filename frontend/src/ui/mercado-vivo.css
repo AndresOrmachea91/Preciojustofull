@@ -1,0 +1,156 @@
+/* ============================================================================
+   C148 · El mercado como se camina: pasillos, toldos y detalle del puesto
+   ============================================================================ */
+.mercado-vivo__ayuda { margin: 0 0 10px; }
+.plano { display: flex; flex-direction: column; gap: 18px; }
+.pasillo {
+  background: color-mix(in srgb, var(--toldo) 7%, var(--superficie));
+  border: 1px solid color-mix(in srgb, var(--toldo) 25%, var(--borde));
+  border-radius: 16px;
+  padding: 12px 14px 14px;
+}
+.pasillo__nombre { margin: 0 0 10px; font-size: 0.98rem; color: var(--tinta); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pasillo__puestos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 12px; }
+
+.toldo {
+  position: relative; width: 100%; display: flex; flex-direction: column; padding: 0;
+  border: 1px solid var(--borde); border-radius: 14px; background: var(--superficie);
+  color: inherit; font: inherit; text-align: left; cursor: pointer; overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: transform 160ms ease-out, box-shadow 160ms ease, border-color 160ms ease;
+}
+@media (hover: hover) { .toldo:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1); } }
+.toldo:active { transform: scale(0.98); }
+.toldo:focus-visible { outline: 3px solid var(--toldo); outline-offset: 2px; }
+.toldo--activo { border-color: var(--toldo); box-shadow: 0 0 0 3px color-mix(in srgb, var(--toldo) 35%, transparent); }
+.toldo--cerrado { opacity: 0.6; }
+/* La tela del toldo: rayas del color del rubro con el borde ondulado de los mercados. */
+.toldo__tela {
+  display: block; height: 22px;
+  background: repeating-linear-gradient(90deg, var(--toldo) 0 18px, color-mix(in srgb, var(--toldo) 35%, white) 18px 36px);
+  -webkit-mask: radial-gradient(circle at 9px 22px, transparent 8px, #000 8.5px) 0 0 / 18px 22px repeat-x;
+  mask: radial-gradient(circle at 9px 22px, transparent 8px, #000 8.5px) 0 0 / 18px 22px repeat-x;
+}
+.toldo__oferta {
+  position: absolute; top: 6px; right: 6px; padding: 2px 8px; border-radius: 999px;
+  background: #b7791f; color: #fff; font-size: 0.72rem; font-weight: 700; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.toldo__frente { display: flex; align-items: center; gap: 10px; padding: 10px 12px 4px; }
+.toldo__foto, .toldo__dibujo { flex: none; width: 48px; height: 48px; border-radius: 12px; object-fit: cover; }
+.toldo__dibujo { display: grid; place-items: center; font-size: 1.75rem; background: color-mix(in srgb, var(--toldo) 14%, var(--superficie)); }
+.toldo__numero { font-weight: 800; font-size: 0.95rem; color: var(--toldo); }
+.toldo__texto { display: flex; flex-direction: column; gap: 3px; padding: 4px 12px 12px; }
+.toldo__nombre { font-size: 0.92rem; line-height: 1.25; color: var(--tinta); }
+.toldo__estado { font-size: 0.78rem; color: var(--tenue); }
+.toldo__poco { color: var(--ambar); font-weight: 600; }
+.toldo__iconos { display: flex; gap: 4px; margin-top: 2px; font-size: 1.05rem; }
+.toldo__icono { position: relative; }
+.toldo__icono--agotado { filter: grayscale(1); opacity: 0.35; }
+.toldo__icono--poco::after { content: ""; position: absolute; right: -2px; bottom: 0; width: 6px; height: 6px; border-radius: 50%; background: var(--ambar); }
+
+/* En la ventana del mapa: el mismo mercado en miniatura. */
+.plano--compacto { gap: 8px; }
+.plano--compacto .pasillo { padding: 6px; border-radius: 10px; }
+.plano--compacto .pasillo__puestos { grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 6px; }
+.plano--compacto .toldo { border-radius: 10px; }
+.plano--compacto .toldo__tela {
+  height: 12px;
+  -webkit-mask: radial-gradient(circle at 6px 12px, transparent 5px, #000 5.5px) 0 0 / 12px 12px repeat-x;
+  mask: radial-gradient(circle at 6px 12px, transparent 5px, #000 5.5px) 0 0 / 12px 12px repeat-x;
+}
+.plano--compacto .toldo__frente { flex-direction: column; gap: 2px; padding: 4px 4px 6px; }
+.plano--compacto .toldo__foto, .plano--compacto .toldo__dibujo { width: 32px; height: 32px; border-radius: 8px; font-size: 1.2rem; }
+.plano--compacto .toldo__numero { font-size: 0.72rem; }
+.plano--compacto .toldo__oferta { display: none; }
+.ventana__resumen { margin: 6px 0; font-size: 0.82rem; color: var(--tenue); }
+
+/* El detalle del puesto elegido. */
+.detalle-puesto { margin-top: 16px; border: 1px solid var(--borde); border-radius: 18px; background: var(--superficie); overflow: hidden; animation: aparecer 220ms ease-out; }
+@keyframes aparecer { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .detalle-puesto { animation: none; } .toldo, .existencia__barra { transition: none; } }
+.detalle-puesto__cabeza {
+  position: relative; display: flex; gap: 14px; align-items: flex-start; padding: 16px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--toldo, var(--jade)) 14%, var(--superficie)), var(--superficie));
+  border-bottom: 1px solid var(--borde);
+}
+.detalle-puesto__foto { flex: none; width: 84px; height: 84px; border-radius: 16px; object-fit: cover; }
+.detalle-puesto__foto--vacia { display: grid; place-items: center; font-size: 2.6rem; background: color-mix(in srgb, var(--toldo, var(--jade)) 18%, var(--superficie)); }
+.detalle-puesto__datos { flex: 1; min-width: 0; }
+.detalle-puesto__datos p { margin: 2px 0; }
+.detalle-puesto__nombre { margin: 0; font-size: 1.15rem; color: var(--tinta); }
+.detalle-puesto__resumen { font-size: 0.86rem; font-weight: 600; color: var(--texto); }
+.detalle-puesto__cerrar { flex: none; padding: 4px 10px; }
+.detalle-puesto__ofertas, .detalle-puesto__nota { padding: 0 16px; }
+.detalle-puesto__nota { margin: 8px 0 14px; font-size: 0.78rem; }
+
+.productos-puesto { list-style: none; margin: 0; padding: 14px 16px 4px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.producto-puesto {
+  display: grid; grid-template-columns: auto 1fr auto;
+  grid-template-areas: "dibujo nombre precio" "dibujo queda queda" "barra barra barra";
+  align-items: center; gap: 2px 10px; padding: 10px 12px;
+  border: 1px solid var(--borde); border-radius: 14px; background: var(--superficie);
+}
+.producto-puesto__dibujo { grid-area: dibujo; font-size: 1.9rem; }
+.producto-puesto__nombre { grid-area: nombre; font-weight: 600; font-size: 0.92rem; }
+.producto-puesto__precio { grid-area: precio; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.producto-puesto__queda { grid-area: queda; font-size: 0.8rem; color: var(--tenue); }
+.producto-puesto .existencia { grid-area: barra; margin-top: 6px; }
+.producto-puesto--poco .producto-puesto__queda { color: var(--ambar); font-weight: 600; }
+.producto-puesto--agotado { opacity: 0.55; }
+.producto-puesto--agotado .producto-puesto__dibujo { filter: grayscale(1); }
+.producto-puesto--agotado .producto-puesto__queda { color: var(--peligro); font-weight: 600; }
+
+/* La barrita de cuánto queda. */
+.existencia { position: relative; display: block; height: 6px; border-radius: 999px; background: color-mix(in srgb, var(--tenue) 22%, transparent); overflow: hidden; }
+.existencia__barra { display: block; height: 100%; border-radius: inherit; background: var(--jade); transition: width 300ms ease-out; }
+.producto-puesto--poco .existencia__barra, .articulo--poco .existencia__barra { background: var(--ambar); }
+.producto-puesto--agotado .existencia__barra, .articulo--agotado .existencia__barra { background: var(--peligro); }
+.existencia--grande { height: 9px; margin: 6px 0 8px; overflow: visible; }
+.existencia--grande .existencia__barra { border-radius: 999px; }
+.existencia__aviso { position: absolute; left: 16.7%; top: -3px; bottom: -3px; width: 2px; background: var(--ambar); border-radius: 1px; }
+
+/* ============================================================================
+   C148 · El inventario de la casera: su puesto hoy, existencias y sugerencias
+   ============================================================================ */
+.resumen-puesto { margin-bottom: 16px; padding: 16px; border-radius: 18px; background: linear-gradient(135deg, var(--jade-claro), var(--superficie)); border: 1px solid var(--borde); }
+.resumen-puesto__titulo { margin: 0 0 10px; font-size: 1.02rem; color: var(--tinta); }
+.resumen-puesto__cifras { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.resumen-puesto__cifra { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 14px; background: var(--superficie); border: 1px solid var(--borde); font-size: 0.8rem; color: var(--tenue); }
+.resumen-puesto__valor { font-size: 1.35rem; font-weight: 800; color: var(--tinta); font-variant-numeric: tabular-nums; }
+.resumen-puesto__cifra--alerta { border-color: color-mix(in srgb, var(--peligro) 45%, var(--borde)); }
+.resumen-puesto__cifra--alerta .resumen-puesto__valor { color: var(--peligro); }
+.resumen-puesto__cifra--aviso .resumen-puesto__valor { color: var(--ambar); }
+.resumen-puesto__consejos { margin: 12px 0 0; padding-left: 22px; display: flex; flex-direction: column; gap: 4px; font-size: 0.88rem; list-style: none; }
+.resumen-puesto__consejos li { position: relative; }
+.resumen-puesto__consejos li::before { content: "\1F4A1"; position: absolute; left: -22px; }
+
+.articulo__dibujo { flex: none; font-size: 1.8rem; line-height: 1; }
+.articulo__titulo { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+.articulo__cabeza { display: flex; align-items: center; gap: 12px; }
+.estado-chip { font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--jade-claro); color: var(--jade); }
+.estado-chip--poco { background: var(--ambar-claro); color: var(--ambar); }
+.estado-chip--agotado { background: var(--peligro-claro); color: var(--peligro); }
+.existencias { margin-top: 10px; }
+.existencias__texto { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 0.9rem; }
+.existencias__botones { display: flex; flex-wrap: wrap; gap: 6px; }
+.existencias__botones .boton { padding: 6px 12px; font-size: 0.84rem; }
+.existencias__llego { color: var(--jade); }
+.existencias--form { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px 12px; align-items: end; }
+.existencias--form .formulario__botones { grid-column: 1 / -1; }
+.sugerencia { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 10px; padding: 9px 12px; border-radius: 12px; font-size: 0.85rem; background: var(--jade-claro); }
+.sugerencia__icono { flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--jade); color: var(--superficie); font-weight: 800; }
+.sugerencia__texto { flex: 1 1 220px; }
+.sugerencia--bajar { background: var(--ambar-claro); }
+.sugerencia--bajar .sugerencia__icono { background: var(--ambar); }
+.sugerencia--subir { background: color-mix(in srgb, #2a62b8 12%, var(--superficie)); }
+.sugerencia--subir .sugerencia__icono { background: #2a62b8; }
+.articulo__alerta { margin: 8px 0 0; font-size: 0.8rem; color: var(--ambar); }
+.articulo__final { display: flex; justify-content: flex-end; margin-top: 6px; }
+
+@media (max-width: 520px) {
+  .pasillo__puestos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .toldo__frente { padding: 8px 10px 2px; }
+  .toldo__foto, .toldo__dibujo { width: 40px; height: 40px; font-size: 1.45rem; }
+  .detalle-puesto__foto { width: 64px; height: 64px; }
+  .productos-puesto { grid-template-columns: 1fr; padding: 12px; }
+}
