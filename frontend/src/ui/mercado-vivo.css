@@ -154,3 +154,15 @@
   .detalle-puesto__foto { width: 64px; height: 64px; }
   .productos-puesto { grid-template-columns: 1fr; padding: 12px; }
 }
+
+/* Panel del mercado elegido en el mapa: botón arriba, precio promedio y precios por puesto. */
+.panel__cabeza { position: relative; padding-right: 0; }
+.panel__ver { float: right; margin: 0 0 6px 8px; padding: 6px 12px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; }
+.panel__etiqueta { margin: 0; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--tinta-suave, #5b6b66); }
+.panel__rango { margin: 0 0 6px; font-size: 0.9rem; color: var(--tinta-suave, #5b6b66); }
+.precios-puestos { margin-top: 12px; }
+.precios-puestos__titulo { margin: 0 0 6px; font-size: 0.95rem; }
+.precios-puestos ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.precios-puestos li { display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; border-radius: 10px; background: color-mix(in srgb, var(--jade, #17795a) 7%, transparent); font-size: 0.9rem; }
+.precios-puestos li strong { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.precios-puestos__agotado { opacity: 0.55; }

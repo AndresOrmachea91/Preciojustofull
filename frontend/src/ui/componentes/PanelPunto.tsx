@@ -42,6 +42,16 @@ interface Props {
   /** Los lugares donde alguien lo midió, del más barato al más caro: la respuesta a "¿dónde conviene?". */
   readonly masBaratos?: readonly PrecioEnMercado[];
   readonly alElegir?: (codigoMercado: string) => void;
+  /** Lo que cobra cada puesto de este mercado por el producto buscado (de las caseras registradas). */
+  readonly preciosPuestos?: readonly PrecioDePuesto[];
+}
+
+export interface PrecioDePuesto {
+  readonly numero: string;
+  readonly titulo: string;
+  readonly monto: number;
+  readonly presentacion: string;
+  readonly agotado: boolean;
 }
 
 /** Lo que se ve al lado del mapa: el resumen del producto, o el punto elegido con su precio y de dónde sale. */
@@ -55,6 +65,7 @@ export function PanelPunto({
   usuario = null,
   masBaratos = [],
   alElegir,
+  preciosPuestos = [],
 }: Props) {
   if (!marcador) return <PanelResumen producto={producto} resumen={resumen} masBaratos={masBaratos} alElegir={alElegir} />;
 
@@ -63,7 +74,10 @@ export function PanelPunto({
 
   return (
     <aside className="panel" aria-live="polite">
-      <header>
+      <header className="panel__cabeza">
+        <a className="boton panel__ver" href={hrefMercado(mercado.codigo)}>
+          Ver el mercado <Icono nombre="flecha" tamano={14} />
+        </a>
         <h2 className="panel__nombre">{mercado.nombre}</h2>
         <p className="panel__meta">
           {etiquetaTipo(mercado.tipo)} · {mercado.macrodistrito}
@@ -80,16 +94,16 @@ export function PanelPunto({
             <span className="tenue">{producto?.nombre ?? precio.codigoProducto}</span>
             <Procedencia valor={precio.procedencia} />
           </div>
+          <p className="panel__etiqueta">Precio promedio</p>
           <p className="panel__monto">
-            {rango ? (
-              <>
-                Bs {bs(precio.rango.minimo)} <span className="panel__a">a</span> {bs(precio.rango.maximo)}
-              </>
-            ) : (
-              <>Bs {bs(precio.rango.centro)}</>
-            )}
+            Bs {bs(precio.rango.centro)}
             <span className="tenue"> por {precio.unidad}</span>
           </p>
+          {rango && precio.rango.minimo !== precio.rango.maximo && (
+            <p className="panel__rango">
+              Va de Bs {bs(precio.rango.minimo)} a Bs {bs(precio.rango.maximo)}
+            </p>
+          )}
           <p className="panel__explicacion">{explicacionProcedencia(precio, mercado)}</p>
           {esPrecioViejo(precio) && (
             <p className="aviso-viejo">El dato es de {textoAntiguedad(precio)}: el precio pudo cambiar.</p>
@@ -112,6 +126,24 @@ export function PanelPunto({
             Sin precio para este producto aquí: no hay mediciones en este lugar ni referencia de ciudad de su nivel. No
             se inventa.
           </p>
+        </section>
+      )}
+
+      {preciosPuestos.length > 0 && (
+        <section className="precios-puestos" aria-label={`Precios de los puestos de ${mercado.nombre}`}>
+          <h3 className="precios-puestos__titulo">Sus precios por puesto</h3>
+          <ul>
+            {[...preciosPuestos]
+              .sort((a, b) => Number(a.agotado) - Number(b.agotado) || a.monto - b.monto)
+              .map((x) => (
+                <li key={x.numero} className={x.agotado ? "precios-puestos__agotado" : undefined}>
+                  <span>{x.titulo}</span>
+                  <strong>
+                    {x.agotado ? "Se acabó" : <>Bs {bs(x.monto)}<span className="tenue">/{x.presentacion}</span></>}
+                  </strong>
+                </li>
+              ))}
+          </ul>
         </section>
       )}
 

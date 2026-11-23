@@ -8,6 +8,7 @@ import { bs,
   precioEnPresentacion,
   presentacionBase,
   publicaRango,
+  nombreDelPuesto,
   textoDistancia,
   unidadDePresentacion,
   ZONAS_DE_LA_PAZ,
@@ -16,7 +17,7 @@ import { ahorroPosible } from "@/dominio/servicio/ordenarPorConveniencia";
 import type { Contenedor } from "@/infraestructura/contenedor";
 import { GraficoHistorial } from "@/ui/componentes/GraficoHistorial";
 import { Icono } from "@/ui/componentes/Iconos";
-import { MapaPuntosVenta } from "@/ui/componentes/MapaPuntosVenta";
+import { MapaPuntosVenta, type RamasDelMercado } from "@/ui/componentes/MapaPuntosVenta";
 import { PanelPunto, type ResumenDelMapa } from "@/ui/componentes/PanelPunto";
 import { Procedencia } from "@/ui/componentes/Procedencia";
 import { SelectorProducto } from "@/ui/componentes/SelectorProducto";
@@ -94,6 +95,39 @@ export function PaginaPrecios({ contenedor, usuario = null }: { contenedor: Cont
   // Los puestos del mercado elegido se abren como ramas en el mapa (C143).
   // Un lugar con un solo puesto (una distribuidora) abre su ventana de siempre.
   const delElegido = useRamasDelMercado(contenedor, seleccionado, producto);
+  const ramas = useMemo((): RamasDelMercado | null => {
+    if (!delElegido || !marcadorSeleccionado || delElegido.codigoMercado !== seleccionado) return null;
+    const lista =
+      delElegido.puestos.length < 2
+        ? []
+        : delElegido.puestos.map(({ puesto, articulos }) => {
+            const buscado = articulos.find((a) => a.codigoProducto === producto);
+            return {
+              clave: puesto.numero,
+              numero: puesto.esLocal ? "•" : puesto.numero,
+              titulo: nombreDelPuesto(puesto),
+              foto: puesto.foto,
+              precio: buscado ? buscado.monto : null,
+              agotado: buscado?.disponibilidad === "agotado",
+              oferta: delElegido.ofertas.some((o) => o.numeroPuesto === puesto.numero),
+            };
+          });
+    return {
+      codigo: delElegido.codigoMercado,
+      nombre: marcadorSeleccionado.mercado.nombre,
+      enlace: hrefMercado(delElegido.codigoMercado),
+      lista,
+    };
+  }, [delElegido, marcadorSeleccionado, seleccionado, producto]);
+  const preciosPuestos = useMemo(() => {
+    if (!delElegido || delElegido.codigoMercado !== seleccionado) return [];
+    return delElegido.puestos.flatMap(({ puesto, articulos }) => {
+      const a = articulos.find((x) => x.codigoProducto === producto);
+      return a
+        ? [{ numero: puesto.numero, titulo: nombreDelPuesto(puesto), monto: a.monto, presentacion: a.presentacion, agotado: a.disponibilidad === "agotado" }]
+        : [];
+    });
+  }, [delElegido, seleccionado, producto]);
 
   // Solo se ofrecen presentaciones de la magnitud en que llegó el precio: si
   // la fuente publica por unidad, no hay "por arroba" que mostrar.
@@ -268,7 +302,7 @@ export function PaginaPrecios({ contenedor, usuario = null }: { contenedor: Cont
               ubicacion={cercania.ubicacion}
               conOferta={conOferta}
               onUbicar={() => void cercania.buscar()}
-              ramas={null}
+              ramas={seleccionado ? ramas : null}
               onCerrar={() => setSeleccionado(null)}
               ventanaRama={(clave, alCambiarTamano) => {
                 const datos = delElegido?.puestos.find((x) => x.puesto.numero === clave);
@@ -303,6 +337,7 @@ export function PaginaPrecios({ contenedor, usuario = null }: { contenedor: Cont
               contenedor={contenedor}
               usuario={usuario}
               masBaratos={masBaratos}
+              preciosPuestos={preciosPuestos}
               alElegir={setSeleccionado}
             />
           </div>

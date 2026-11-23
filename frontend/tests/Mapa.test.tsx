@@ -84,6 +84,27 @@ describe("PanelPunto", () => {
     expect(screen.getByText(/Distribuidor · Centro/)).toBeDefined();
   });
 
+  it("muestra el precio promedio, los precios de cada puesto y el botón para ver el mercado", async () => {
+    const memoria = new PreciosMemoria();
+    const { marcadores } = await new VerMapa(memoria, memoria).ejecutar("tomate");
+    const sanPedro = marcadores.find((m) => m.mercado.codigo === "mercado_san_pedro")!;
+    render(
+      <PanelPunto
+        marcador={sanPedro}
+        producto={null}
+        preciosPuestos={[
+          { numero: "14", titulo: "Puesto 14 · Doña Rosa", monto: 11, presentacion: "kilo", agotado: false },
+          { numero: "3", titulo: "Puesto 3", monto: 9, presentacion: "kilo", agotado: true },
+        ]}
+      />,
+    );
+    expect(screen.getByText("Precio promedio")).toBeDefined();
+    expect(screen.getByRole("link", { name: /Ver el mercado/ }).getAttribute("href")).toContain("mercado_san_pedro");
+    const lista = screen.getByRole("region", { name: /Precios de los puestos/ });
+    expect(lista.textContent).toContain("Bs 11,00");
+    expect(lista.textContent).toContain("Se acabó");
+  });
+
   it("sin precio lo dice, no lo inventa", () => {
     render(
       <PanelPunto
