@@ -758,3 +758,13 @@ a { text-underline-offset: 0.18em; }
 .estado--vacio p { margin: 0 0 12px; }
 .estado__acciones { display: flex; flex-wrap: wrap; gap: 8px; }
 .estado__acciones .boton { text-decoration: none; }
+
+/* «Salir» siempre a la vista: si la pantalla es baja (o hay zoom), el menú se desplaza y la cuenta queda fija abajo. */
+@media (min-width: 801px) {
+  .lateral__cuerpo { min-height: 0; overflow-y: auto; }
+  .lateral__cuenta { position: sticky; bottom: 0; background: var(--superficie); padding-bottom: 4px; }
+}
+@media (min-width: 801px) and (max-height: 760px) {
+  .lateral__lema { display: none; }
+  .lateral__marca { padding-bottom: 10px; }
+}
